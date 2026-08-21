@@ -1,0 +1,14 @@
+# Build
+build/
+*.app
+*.dmg
+
+# Generated
+Resources/AppIcon.icns
+Resources/AppIcon.iconset/
+Resources/icon_1024x1024.png
+
+# macOS
+.DS_Store
+*.swp
+*~
