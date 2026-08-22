@@ -79,6 +79,12 @@ enum L {
         case .russian: return "Язык"
         }
     }
+    static var iconStyle: String {
+        switch current {
+        case .english: return "Icon"
+        case .russian: return "Иконка"
+        }
+    }
 
     // MARK: - About & Quit
     static var about: String {

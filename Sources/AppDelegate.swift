@@ -76,7 +76,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
-            button.image = makeIcon(active: false)
+            button.image = IconRenderer.makeIcon(style: IconStyle.current, active: false)
             button.toolTip = "ClamKeep"
         }
     }
@@ -129,6 +129,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         langItem.submenu = langMenu
         settingsMenu.addItem(langItem)
 
+        // Icon submenu
+        let iconItem = NSMenuItem(title: L.iconStyle, action: nil, keyEquivalent: "")
+        let iconMenu = NSMenu()
+        for style in IconStyle.allCases {
+            let item = NSMenuItem(title: style.localizedName, action: #selector(changeIcon(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = style.rawValue
+            item.state = IconStyle.current == style ? .on : .off
+            item.image = IconRenderer.makeIcon(style: style, active: false)
+            iconMenu.addItem(item)
+        }
+        iconItem.submenu = iconMenu
+        settingsMenu.addItem(iconItem)
+
         settingsItem.submenu = settingsMenu
         menu.addItem(settingsItem)
 
@@ -171,7 +185,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusMenuItem.title = active ? L.statusActive : L.statusInactive
         toggleMenuItem.title = active ? L.disableWake : L.enableWake
         timerMenuItem.isHidden = !active
-        statusItem.button?.image = makeIcon(active: active)
+        statusItem.button?.image = IconRenderer.makeIcon(style: IconStyle.current, active: active)
         if active { updateTimerDisplay() }
     }
 
@@ -220,6 +234,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         rebuildMenu()
     }
 
+    @objc private func changeIcon(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+              let style = IconStyle(rawValue: raw) else { return }
+        IconStyle.current = style
+        updateUI(active: isActive)
+        rebuildMenu()
+    }
+
     @objc private func showAbout() {
         let alert = NSAlert()
         alert.messageText = L.aboutTitle
@@ -244,61 +266,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             NSApp.terminate(nil)
         }
-    }
-
-    // MARK: - Icon
-
-    private func makeIcon(active: Bool) -> NSImage? {
-        let size = NSSize(width: 18, height: 18)
-        let image = NSImage(size: size, flipped: false) { rect in
-            // Shield
-            let shield = NSBezierPath()
-            shield.move(to: CGPoint(x: 9, y: 17))
-            shield.curve(to: CGPoint(x: 16, y: 14),
-                         controlPoint1: CGPoint(x: 12, y: 17),
-                         controlPoint2: CGPoint(x: 16, y: 16))
-            shield.line(to: CGPoint(x: 16, y: 7.5))
-            shield.curve(to: CGPoint(x: 9, y: 1.5),
-                         controlPoint1: CGPoint(x: 16, y: 4.5),
-                         controlPoint2: CGPoint(x: 13, y: 2))
-            shield.curve(to: CGPoint(x: 2, y: 7.5),
-                         controlPoint1: CGPoint(x: 5, y: 2),
-                         controlPoint2: CGPoint(x: 2, y: 4.5))
-            shield.line(to: CGPoint(x: 2, y: 14))
-            shield.curve(to: CGPoint(x: 9, y: 17),
-                         controlPoint1: CGPoint(x: 2, y: 16),
-                         controlPoint2: CGPoint(x: 6, y: 17))
-            shield.close()
-
-            if active {
-                // Bright green accent when active
-                NSColor(red: 0.2, green: 0.85, blue: 0.4, alpha: 1.0).setFill()
-            } else {
-                NSColor.white.withAlphaComponent(0.75).setFill()
-            }
-            shield.fill()
-
-            // Moon crescent
-            if active {
-                NSColor(white: 0.15, alpha: 1).setFill()
-            } else {
-                NSColor(white: 0.35, alpha: 1).setFill()
-            }
-            let outer = NSBezierPath(ovalIn: NSRect(x: 5.5, y: 5, width: 9, height: 9))
-            outer.fill()
-
-            if active {
-                NSColor(red: 0.2, green: 0.85, blue: 0.4, alpha: 1.0).setFill()
-            } else {
-                NSColor.white.withAlphaComponent(0.75).setFill()
-            }
-            let inner = NSBezierPath(ovalIn: NSRect(x: 7.2, y: 4.5, width: 9, height: 9))
-            inner.fill()
-
-            return true
-        }
-        image.isTemplate = false
-        return image
     }
 
     // MARK: - Timer
