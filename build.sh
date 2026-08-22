@@ -22,6 +22,7 @@ SWIFT_SOURCES=(
     "Sources/AppDelegate.swift"
     "Sources/PrivilegedShell.swift"
     "Sources/LoginItem.swift"
+    "Sources/Localizable.swift"
 )
 
 ENTITLEMENTS_FILE="ClamKeep.entitlements"
