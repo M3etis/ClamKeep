@@ -6,10 +6,11 @@ macOS menu bar application that prevents your Mac from sleeping when the lid is 
 
 - Prevents sleep with closed lid via `pmset disablesleep`
 - Minimalist menu bar icon (shield + crescent moon)
-- Visual indicator for active/inactive state
+- Green accent icon when wake mode is active
 - Timer showing wake mode duration
 - Launch at login (SMAppService)
 - Passwordless operation via privileged helper daemon
+- English and Russian interface with language switcher
 - No external dependencies
 - Universal binary (Apple Silicon + Intel)
 
@@ -32,10 +33,13 @@ make dmg      # Create DMG installer
 
 ## Usage
 
-- Click the shield icon in the menu bar
-- Select **"Включить бодрствование"** to enable wake mode
-- Select **"Выключить бодрствование"** to disable
-- **"Запускать при входе в систему"** — toggle launch at login
+1. Click the shield icon in the menu bar to open the menu
+2. Select **"Enable Wake Mode"** to prevent sleep — the icon turns green and a timer starts
+3. Select **"Disable Wake Mode"** to restore normal sleep behavior
+4. Open **Settings** to configure:
+   - **Launch at Login** — start ClamKeep automatically on login
+   - **Language** — switch between English and Russian
+5. Close the lid — your Mac stays awake
 
 ## Requirements
 
