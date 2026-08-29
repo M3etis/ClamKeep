@@ -10,8 +10,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var isActive = false
     private var wakeStartTime: Date?
     private var displayTimer: Timer?
+    private var caffeinateProcess: Process?
 
     private let wakeStartKey = "ClamKeepWakeStartTime"
+    private let expectedDaemonVersion = "1.1.0"
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
@@ -19,6 +21,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if !isDaemonInstalled() {
             installDaemon()
+        } else {
+            checkDaemonVersion()
         }
 
         checkInitialState()
@@ -28,6 +32,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if isActive {
             disableWakeMode()
         }
+        stopCaffeinate()
     }
 
     // MARK: - Daemon
@@ -69,6 +74,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             try? FileManager.default.removeItem(atPath: tempDir)
         }
+    }
+
+    private func checkDaemonVersion() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            let installed = PrivilegedShell.getDaemonVersion()
+            if installed != self.expectedDaemonVersion {
+                NSLog("ClamKeep: Daemon version mismatch: installed=\(installed ?? "nil"), expected=\(self.expectedDaemonVersion)")
+                DispatchQueue.main.async {
+                    self.updateDaemon()
+                }
+            }
+        }
+    }
+
+    private func updateDaemon() {
+        let bundlePath = Bundle.main.resourcePath ?? ""
+        let tempDir = "/tmp/clamkeep-install"
+        try? FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true)
+        try? FileManager.default.copyItem(atPath: "\(bundlePath)/clamkeep-helper.sh", toPath: "\(tempDir)/clamkeep-helper.sh")
+        try? FileManager.default.copyItem(atPath: "\(bundlePath)/install-helper.sh", toPath: "\(tempDir)/install-helper.sh")
+
+        let script = "do shell script \"bash \\\"\(tempDir)/install-helper.sh\\\"\" with administrator privileges"
+        var error: NSDictionary?
+        if let appleScript = NSAppleScript(source: script) {
+            appleScript.executeAndReturnError(&error)
+            if let error = error {
+                let msg = error[NSAppleScript.errorMessage] as? String ?? "Unknown error"
+                NSLog("ClamKeep: Daemon update failed: \(msg)")
+            }
+        }
+        try? FileManager.default.removeItem(atPath: tempDir)
     }
 
     // MARK: - Status Item
@@ -174,6 +211,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 if sleepDisabled {
                     self.isActive = true
                     self.wakeStartTime = UserDefaults.standard.object(forKey: self.wakeStartKey) as? Date ?? Date()
+                    self.startCaffeinate()
                     self.updateUI(active: true)
                     self.startDisplayTimer()
                 }
@@ -200,19 +238,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func enableWakeMode() {
-        let success = PrivilegedShell.sendCommand("enable")
-        if success {
+        let sleepOk = PrivilegedShell.sendCommand("enable")
+        let displayOk = PrivilegedShell.sendCommand("display_enable")
+        if sleepOk {
             isActive = true
             wakeStartTime = Date()
             UserDefaults.standard.set(wakeStartTime, forKey: wakeStartKey)
+            startCaffeinate()
             updateUI(active: true)
             startDisplayTimer()
+            if !displayOk {
+                NSLog("ClamKeep: display_enable failed, sleep prevention still active")
+            }
         }
     }
 
     private func disableWakeMode() {
-        let success = PrivilegedShell.sendCommand("disable")
-        if success {
+        stopCaffeinate()
+        let sleepOk = PrivilegedShell.sendCommand("disable")
+        PrivilegedShell.sendCommand("display_disable")
+        if sleepOk {
             isActive = false
             wakeStartTime = nil
             UserDefaults.standard.removeObject(forKey: wakeStartKey)
@@ -266,6 +311,30 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             NSApp.terminate(nil)
         }
+    }
+
+    // MARK: - Caffeinate
+
+    private func startCaffeinate() {
+        stopCaffeinate()
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/caffeinate")
+        process.arguments = ["-u", "-i"]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        do {
+            try process.run()
+            caffeinateProcess = process
+        } catch {
+            NSLog("ClamKeep: Failed to start caffeinate: \(error)")
+        }
+    }
+
+    private func stopCaffeinate() {
+        if let process = caffeinateProcess, process.isRunning {
+            process.terminate()
+        }
+        caffeinateProcess = nil
     }
 
     // MARK: - Timer

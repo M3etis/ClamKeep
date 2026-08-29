@@ -102,11 +102,11 @@ enum L {
 
     // MARK: - About dialog
     static var aboutTitle: String { "ClamKeep" }
-    static var aboutVersion: String { "1.0.0" }
+    static var aboutVersion: String { "1.1.0" }
     static var aboutDescription: String {
         switch current {
-        case .english: return "Version 1.0.0\n\nPrevents your Mac from sleeping when the lid is closed.\n\nAuthor: m3etis@gmail.com"
-        case .russian: return "Версия 1.0.0\n\nПредотвращает уход Mac в сон при закрытой крышке.\n\nАвтор: m3etis@gmail.com"
+        case .english: return "Version 1.1.0\n\nKeeps your Mac awake with lid closed and prevents screen lock with lid open.\n\nAuthor: m3etis@gmail.com"
+        case .russian: return "Версия 1.1.0\n\nДержит Mac активным при закрытой крышке и предотвращает блокировку экрана при открытой.\n\nАвтор: m3etis@gmail.com"
         }
     }
 

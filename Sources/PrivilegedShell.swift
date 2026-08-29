@@ -41,6 +41,31 @@ enum PrivilegedShell {
         return false
     }
 
+    static func getDaemonVersion() -> String? {
+        setup()
+        try? FileManager.default.removeItem(atPath: resultFile)
+        do {
+            try "version".write(toFile: triggerFile, atomically: true, encoding: .utf8)
+        } catch {
+            return nil
+        }
+        let deadline = Date().addingTimeInterval(5.0)
+        while Date() < deadline {
+            if FileManager.default.fileExists(atPath: resultFile) {
+                if let result = try? String(contentsOfFile: resultFile, encoding: .utf8) {
+                    try? FileManager.default.removeItem(atPath: resultFile)
+                    // Result format: "ok 1.1.0"
+                    let parts = result.split(separator: " ", maxSplits: 1)
+                    if parts.count >= 2 {
+                        return String(parts[1]).trimmingCharacters(in: .whitespacesAndNewlines)
+                    }
+                }
+            }
+            Thread.sleep(forTimeInterval: 0.2)
+        }
+        return nil
+    }
+
     static func isSleepDisabled() -> Bool {
         guard let output = runCommand("/usr/bin/pmset", arguments: ["-g"]) else {
             return false
