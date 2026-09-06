@@ -495,6 +495,17 @@ extension AppDelegate: NSMenuDelegate {
     }
 }
 
+// MARK: - Menu Validation
+
+extension AppDelegate: NSMenuItemValidation {
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem == keepScreenOnMenuItem {
+            return isActive
+        }
+        return menuItem.isEnabled
+    }
+}
+
 // MARK: - AppWatchdogDelegate
 
 extension AppDelegate: AppWatchdogDelegate {
