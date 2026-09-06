@@ -7,8 +7,10 @@ macOS menu bar application that keeps your Mac awake when the lid is closed and 
 - Prevents sleep with closed lid via `pmset disablesleep`
 - Prevents screen dimming and lock with open lid via `caffeinate`
 - Disables password prompt on screen lock during wake mode
-- Minimalist menu bar icon (shield + crescent moon)
-- Green accent icon when wake mode is active
+- **Allow Display Sleep** — let the screen turn off while the system stays awake (amber icon)
+- **Stay Awake Until...** — automatically disable wake mode when a selected app quits
+- Minimalist menu bar icon (shield + symbol) with 5 style variants
+- Green icon when wake mode is active, amber when display sleep is allowed
 - Timer showing wake mode duration
 - Launch at login (SMAppService)
 - Passwordless operation via privileged helper daemon
@@ -18,16 +20,17 @@ macOS menu bar application that keeps your Mac awake when the lid is closed and 
 
 ## Behavior
 
-| State | Lid Open | Lid Closed |
-|-------|----------|------------|
-| Wake Mode ON | Screen stays on, no lock, no password | Screen off (hardware), system stays awake |
-| Wake Mode OFF | Standard macOS behavior | Standard macOS behavior |
+| State | Display | Lid Open | Lid Closed |
+|-------|---------|----------|------------|
+| Wake Mode ON | Screen stays on | No lock, no password | Screen off (hardware), system stays awake |
+| Wake Mode ON + Allow Display Sleep | Screen can turn off | No lock, system stays awake | System stays awake |
+| Wake Mode OFF | Standard macOS | Standard macOS | Standard macOS |
 
 ## Installation
 
 ### From DMG
 
-1. Download `ClamKeep-1.1.0.dmg` from [Releases](https://github.com/M3etis/ClamKeep/releases)
+1. Download `ClamKeep-1.2.0.dmg` from [Releases](https://github.com/M3etis/ClamKeep/releases)
 2. Open the DMG and drag ClamKeep to Applications
 3. Launch ClamKeep — on first run, approve the helper daemon installation (one-time password)
 
@@ -40,6 +43,18 @@ make build    # Build + install to /Applications
 make dmg      # Create DMG installer
 ```
 
+## Usage
+
+1. Click the shield icon in the menu bar to open the menu
+2. Select **"Enable Wake Mode"** to prevent sleep — the icon turns green and a timer starts
+3. **"Allow Display Sleep"** — toggle to let the screen turn off while keeping the system awake (icon turns amber)
+4. **"Stay Awake Until..."** — pick a running app; wake mode auto-disables when that app quits
+5. Open **Settings** to configure:
+   - **Launch at Login** — start ClamKeep automatically on login
+   - **Language** — switch between English and Russian
+   - **Icon** — choose between Moon, Bolt, Eye, Coffee, or Shield styles
+6. Select **"Disable Wake Mode"** to restore normal sleep behavior
+
 ## Updating the Helper Daemon
 
 When updating ClamKeep, the helper daemon must also be updated:
@@ -50,23 +65,18 @@ sudo launchctl bootout system/com.m3etis.clamkeep.helper 2>/dev/null
 sudo launchctl bootstrap system /Library/LaunchDaemons/com.m3etis.clamkeep.helper.plist
 ```
 
-## Usage
-
-1. Click the shield icon in the menu bar to open the menu
-2. Select **"Enable Wake Mode"** to prevent sleep — the icon turns green and a timer starts
-3. Select **"Disable Wake Mode"** to restore normal sleep behavior
-4. Open **Settings** to configure:
-   - **Launch at Login** — start ClamKeep automatically on login
-   - **Language** — switch between English and Russian
-   - **Icon** — choose between Moon, Bolt, Eye, Coffee, or Shield styles
-5. Close the lid — your Mac stays awake
-
 ## Requirements
 
 - macOS 13.0+
 - Xcode Command Line Tools (for building from source)
 
 ## Changelog
+
+### 1.2.0
+- Added "Allow Display Sleep" option — system stays awake while screen can turn off
+- Added "Stay Awake Until..." submenu — auto-disable wake mode when a selected app quits
+- Amber icon color for display-sleep-allowed state
+- About dialog now includes repository link
 
 ### 1.1.0
 - Added display wake: screen no longer dims or locks with lid open

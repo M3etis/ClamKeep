@@ -7,7 +7,7 @@ set -euo pipefail
 
 APP_NAME="ClamKeep"
 BUNDLE_ID="com.m3etis.clamkeep"
-VERSION="1.1.0"
+VERSION="1.2.0"
 BUILD_NUMBER="2"
 MIN_MACOS="13.0"
 
@@ -24,6 +24,7 @@ SWIFT_SOURCES=(
     "Sources/LoginItem.swift"
     "Sources/Localizable.swift"
     "Sources/IconRenderer.swift"
+    "Sources/AppWatchdog.swift"
 )
 
 ENTITLEMENTS_FILE="ClamKeep.entitlements"

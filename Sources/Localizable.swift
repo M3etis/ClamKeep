@@ -102,11 +102,11 @@ enum L {
 
     // MARK: - About dialog
     static var aboutTitle: String { "ClamKeep" }
-    static var aboutVersion: String { "1.1.0" }
+    static var aboutVersion: String { "1.2.0" }
     static var aboutDescription: String {
         switch current {
-        case .english: return "Version 1.1.0\n\nKeeps your Mac awake with lid closed and prevents screen lock with lid open.\n\nAuthor: m3etis@gmail.com"
-        case .russian: return "Версия 1.1.0\n\nДержит Mac активным при закрытой крышке и предотвращает блокировку экрана при открытой.\n\nАвтор: m3etis@gmail.com"
+        case .english: return "Version 1.2.0\n\nKeeps your Mac awake with lid closed and prevents screen lock with lid open.\n\nhttps://github.com/M3etis/ClamKeep\n\nAuthor: m3etis@gmail.com"
+        case .russian: return "Версия 1.2.0\n\nДержит Mac активным при закрытой крышке и предотвращает блокировку экрана при открытой.\n\nhttps://github.com/M3etis/ClamKeep\n\nАвтор: m3etis@gmail.com"
         }
     }
 
@@ -133,6 +133,40 @@ enum L {
         switch current {
         case .english: return "Cancel"
         case .russian: return "Отмена"
+        }
+    }
+
+    // MARK: - Display Sleep Option
+    static var keepScreenOn: String {
+        switch current {
+        case .english: return "Allow Display Sleep"
+        case .russian: return "Разрешить сон дисплея"
+        }
+    }
+    static var statusActiveDisplaySleep: String {
+        switch current {
+        case .english: return "Sleep: disabled (display can sleep)"
+        case .russian: return "Режим сна: отключён (экран может выкл.)"
+        }
+    }
+
+    // MARK: - Stay Awake Until
+    static var stayAwakeUntil: String {
+        switch current {
+        case .english: return "Stay Awake Until…"
+        case .russian: return "Не засыпать до…"
+        }
+    }
+    static var noRunningApps: String {
+        switch current {
+        case .english: return "No running apps"
+        case .russian: return "Нет запущенных приложений"
+        }
+    }
+    static func watchingApp(_ name: String) -> String {
+        switch current {
+        case .english: return "Watching: \(name)"
+        case .russian: return "Слежение: \(name)"
         }
     }
 

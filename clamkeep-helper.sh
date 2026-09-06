@@ -2,7 +2,7 @@
 # ClamKeep Helper Daemon - runs as root via launchd
 # Executes pmset commands triggered by the app
 
-DAEMON_VERSION="1.1.0"
+DAEMON_VERSION="1.2.0"
 TRIGGER_DIR="/tmp/clamkeep"
 TRIGGER_FILE="${TRIGGER_DIR}/command"
 SCREENSAVER_PLIST_BASE="/Library/Preferences/com.apple.screensaver"

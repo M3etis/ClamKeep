@@ -6,16 +6,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusMenuItem: NSMenuItem!
     private var timerMenuItem: NSMenuItem!
     private var toggleMenuItem: NSMenuItem!
+    private var keepScreenOnMenuItem: NSMenuItem!
+    private var stayAwakeSubmenu: NSMenu!
 
     private var isActive = false
     private var wakeStartTime: Date?
     private var displayTimer: Timer?
     private var caffeinateProcess: Process?
+    private var allowDisplaySleep = false
+    private let allowDisplaySleepKey = "ClamKeepAllowDisplaySleep"
+
+    private var watchdog = AppWatchdog()
 
     private let wakeStartKey = "ClamKeepWakeStartTime"
-    private let expectedDaemonVersion = "1.1.0"
+    private let expectedDaemonVersion = "1.2.0"
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        watchdog.delegate = self
         setupStatusItem()
         setupMenu()
 
@@ -138,6 +145,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         toggleMenuItem.target = self
         menu.addItem(toggleMenuItem)
 
+        // Allow Display Sleep toggle
+        keepScreenOnMenuItem = NSMenuItem(title: L.keepScreenOn, action: #selector(toggleKeepScreenOn), keyEquivalent: "s")
+        keepScreenOnMenuItem.target = self
+        keepScreenOnMenuItem.state = allowDisplaySleep ? .on : .off
+        keepScreenOnMenuItem.isEnabled = isActive
+        menu.addItem(keepScreenOnMenuItem)
+
+        // Stay Awake Until submenu
+        let stayAwakeItem = NSMenuItem(title: L.stayAwakeUntil, action: nil, keyEquivalent: "")
+        stayAwakeSubmenu = NSMenu()
+        stayAwakeSubmenu.delegate = self
+        stayAwakeItem.submenu = stayAwakeSubmenu
+        menu.addItem(stayAwakeItem)
+
         menu.addItem(NSMenuItem.separator())
 
         // Settings submenu
@@ -204,6 +225,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - State
 
     private func checkInitialState() {
+        allowDisplaySleep = UserDefaults.standard.bool(forKey: allowDisplaySleepKey)
+
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let sleepDisabled = PrivilegedShell.isSleepDisabled()
             DispatchQueue.main.async {
@@ -223,7 +246,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusMenuItem.title = active ? L.statusActive : L.statusInactive
         toggleMenuItem.title = active ? L.disableWake : L.enableWake
         timerMenuItem.isHidden = !active
-        statusItem.button?.image = IconRenderer.makeIcon(style: IconStyle.current, active: active)
+        keepScreenOnMenuItem.isEnabled = active
+        keepScreenOnMenuItem.state = allowDisplaySleep ? .on : .off
+
+        if active && allowDisplaySleep {
+            statusItem.button?.image = IconRenderer.makeIcon(style: IconStyle.current, active: true, displaySleepAllowed: true)
+            statusMenuItem.title = L.statusActiveDisplaySleep
+        } else {
+            statusItem.button?.image = IconRenderer.makeIcon(style: IconStyle.current, active: active, displaySleepAllowed: false)
+        }
         if active { updateTimerDisplay() }
     }
 
@@ -239,7 +270,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func enableWakeMode() {
         let sleepOk = PrivilegedShell.sendCommand("enable")
-        let displayOk = PrivilegedShell.sendCommand("display_enable")
+        if !allowDisplaySleep {
+            let displayOk = PrivilegedShell.sendCommand("display_enable")
+            if !displayOk {
+                NSLog("ClamKeep: display_enable failed, sleep prevention still active")
+            }
+        }
         if sleepOk {
             isActive = true
             wakeStartTime = Date()
@@ -247,16 +283,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             startCaffeinate()
             updateUI(active: true)
             startDisplayTimer()
-            if !displayOk {
-                NSLog("ClamKeep: display_enable failed, sleep prevention still active")
-            }
         }
     }
 
     private func disableWakeMode() {
         stopCaffeinate()
+        watchdog.stopWatching()
         let sleepOk = PrivilegedShell.sendCommand("disable")
-        PrivilegedShell.sendCommand("display_disable")
+        if !allowDisplaySleep {
+            PrivilegedShell.sendCommand("display_disable")
+        }
         if sleepOk {
             isActive = false
             wakeStartTime = nil
@@ -319,7 +355,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         stopCaffeinate()
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/caffeinate")
-        process.arguments = ["-u", "-i"]
+        if allowDisplaySleep {
+            process.arguments = ["-i"]
+        } else {
+            process.arguments = ["-u", "-i"]
+        }
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
         do {
@@ -367,5 +407,96 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             timerMenuItem.title = "\(L.wakeTime): \(String(format: "%02d:%02d:%02d", hours, minutes, seconds))"
         }
+    }
+
+    // MARK: - Allow Display Sleep
+
+    @objc private func toggleKeepScreenOn() {
+        allowDisplaySleep.toggle()
+        UserDefaults.standard.set(allowDisplaySleep, forKey: allowDisplaySleepKey)
+
+        if isActive {
+            stopCaffeinate()
+            if allowDisplaySleep {
+                PrivilegedShell.sendCommand("display_disable")
+            } else {
+                PrivilegedShell.sendCommand("display_enable")
+            }
+            startCaffeinate()
+        }
+
+        updateUI(active: isActive)
+        rebuildMenu()
+    }
+
+    // MARK: - Stay Awake Until
+
+    @objc private func toggleStayAwakeForApp(_ sender: NSMenuItem) {
+        guard let app = sender.representedObject as? WatchableApp else { return }
+
+        if watchdog.toggleWatching(app) {
+            if !isActive {
+                enableWakeMode()
+            }
+        }
+
+        rebuildMenu()
+    }
+
+    private func populateStayAwakeSubmenu() {
+        stayAwakeSubmenu.removeAllItems()
+
+        if watchdog.isWatching, let watched = watchdog.watchedApp {
+            let label = NSMenuItem(title: L.watchingApp(watched.name), action: nil, keyEquivalent: "")
+            label.isEnabled = false
+            stayAwakeSubmenu.addItem(label)
+            stayAwakeSubmenu.addItem(NSMenuItem.separator())
+        }
+
+        let apps = AppWatchdog.runningUserApps(excludingBundleID: Bundle.main.bundleIdentifier)
+
+        if apps.isEmpty {
+            let emptyItem = NSMenuItem(title: L.noRunningApps, action: nil, keyEquivalent: "")
+            emptyItem.isEnabled = false
+            stayAwakeSubmenu.addItem(emptyItem)
+            return
+        }
+
+        for app in apps {
+            let item = NSMenuItem(title: app.name, action: #selector(toggleStayAwakeForApp(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = app
+            item.state = (watchdog.watchedApp?.bundleIdentifier == app.bundleIdentifier) ? .on : .off
+
+            if let runningApp = NSWorkspace.shared.runningApplications.first(where: {
+                $0.bundleIdentifier == app.bundleIdentifier
+            }) {
+                item.image = runningApp.icon
+                item.image?.size = NSSize(width: 16, height: 16)
+            }
+
+            stayAwakeSubmenu.addItem(item)
+        }
+    }
+}
+
+// MARK: - NSMenuDelegate
+
+extension AppDelegate: NSMenuDelegate {
+    func menuWillOpen(_ menu: NSMenu) {
+        if menu === stayAwakeSubmenu {
+            populateStayAwakeSubmenu()
+        }
+    }
+}
+
+// MARK: - AppWatchdogDelegate
+
+extension AppDelegate: AppWatchdogDelegate {
+    func watchdogDidDetectAppTermination(_ watchdog: AppWatchdog, app: WatchableApp) {
+        if isActive {
+            disableWakeMode()
+        }
+        rebuildMenu()
     }
 }

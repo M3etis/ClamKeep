@@ -50,15 +50,15 @@ enum IconStyle: String, CaseIterable {
 
 enum IconRenderer {
 
-    static func makeIcon(style: IconStyle, active: Bool) -> NSImage? {
+    static func makeIcon(style: IconStyle, active: Bool, displaySleepAllowed: Bool = false) -> NSImage? {
         let size = NSSize(width: 18, height: 18)
         let image = NSImage(size: size, flipped: false) { rect in
-            drawShield(active: active)
+            drawShield(active: active, displaySleepAllowed: displaySleepAllowed)
             switch style {
-            case .moon:   drawMoon(active: active)
-            case .bolt:   drawBolt(active: active)
-            case .eye:    drawEye(active: active)
-            case .coffee: drawCoffee(active: active)
+            case .moon:   drawMoon(active: active, displaySleepAllowed: displaySleepAllowed)
+            case .bolt:   drawBolt(active: active, displaySleepAllowed: displaySleepAllowed)
+            case .eye:    drawEye(active: active, displaySleepAllowed: displaySleepAllowed)
+            case .coffee: drawCoffee(active: active, displaySleepAllowed: displaySleepAllowed)
             case .plain:  break
             }
             return true
@@ -79,9 +79,27 @@ enum IconRenderer {
                : NSColor(white: 0.35, alpha: 1)
     }
 
+    private static func shieldColorAmber() -> NSColor {
+        NSColor(red: 0.95, green: 0.75, blue: 0.15, alpha: 1.0)
+    }
+
+    private static func symbolColorAmber() -> NSColor {
+        NSColor(white: 0.2, alpha: 1)
+    }
+
+    private static func resolveShieldColor(active: Bool, displaySleepAllowed: Bool) -> NSColor {
+        if active && displaySleepAllowed { return shieldColorAmber() }
+        return shieldColor(active: active)
+    }
+
+    private static func resolveSymbolColor(active: Bool, displaySleepAllowed: Bool) -> NSColor {
+        if active && displaySleepAllowed { return symbolColorAmber() }
+        return symbolColor(active: active)
+    }
+
     // MARK: - Shield
 
-    private static func drawShield(active: Bool) {
+    private static func drawShield(active: Bool, displaySleepAllowed: Bool = false) {
         let s = NSBezierPath()
         s.move(to: CGPoint(x: 9, y: 17))
         s.curve(to: CGPoint(x: 16, y: 14),
@@ -99,23 +117,23 @@ enum IconRenderer {
                 controlPoint1: CGPoint(x: 2, y: 16),
                 controlPoint2: CGPoint(x: 6, y: 17))
         s.close()
-        shieldColor(active: active).setFill()
+        resolveShieldColor(active: active, displaySleepAllowed: displaySleepAllowed).setFill()
         s.fill()
     }
 
     // MARK: - Moon
 
-    private static func drawMoon(active: Bool) {
-        symbolColor(active: active).setFill()
+    private static func drawMoon(active: Bool, displaySleepAllowed: Bool = false) {
+        resolveSymbolColor(active: active, displaySleepAllowed: displaySleepAllowed).setFill()
         NSBezierPath(ovalIn: NSRect(x: 5.5, y: 5, width: 9, height: 9)).fill()
-        shieldColor(active: active).setFill()
+        resolveShieldColor(active: active, displaySleepAllowed: displaySleepAllowed).setFill()
         NSBezierPath(ovalIn: NSRect(x: 7.2, y: 4.5, width: 9, height: 9)).fill()
     }
 
     // MARK: - Bolt
 
-    private static func drawBolt(active: Bool) {
-        let c = symbolColor(active: active)
+    private static func drawBolt(active: Bool, displaySleepAllowed: Bool = false) {
+        let c = resolveSymbolColor(active: active, displaySleepAllowed: displaySleepAllowed)
         c.setFill()
         let b = NSBezierPath()
         b.move(to: CGPoint(x: 10.5, y: 14))
@@ -131,8 +149,8 @@ enum IconRenderer {
 
     // MARK: - Eye
 
-    private static func drawEye(active: Bool) {
-        let c = symbolColor(active: active)
+    private static func drawEye(active: Bool, displaySleepAllowed: Bool = false) {
+        let c = resolveSymbolColor(active: active, displaySleepAllowed: displaySleepAllowed)
         c.setStroke()
         c.setFill()
 
@@ -161,8 +179,8 @@ enum IconRenderer {
 
     // MARK: - Coffee
 
-    private static func drawCoffee(active: Bool) {
-        let c = symbolColor(active: active)
+    private static func drawCoffee(active: Bool, displaySleepAllowed: Bool = false) {
+        let c = resolveSymbolColor(active: active, displaySleepAllowed: displaySleepAllowed)
         c.setStroke()
         c.setFill()
 
