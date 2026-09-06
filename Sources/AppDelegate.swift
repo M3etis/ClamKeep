@@ -129,6 +129,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupMenu() {
         let menu = NSMenu()
+        menu.delegate = self
 
         statusMenuItem = NSMenuItem(title: L.statusInactive, action: nil, keyEquivalent: "")
         statusMenuItem.isEnabled = false
@@ -143,6 +144,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         toggleMenuItem = NSMenuItem(title: L.enableWake, action: #selector(toggleWake), keyEquivalent: "w")
         toggleMenuItem.target = self
+        toggleMenuItem.state = isActive ? .on : .off
         menu.addItem(toggleMenuItem)
 
         // Allow Display Sleep toggle
@@ -245,6 +247,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func updateUI(active: Bool) {
         statusMenuItem.title = active ? L.statusActive : L.statusInactive
         toggleMenuItem.title = active ? L.disableWake : L.enableWake
+        toggleMenuItem.state = active ? .on : .off
         timerMenuItem.isHidden = !active
         keepScreenOnMenuItem.isEnabled = active
         keepScreenOnMenuItem.state = allowDisplaySleep ? .on : .off
