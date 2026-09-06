@@ -2,7 +2,7 @@
 # ClamKeep Helper Daemon - runs as root via launchd
 # Executes pmset commands triggered by the app
 
-DAEMON_VERSION="1.2.0"
+DAEMON_VERSION="1.2.1"
 TRIGGER_DIR="/tmp/clamkeep"
 TRIGGER_FILE="${TRIGGER_DIR}/command"
 SCREENSAVER_PLIST_BASE="/Library/Preferences/com.apple.screensaver"
@@ -10,7 +10,10 @@ mkdir -p "${TRIGGER_DIR}"
 chmod 1777 "${TRIGGER_DIR}"
 
 save_display_settings() {
-    # Save current display sleep value
+    # Save only once per wake session — don't overwrite if already saved
+    if [ -f "${TRIGGER_DIR}/displaysleep.saved" ]; then
+        return
+    fi
     DISPLAYSLEEP=$(/usr/bin/pmset -g | awk '/displaysleep/ {print $2}')
     echo "${DISPLAYSLEEP:-10}" > "${TRIGGER_DIR}/displaysleep.saved"
     chmod 644 "${TRIGGER_DIR}/displaysleep.saved"

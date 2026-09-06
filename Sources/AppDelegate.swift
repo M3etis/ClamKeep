@@ -19,7 +19,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var watchdog = AppWatchdog()
 
     private let wakeStartKey = "ClamKeepWakeStartTime"
-    private let expectedDaemonVersion = "1.2.0"
+    private let expectedDaemonVersion = "1.2.1"
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         watchdog.delegate = self
@@ -434,7 +434,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         updateUI(active: isActive)
-        rebuildMenu()
     }
 
     // MARK: - Stay Awake Until
@@ -476,9 +475,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             item.representedObject = app
             item.state = (watchdog.watchedApp?.bundleIdentifier == app.bundleIdentifier) ? .on : .off
 
-            if let runningApp = NSWorkspace.shared.runningApplications.first(where: {
-                $0.bundleIdentifier == app.bundleIdentifier
-            }) {
+            if let runningApp = NSRunningApplication(processIdentifier: app.processIdentifier) {
                 item.image = runningApp.icon
                 item.image?.size = NSSize(width: 16, height: 16)
             }
