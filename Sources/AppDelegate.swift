@@ -328,8 +328,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         alert.messageText = L.aboutTitle
         alert.informativeText = L.aboutDescription
         alert.alertStyle = .informational
+        alert.addButton(withTitle: "GitHub")
         alert.addButton(withTitle: "OK")
-        alert.runModal()
+        if alert.runModal() == .alertFirstButtonReturn {
+            if let url = URL(string: "https://github.com/M3etis/ClamKeep") {
+                NSWorkspace.shared.open(url)
+            }
+        }
     }
 
     @objc private func quitApp() {
