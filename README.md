@@ -1,12 +1,11 @@
 # ClamKeep
 
-macOS menu bar application that keeps your Mac awake when the lid is closed and prevents screen lock when the lid is open.
+macOS menu bar application that keeps your Mac awake when the lid is closed and prevents screen dimming when the lid is open.
 
 ## Features
 
 - Prevents sleep with closed lid via `pmset disablesleep`
-- Prevents screen dimming and lock with open lid via `caffeinate`
-- Disables password prompt on screen lock during wake mode
+- Prevents screen dimming with open lid via `caffeinate`
 - **Allow Display Sleep** — let the screen turn off while the system stays awake (amber icon)
 - **Stay Awake Until...** — automatically disable wake mode when a selected app quits
 - Minimalist menu bar icon (shield + symbol) with 5 style variants
@@ -22,15 +21,15 @@ macOS menu bar application that keeps your Mac awake when the lid is closed and 
 
 | State | Display | Lid Open | Lid Closed |
 |-------|---------|----------|------------|
-| Wake Mode ON | Screen stays on | No lock, no password | Screen off (hardware), system stays awake |
-| Wake Mode ON + Allow Display Sleep | Screen can turn off | No lock, system stays awake | System stays awake |
+| Wake Mode ON | Screen stays on | Lock screen works normally | Screen off (hardware), system stays awake |
+| Wake Mode ON + Allow Display Sleep | Screen can turn off | Lock screen works normally, system stays awake | System stays awake |
 | Wake Mode OFF | Standard macOS | Standard macOS | Standard macOS |
 
 ## Installation
 
 ### From DMG
 
-1. Download `ClamKeep-1.2.0.dmg` from [Releases](https://github.com/M3etis/ClamKeep/releases)
+1. Download `ClamKeep-1.3.0.dmg` from [Releases](https://github.com/M3etis/ClamKeep/releases)
 2. Open the DMG and drag ClamKeep to Applications
 3. Launch ClamKeep — on first run, approve the helper daemon installation (one-time password)
 
@@ -72,6 +71,10 @@ sudo launchctl bootstrap system /Library/LaunchDaemons/com.m3etis.clamkeep.helpe
 
 ## Changelog
 
+### 1.3.0
+- Removed screen lock override: Lock Screen (automatic and manual) now works normally during wake mode
+- `display_enable` no longer sets `askForPassword = 0`
+
 ### 1.2.0
 - Added "Allow Display Sleep" option — system stays awake while screen can turn off
 - Added "Stay Awake Until..." submenu — auto-disable wake mode when a selected app quits
@@ -79,9 +82,8 @@ sudo launchctl bootstrap system /Library/LaunchDaemons/com.m3etis.clamkeep.helpe
 - About dialog now includes repository link
 
 ### 1.1.0
-- Added display wake: screen no longer dims or locks with lid open
+- Added display wake: screen no longer dims with lid open
 - Added `caffeinate` integration for active display prevention
-- Added screen lock password disable during wake mode
 - Helper daemon now supports `display_enable` / `display_disable` commands
 - Updated app icon
 

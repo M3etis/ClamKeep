@@ -1,4 +1,7 @@
 import AppKit
+import os.log
+
+private let logger = Logger(subsystem: "com.m3etis.clamkeep", category: "app")
 
 class AppDelegate: NSObject, NSApplicationDelegate {
 
@@ -19,7 +22,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var watchdog = AppWatchdog()
 
     private let wakeStartKey = "ClamKeepWakeStartTime"
-    private let expectedDaemonVersion = "1.2.1"
+    private let expectedDaemonVersion = "1.3.0"
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         watchdog.delegate = self
@@ -49,6 +52,42 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                FileManager.default.fileExists(atPath: "/usr/local/bin/clamkeep-helper.sh")
     }
 
+    private func executeInstallScript() {
+        let bundlePath = Bundle.main.resourcePath ?? ""
+        let tempDir = NSTemporaryDirectory() + "clamkeep-install-\(UUID().uuidString)"
+        do {
+            try FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            try FileManager.default.copyItem(atPath: "\(bundlePath)/clamkeep-helper.sh", toPath: "\(tempDir)/clamkeep-helper.sh")
+            try FileManager.default.copyItem(atPath: "\(bundlePath)/install-helper.sh", toPath: "\(tempDir)/install-helper.sh")
+        } catch {
+            logger.error("Failed to prepare install scripts: \(error.localizedDescription)")
+            return
+        }
+
+        let script = "do shell script \"bash \\\"\(tempDir)/install-helper.sh\\\"\" with administrator privileges"
+        var error: NSDictionary?
+        if let appleScript = NSAppleScript(source: script) {
+            appleScript.executeAndReturnError(&error)
+            if let error = error {
+                let msg = error[NSAppleScript.errorMessage] as? String ?? "Unknown error"
+                logger.error("Daemon install/update failed: \(msg)")
+                DispatchQueue.main.async {
+                    let failAlert = NSAlert()
+                    failAlert.messageText = L.installErrorTitle
+                    failAlert.informativeText = msg
+                    failAlert.alertStyle = .warning
+                    failAlert.addButton(withTitle: L.okButton)
+                    failAlert.runModal()
+                }
+            }
+        }
+        do {
+            try FileManager.default.removeItem(atPath: tempDir)
+        } catch {
+            logger.warning("Failed to clean up temp dir: \(error.localizedDescription)")
+        }
+    }
+
     private func installDaemon() {
         let alert = NSAlert()
         alert.messageText = L.installTitle
@@ -58,28 +97,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         alert.addButton(withTitle: L.cancelButton)
 
         if alert.runModal() == .alertFirstButtonReturn {
-            let bundlePath = Bundle.main.resourcePath ?? ""
-            let tempDir = "/tmp/clamkeep-install"
-            try? FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true)
-            try? FileManager.default.copyItem(atPath: "\(bundlePath)/clamkeep-helper.sh", toPath: "\(tempDir)/clamkeep-helper.sh")
-            try? FileManager.default.copyItem(atPath: "\(bundlePath)/install-helper.sh", toPath: "\(tempDir)/install-helper.sh")
-
-            let script = "do shell script \"bash \\\"\(tempDir)/install-helper.sh\\\"\" with administrator privileges"
-            var error: NSDictionary?
-            if let appleScript = NSAppleScript(source: script) {
-                appleScript.executeAndReturnError(&error)
-                if let error = error {
-                    let msg = error[NSAppleScript.errorMessage] as? String ?? "Unknown error"
-                    NSLog("ClamKeep: Install failed: \(msg)")
-                    let failAlert = NSAlert()
-                    failAlert.messageText = L.installErrorTitle
-                    failAlert.informativeText = msg
-                    failAlert.alertStyle = .warning
-                    failAlert.addButton(withTitle: "OK")
-                    failAlert.runModal()
-                }
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                self?.executeInstallScript()
             }
-            try? FileManager.default.removeItem(atPath: tempDir)
         }
     }
 
@@ -88,31 +108,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self = self else { return }
             let installed = PrivilegedShell.getDaemonVersion()
             if installed != self.expectedDaemonVersion {
-                NSLog("ClamKeep: Daemon version mismatch: installed=\(installed ?? "nil"), expected=\(self.expectedDaemonVersion)")
+                logger.warning("Daemon version mismatch: installed=\(installed ?? "nil", privacy: .public), expected=\(self.expectedDaemonVersion, privacy: .public)")
                 DispatchQueue.main.async {
-                    self.updateDaemon()
+                    let alert = NSAlert()
+                    alert.messageText = L.daemonUpdateTitle
+                    alert.informativeText = L.daemonUpdateMessage
+                    alert.alertStyle = .informational
+                    alert.addButton(withTitle: L.installButton)
+                    alert.addButton(withTitle: L.cancelButton)
+                    if alert.runModal() == .alertFirstButtonReturn {
+                        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                            self?.executeInstallScript()
+                        }
+                    }
                 }
             }
         }
-    }
-
-    private func updateDaemon() {
-        let bundlePath = Bundle.main.resourcePath ?? ""
-        let tempDir = "/tmp/clamkeep-install"
-        try? FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true)
-        try? FileManager.default.copyItem(atPath: "\(bundlePath)/clamkeep-helper.sh", toPath: "\(tempDir)/clamkeep-helper.sh")
-        try? FileManager.default.copyItem(atPath: "\(bundlePath)/install-helper.sh", toPath: "\(tempDir)/install-helper.sh")
-
-        let script = "do shell script \"bash \\\"\(tempDir)/install-helper.sh\\\"\" with administrator privileges"
-        var error: NSDictionary?
-        if let appleScript = NSAppleScript(source: script) {
-            appleScript.executeAndReturnError(&error)
-            if let error = error {
-                let msg = error[NSAppleScript.errorMessage] as? String ?? "Unknown error"
-                NSLog("ClamKeep: Daemon update failed: \(msg)")
-            }
-        }
-        try? FileManager.default.removeItem(atPath: tempDir)
     }
 
     // MARK: - Status Item
@@ -229,6 +240,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func checkInitialState() {
         allowDisplaySleep = UserDefaults.standard.bool(forKey: allowDisplaySleepKey)
 
+        // Restore watchdog target if persisted
+        if let bundleID = UserDefaults.standard.string(forKey: "ClamKeepWatchdogBundleID"),
+           let name = UserDefaults.standard.string(forKey: "ClamKeepWatchdogAppName") {
+            let pid = NSWorkspace.shared.runningApplications
+                .first { $0.bundleIdentifier == bundleID }?.processIdentifier ?? 0
+            if pid != 0 {
+                let app = WatchableApp(bundleIdentifier: bundleID, name: name, processIdentifier: pid)
+                watchdog.startWatching(app)
+            }
+        }
+
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let sleepDisabled = PrivilegedShell.isSleepDisabled()
             DispatchQueue.main.async {
@@ -272,36 +294,46 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func enableWakeMode() {
-        let sleepOk = PrivilegedShell.sendCommand("enable")
-        if !allowDisplaySleep {
-            let displayOk = PrivilegedShell.sendCommand("display_enable")
-            if !displayOk {
-                NSLog("ClamKeep: display_enable failed, sleep prevention still active")
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            let sleepOk = PrivilegedShell.sendCommand("enable")
+            if !self.allowDisplaySleep {
+                let displayOk = PrivilegedShell.sendCommand("display_enable")
+                if !displayOk {
+                    logger.error("display_enable failed, sleep prevention still active")
+                }
             }
-        }
-        if sleepOk {
-            isActive = true
-            wakeStartTime = Date()
-            UserDefaults.standard.set(wakeStartTime, forKey: wakeStartKey)
-            startCaffeinate()
-            updateUI(active: true)
-            startDisplayTimer()
+            DispatchQueue.main.async {
+                if sleepOk {
+                    self.isActive = true
+                    self.wakeStartTime = Date()
+                    UserDefaults.standard.set(self.wakeStartTime, forKey: self.wakeStartKey)
+                    self.startCaffeinate()
+                    self.updateUI(active: true)
+                    self.startDisplayTimer()
+                }
+            }
         }
     }
 
     private func disableWakeMode() {
         stopCaffeinate()
         watchdog.stopWatching()
-        let sleepOk = PrivilegedShell.sendCommand("disable")
-        if !allowDisplaySleep {
-            PrivilegedShell.sendCommand("display_disable")
-        }
-        if sleepOk {
-            isActive = false
-            wakeStartTime = nil
-            UserDefaults.standard.removeObject(forKey: wakeStartKey)
-            updateUI(active: false)
-            stopDisplayTimer()
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            let sleepOk = PrivilegedShell.sendCommand("disable")
+            if !self.allowDisplaySleep {
+                PrivilegedShell.sendCommand("display_disable")
+            }
+            DispatchQueue.main.async {
+                if sleepOk {
+                    self.isActive = false
+                    self.wakeStartTime = nil
+                    UserDefaults.standard.removeObject(forKey: self.wakeStartKey)
+                    self.updateUI(active: false)
+                    self.stopDisplayTimer()
+                }
+            }
         }
     }
 
@@ -331,8 +363,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         alert.messageText = L.aboutTitle
         alert.informativeText = L.aboutDescription
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "GitHub")
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: L.githubButton)
+        alert.addButton(withTitle: L.okButton)
         if alert.runModal() == .alertFirstButtonReturn {
             if let url = URL(string: "https://github.com/M3etis/ClamKeep") {
                 NSWorkspace.shared.open(url)
@@ -370,16 +402,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
+        process.terminationHandler = { [weak self] _ in
+            guard let self = self, self.isActive else { return }
+            logger.warning("caffeinate exited unexpectedly, restarting")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                if self.isActive {
+                    self.startCaffeinate()
+                }
+            }
+        }
         do {
             try process.run()
             caffeinateProcess = process
         } catch {
-            NSLog("ClamKeep: Failed to start caffeinate: \(error)")
+            logger.error("Failed to start caffeinate: \(error.localizedDescription)")
         }
     }
 
     private func stopCaffeinate() {
         if let process = caffeinateProcess, process.isRunning {
+            process.terminationHandler = nil
             process.terminate()
         }
         caffeinateProcess = nil
@@ -425,15 +467,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if isActive {
             stopCaffeinate()
-            if allowDisplaySleep {
-                PrivilegedShell.sendCommand("display_disable")
-            } else {
-                PrivilegedShell.sendCommand("display_enable")
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                guard let self = self else { return }
+                if self.allowDisplaySleep {
+                    PrivilegedShell.sendCommand("display_disable")
+                } else {
+                    PrivilegedShell.sendCommand("display_enable")
+                }
+                DispatchQueue.main.async {
+                    self.startCaffeinate()
+                    self.updateUI(active: self.isActive)
+                }
             }
-            startCaffeinate()
+        } else {
+            updateUI(active: isActive)
         }
-
-        updateUI(active: isActive)
     }
 
     // MARK: - Stay Awake Until
@@ -442,9 +490,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let app = sender.representedObject as? WatchableApp else { return }
 
         if watchdog.toggleWatching(app) {
+            // Persist watchdog target
+            UserDefaults.standard.set(app.bundleIdentifier, forKey: "ClamKeepWatchdogBundleID")
+            UserDefaults.standard.set(app.name, forKey: "ClamKeepWatchdogAppName")
             if !isActive {
                 enableWakeMode()
             }
+        } else {
+            UserDefaults.standard.removeObject(forKey: "ClamKeepWatchdogBundleID")
+            UserDefaults.standard.removeObject(forKey: "ClamKeepWatchdogAppName")
         }
 
         rebuildMenu()
@@ -510,6 +564,8 @@ extension AppDelegate: NSMenuItemValidation {
 
 extension AppDelegate: AppWatchdogDelegate {
     func watchdogDidDetectAppTermination(_ watchdog: AppWatchdog, app: WatchableApp) {
+        UserDefaults.standard.removeObject(forKey: "ClamKeepWatchdogBundleID")
+        UserDefaults.standard.removeObject(forKey: "ClamKeepWatchdogAppName")
         if isActive {
             disableWakeMode()
         }

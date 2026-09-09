@@ -102,11 +102,11 @@ enum L {
 
     // MARK: - About dialog
     static var aboutTitle: String { "ClamKeep" }
-    static var aboutVersion: String { "1.2.0" }
+    static var aboutVersion: String { "1.3.0" }
     static var aboutDescription: String {
         switch current {
-        case .english: return "Version 1.2.0\n\nKeeps your Mac awake with lid closed and prevents screen lock with lid open.\n\nhttps://github.com/M3etis/ClamKeep\n\nAuthor: m3etis@gmail.com"
-        case .russian: return "Версия 1.2.0\n\nДержит Mac активным при закрытой крышке и предотвращает блокировку экрана при открытой.\n\nhttps://github.com/M3etis/ClamKeep\n\nАвтор: m3etis@gmail.com"
+        case .english: return "Version 1.3.0\n\nKeeps your Mac awake with lid closed and prevents screen dimming with lid open.\n\nhttps://github.com/M3etis/ClamKeep\n\nAuthor: m3etis@gmail.com"
+        case .russian: return "Версия 1.3.0\n\nДержит Mac активным при закрытой крышке и предотвращает затемнение экрана при открытой.\n\nhttps://github.com/M3etis/ClamKeep\n\nАвтор: m3etis@gmail.com"
         }
     }
 
@@ -193,6 +193,34 @@ enum L {
         switch current {
         case .english: return "Installation Error"
         case .russian: return "Ошибка установки"
+        }
+    }
+
+    // MARK: - Daemon update dialog
+    static var daemonUpdateTitle: String {
+        switch current {
+        case .english: return "Update Component"
+        case .russian: return "Обновление компонента"
+        }
+    }
+    static var daemonUpdateMessage: String {
+        switch current {
+        case .english: return "ClamKeep needs to update its background component.\n\nAdministrator password required."
+        case .russian: return "ClamKeep нужно обновить фоновый компонент.\n\nПотребуется пароль администратора."
+        }
+    }
+
+    // MARK: - Common buttons
+    static var okButton: String {
+        switch current {
+        case .english: return "OK"
+        case .russian: return "OK"
+        }
+    }
+    static var githubButton: String {
+        switch current {
+        case .english: return "GitHub"
+        case .russian: return "GitHub"
         }
     }
 }

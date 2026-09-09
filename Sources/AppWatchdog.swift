@@ -72,8 +72,7 @@ class AppWatchdog {
     // MARK: - Private
 
     private func handleAppTerminated() {
-        guard watchedApp != nil else { return }
-        let app = watchedApp!
+        guard let app = watchedApp else { return }
         stopWatching()
         delegate?.watchdogDidDetectAppTermination(self, app: app)
     }

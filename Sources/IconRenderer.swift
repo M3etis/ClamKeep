@@ -7,30 +7,18 @@ enum IconStyle: String, CaseIterable {
     case coffee     // shield + coffee cup
     case plain      // plain shield
 
-    var displayName: String {
-        switch self {
-        case .moon:   return "Moon"
-        case .bolt:   return "Bolt"
-        case .eye:    return "Eye"
-        case .coffee: return "Coffee"
-        case .plain:  return "Shield"
-        }
-    }
-
-    var displayNameRu: String {
-        switch self {
-        case .moon:   return "Полумесяц"
-        case .bolt:   return "Молния"
-        case .eye:    return "Глаз"
-        case .coffee: return "Кофе"
-        case .plain:  return "Щит"
-        }
-    }
-
     var localizedName: String {
-        switch L.current {
-        case .english: return displayName
-        case .russian: return displayNameRu
+        switch (self, L.current) {
+        case (.moon,   .english): return "Moon"
+        case (.bolt,   .english): return "Bolt"
+        case (.eye,    .english): return "Eye"
+        case (.coffee, .english): return "Coffee"
+        case (.plain,  .english): return "Shield"
+        case (.moon,   .russian): return "Полумесяц"
+        case (.bolt,   .russian): return "Молния"
+        case (.eye,    .russian): return "Глаз"
+        case (.coffee, .russian): return "Кофе"
+        case (.plain,  .russian): return "Щит"
         }
     }
 
