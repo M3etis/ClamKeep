@@ -13,7 +13,7 @@ macOS menu bar application that keeps your Mac awake when the lid is closed and 
 - Timer showing wake mode duration
 - Launch at login (SMAppService)
 - Passwordless operation via privileged helper daemon
-- English and Russian interface with language switcher
+- English, Russian, and Kazakh interface with language switcher
 - No external dependencies
 - Universal binary (Apple Silicon + Intel)
 
@@ -29,9 +29,11 @@ macOS menu bar application that keeps your Mac awake when the lid is closed and 
 
 ### From DMG
 
-1. Download `ClamKeep-1.3.0.dmg` from [Releases](https://github.com/M3etis/ClamKeep/releases)
+1. Download `ClamKeep-1.3.1.dmg` from [Releases](https://github.com/M3etis/ClamKeep/releases)
 2. Open the DMG and drag ClamKeep to Applications
 3. Launch ClamKeep — on first run, approve the helper daemon installation (one-time password)
+
+The helper daemon is installed automatically on first launch. When a new version requires a daemon update, ClamKeep will prompt you — no manual steps needed.
 
 ### From Source
 
@@ -50,19 +52,9 @@ make dmg      # Create DMG installer
 4. **"Stay Awake Until..."** — pick a running app; wake mode auto-disables when that app quits
 5. Open **Settings** to configure:
    - **Launch at Login** — start ClamKeep automatically on login
-   - **Language** — switch between English and Russian
+   - **Language** — switch between English, Russian, and Kazakh
    - **Icon** — choose between Moon, Bolt, Eye, Coffee, or Shield styles
 6. Select **"Disable Wake Mode"** to restore normal sleep behavior
-
-## Updating the Helper Daemon
-
-When updating ClamKeep, the helper daemon must also be updated:
-
-```bash
-sudo cp /Applications/ClamKeep.app/Contents/Resources/clamkeep-helper.sh /usr/local/bin/clamkeep-helper.sh
-sudo launchctl bootout system/com.m3etis.clamkeep.helper 2>/dev/null
-sudo launchctl bootstrap system /Library/LaunchDaemons/com.m3etis.clamkeep.helper.plist
-```
 
 ## Requirements
 
@@ -71,9 +63,18 @@ sudo launchctl bootstrap system /Library/LaunchDaemons/com.m3etis.clamkeep.helpe
 
 ## Changelog
 
+### 1.3.1
+- Fixed IPC permissions that prevented Wake Mode from working after update (directory 1731→1733, result file 600→644)
+- Unified setup flow: single dialog for both fresh install and daemon update
+- System password prompt now shows a clear explanation of why admin privileges are needed
+- Added Kazakh localization
+
 ### 1.3.0
 - Removed screen lock override: Lock Screen (automatic and manual) now works normally during wake mode
 - `display_enable` no longer sets `askForPassword = 0`
+- Moved IPC directory from `/tmp/clamkeep` to `/Library/Application Support/com.m3etis.clamkeep`
+- Added command allowlist validation in helper daemon
+- Security hardening: restricted IPC file permissions
 
 ### 1.2.0
 - Added "Allow Display Sleep" option — system stays awake while screen can turn off

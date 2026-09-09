@@ -29,10 +29,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupStatusItem()
         setupMenu()
 
-        if !isDaemonInstalled() {
-            installDaemon()
-        } else {
-            checkDaemonVersion()
+        if !isDaemonInstalled() || !isDaemonUpToDate() {
+            setupDaemon()
         }
 
         checkInitialState()
@@ -52,6 +50,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                FileManager.default.fileExists(atPath: "/usr/local/bin/clamkeep-helper.sh")
     }
 
+    private func isDaemonUpToDate() -> Bool {
+        let installed = PrivilegedShell.getDaemonVersion()
+        return installed == expectedDaemonVersion
+    }
+
+    private func setupDaemon() {
+        let alert = NSAlert()
+        alert.messageText = L.setupTitle
+        alert.informativeText = L.setupMessage
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: L.setupButton)
+        alert.addButton(withTitle: L.cancelButton)
+
+        if alert.runModal() == .alertFirstButtonReturn {
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                self?.executeInstallScript()
+            }
+        }
+    }
+
     private func executeInstallScript() {
         let bundlePath = Bundle.main.resourcePath ?? ""
         let tempDir = NSTemporaryDirectory() + "clamkeep-install-\(UUID().uuidString)"
@@ -64,16 +82,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let script = "do shell script \"bash \\\"\(tempDir)/install-helper.sh\\\"\" with administrator privileges"
+        let escapedPrompt = L.promptExplanation
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+        let script = "do shell script \"bash \\\"\(tempDir)/install-helper.sh\\\"\" with administrator privileges with prompt \"\(escapedPrompt)\""
         var error: NSDictionary?
         if let appleScript = NSAppleScript(source: script) {
             appleScript.executeAndReturnError(&error)
             if let error = error {
                 let msg = error[NSAppleScript.errorMessage] as? String ?? "Unknown error"
-                logger.error("Daemon install/update failed: \(msg)")
+                logger.error("Daemon setup failed: \(msg)")
                 DispatchQueue.main.async {
                     let failAlert = NSAlert()
-                    failAlert.messageText = L.installErrorTitle
+                    failAlert.messageText = L.setupErrorTitle
                     failAlert.informativeText = msg
                     failAlert.alertStyle = .warning
                     failAlert.addButton(withTitle: L.okButton)
@@ -85,44 +106,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             try FileManager.default.removeItem(atPath: tempDir)
         } catch {
             logger.warning("Failed to clean up temp dir: \(error.localizedDescription)")
-        }
-    }
-
-    private func installDaemon() {
-        let alert = NSAlert()
-        alert.messageText = L.installTitle
-        alert.informativeText = L.installMessage
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: L.installButton)
-        alert.addButton(withTitle: L.cancelButton)
-
-        if alert.runModal() == .alertFirstButtonReturn {
-            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                self?.executeInstallScript()
-            }
-        }
-    }
-
-    private func checkDaemonVersion() {
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            guard let self = self else { return }
-            let installed = PrivilegedShell.getDaemonVersion()
-            if installed != self.expectedDaemonVersion {
-                logger.warning("Daemon version mismatch: installed=\(installed ?? "nil", privacy: .public), expected=\(self.expectedDaemonVersion, privacy: .public)")
-                DispatchQueue.main.async {
-                    let alert = NSAlert()
-                    alert.messageText = L.daemonUpdateTitle
-                    alert.informativeText = L.daemonUpdateMessage
-                    alert.alertStyle = .informational
-                    alert.addButton(withTitle: L.installButton)
-                    alert.addButton(withTitle: L.cancelButton)
-                    if alert.runModal() == .alertFirstButtonReturn {
-                        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                            self?.executeInstallScript()
-                        }
-                    }
-                }
-            }
         }
     }
 

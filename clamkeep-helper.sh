@@ -13,9 +13,9 @@ setup_ipc() {
     if [ ! -d "${IPC_DIR}" ]; then
         mkdir -p "${IPC_DIR}"
     fi
-    chmod 1731 "${IPC_DIR}"
+    chmod 1733 "${IPC_DIR}"
     chmod 600 "${TRIGGER_FILE}" 2>/dev/null || true
-    chmod 600 "${RESULT_FILE}" 2>/dev/null || true
+    chmod 644 "${RESULT_FILE}" 2>/dev/null || true
 }
 
 setup_ipc
@@ -58,7 +58,7 @@ while true; do
 
         if ! is_valid_command "${CMD}"; then
             echo "error unknown_command" > "${RESULT_FILE}"
-            chmod 600 "${RESULT_FILE}"
+            chmod 644 "${RESULT_FILE}"
             rm -f "${TRIGGER_FILE}"
             sleep 0.2
             continue
@@ -84,7 +84,7 @@ while true; do
             echo "ok ${STATUS}" > "${RESULT_FILE}"
         fi
 
-        chmod 600 "${RESULT_FILE}"
+        chmod 644 "${RESULT_FILE}"
         rm -f "${TRIGGER_FILE}"
     fi
     sleep 0.2

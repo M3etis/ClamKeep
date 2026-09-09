@@ -19,6 +19,11 @@ enum IconStyle: String, CaseIterable {
         case (.eye,    .russian): return "Глаз"
         case (.coffee, .russian): return "Кофе"
         case (.plain,  .russian): return "Щит"
+        case (.moon,   .kazakh):  return "Ай"
+        case (.bolt,   .kazakh):  return "Найзағай"
+        case (.eye,    .kazakh):  return "Көз"
+        case (.coffee, .kazakh):  return "Кофе"
+        case (.plain,  .kazakh):  return "Қалқан"
         }
     }
 

@@ -29,7 +29,7 @@ chmod 755 "${HELPER_SCRIPT}"
 
 # Create IPC directory with restricted permissions
 mkdir -p "${IPC_DIR}"
-chmod 1731 "${IPC_DIR}"
+chmod 1733 "${IPC_DIR}"
 
 # Create launchd plist with secure logging
 cat > "${PLIST_FILE}" <<EOF

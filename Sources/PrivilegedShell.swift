@@ -12,7 +12,7 @@ enum PrivilegedShell {
     @discardableResult
     static func sendCommand(_ command: String) -> Bool {
         do {
-            try FileManager.default.createDirectory(atPath: ipcDir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o731])
+            try FileManager.default.createDirectory(atPath: ipcDir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o733])
         } catch {
             logger.error("Failed to create IPC directory: \(error.localizedDescription)")
             return false
@@ -48,7 +48,7 @@ enum PrivilegedShell {
 
     static func getDaemonVersion() -> String? {
         do {
-            try FileManager.default.createDirectory(atPath: ipcDir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o731])
+            try FileManager.default.createDirectory(atPath: ipcDir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o733])
         } catch {
             logger.error("Failed to create IPC directory: \(error.localizedDescription)")
             return nil

@@ -6,7 +6,7 @@ set -euo pipefail
 # ============================================================
 
 APP_NAME="ClamKeep"
-VERSION="1.3.0"
+VERSION="1.3.1"
 DMG_NAME="${APP_NAME}-${VERSION}.dmg"
 VOLUME_NAME="${APP_NAME}"
 STAGING_DIR="build/dmg_staging"
