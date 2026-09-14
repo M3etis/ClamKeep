@@ -10,14 +10,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var timerMenuItem: NSMenuItem!
     private var toggleMenuItem: NSMenuItem!
     private var keepScreenOnMenuItem: NSMenuItem!
+    private var downloadMonitorMenuItem: NSMenuItem!
     private var stayAwakeSubmenu: NSMenu!
 
     private var isActive = false
     private var wakeStartTime: Date?
     private var displayTimer: Timer?
     private var caffeinateProcess: Process?
-    private var allowDisplaySleep = false
-    private let allowDisplaySleepKey = "ClamKeepAllowDisplaySleep"
+    private var preventDisplaySleep = false
+    private let preventDisplaySleepKey = "ClamKeepPreventDisplaySleep"
+    private var downloadMonitorEnabled = false
+    private let downloadMonitorKey = "ClamKeepDownloadMonitor"
+    private var downloadMonitorTimer: Timer?
 
     private var watchdog = AppWatchdog()
 
@@ -37,6 +41,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        stopDownloadMonitor()
         if isActive {
             disableWakeMode()
         }
@@ -141,14 +146,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         toggleMenuItem.state = isActive ? .on : .off
         menu.addItem(toggleMenuItem)
 
-        // Allow Display Sleep toggle
+        // Prevent Display Sleep toggle
         keepScreenOnMenuItem = NSMenuItem(title: L.keepScreenOn, action: #selector(toggleKeepScreenOn), keyEquivalent: "s")
         keepScreenOnMenuItem.target = self
-        keepScreenOnMenuItem.state = allowDisplaySleep ? .on : .off
+        keepScreenOnMenuItem.state = preventDisplaySleep ? .on : .off
         keepScreenOnMenuItem.isEnabled = isActive
         menu.addItem(keepScreenOnMenuItem)
 
-        // Stay Awake Until submenu
+        // Don't Sleep During Downloads toggle
+        downloadMonitorMenuItem = NSMenuItem(title: L.dontSleepDuringDownloads, action: #selector(toggleDownloadMonitor), keyEquivalent: "d")
+        downloadMonitorMenuItem.target = self
+        downloadMonitorMenuItem.state = downloadMonitorEnabled ? .on : .off
+        menu.addItem(downloadMonitorMenuItem)
+
+        // Stay Awake While App Active submenu
         let stayAwakeItem = NSMenuItem(title: L.stayAwakeUntil, action: nil, keyEquivalent: "")
         stayAwakeSubmenu = NSMenu()
         stayAwakeSubmenu.delegate = self
@@ -221,7 +232,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - State
 
     private func checkInitialState() {
-        allowDisplaySleep = UserDefaults.standard.bool(forKey: allowDisplaySleepKey)
+        preventDisplaySleep = UserDefaults.standard.bool(forKey: preventDisplaySleepKey)
+        downloadMonitorEnabled = UserDefaults.standard.bool(forKey: downloadMonitorKey)
+        if downloadMonitorEnabled {
+            startDownloadMonitor()
+        }
 
         // Restore watchdog target if persisted
         if let bundleID = UserDefaults.standard.string(forKey: "ClamKeepWatchdogBundleID"),
@@ -255,9 +270,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         toggleMenuItem.state = active ? .on : .off
         timerMenuItem.isHidden = !active
         keepScreenOnMenuItem.isEnabled = active
-        keepScreenOnMenuItem.state = allowDisplaySleep ? .on : .off
+        keepScreenOnMenuItem.state = preventDisplaySleep ? .on : .off
+        downloadMonitorMenuItem.state = downloadMonitorEnabled ? .on : .off
 
-        if active && allowDisplaySleep {
+        if active && !preventDisplaySleep {
             statusItem.button?.image = IconRenderer.makeIcon(style: IconStyle.current, active: true, displaySleepAllowed: true)
             statusMenuItem.title = L.statusActiveDisplaySleep
         } else {
@@ -280,7 +296,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
             let sleepOk = PrivilegedShell.sendCommand("enable")
-            if !self.allowDisplaySleep {
+            if self.preventDisplaySleep {
                 let displayOk = PrivilegedShell.sendCommand("display_enable")
                 if !displayOk {
                     logger.error("display_enable failed, sleep prevention still active")
@@ -305,7 +321,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
             let sleepOk = PrivilegedShell.sendCommand("disable")
-            if !self.allowDisplaySleep {
+            if self.preventDisplaySleep {
                 PrivilegedShell.sendCommand("display_disable")
             }
             DispatchQueue.main.async {
@@ -378,10 +394,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         stopCaffeinate()
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/caffeinate")
-        if allowDisplaySleep {
-            process.arguments = ["-i"]
-        } else {
+        if preventDisplaySleep {
             process.arguments = ["-u", "-i"]
+        } else {
+            process.arguments = ["-i"]
         }
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
@@ -442,20 +458,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // MARK: - Allow Display Sleep
+    // MARK: - Prevent Display Sleep
 
     @objc private func toggleKeepScreenOn() {
-        allowDisplaySleep.toggle()
-        UserDefaults.standard.set(allowDisplaySleep, forKey: allowDisplaySleepKey)
+        preventDisplaySleep.toggle()
+        UserDefaults.standard.set(preventDisplaySleep, forKey: preventDisplaySleepKey)
 
         if isActive {
             stopCaffeinate()
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 guard let self = self else { return }
-                if self.allowDisplaySleep {
-                    PrivilegedShell.sendCommand("display_disable")
-                } else {
+                if self.preventDisplaySleep {
                     PrivilegedShell.sendCommand("display_enable")
+                } else {
+                    PrivilegedShell.sendCommand("display_disable")
                 }
                 DispatchQueue.main.async {
                     self.startCaffeinate()
@@ -467,7 +483,97 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // MARK: - Stay Awake Until
+    // MARK: - Download Monitor
+
+    @objc private func toggleDownloadMonitor() {
+        downloadMonitorEnabled.toggle()
+        UserDefaults.standard.set(downloadMonitorEnabled, forKey: downloadMonitorKey)
+
+        if downloadMonitorEnabled {
+            startDownloadMonitor()
+        } else {
+            stopDownloadMonitor()
+        }
+
+        updateUI(active: isActive)
+    }
+
+    private func startDownloadMonitor() {
+        stopDownloadMonitor()
+        downloadMonitorTimer = Timer(timeInterval: 15.0, repeats: true) { [weak self] _ in
+            self?.checkDownloads()
+        }
+        RunLoop.main.add(downloadMonitorTimer!, forMode: .common)
+    }
+
+    private func stopDownloadMonitor() {
+        downloadMonitorTimer?.invalidate()
+        downloadMonitorTimer = nil
+    }
+
+    private func checkDownloads() {
+        guard downloadMonitorEnabled else { return }
+
+        let hasDownloads = hasActiveDownloads()
+
+        if hasDownloads && !isActive {
+            enableWakeMode()
+        } else if !hasDownloads && isActive {
+            stopDownloadMonitor()
+            downloadMonitorEnabled = false
+            UserDefaults.standard.set(false, forKey: downloadMonitorKey)
+            disableWakeMode()
+        }
+    }
+
+    private func hasActiveDownloads() -> Bool {
+        let downloadProcesses = ["curl", "wget", "aria2c", "httpdownloader"]
+
+        for name in downloadProcesses {
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
+            task.arguments = ["-x", name]
+            task.standardOutput = FileHandle.nullDevice
+            task.standardError = FileHandle.nullDevice
+
+            do {
+                try task.run()
+                task.waitUntilExit()
+                if task.terminationStatus == 0 {
+                    return true
+                }
+            } catch {
+                continue
+            }
+        }
+
+        // Also check for NSURLSession downloads (used by browsers and download managers)
+        let networkTask = Process()
+        networkTask.executableURL = URL(fileURLWithPath: "/usr/sbin/netstat")
+        networkTask.arguments = ["-n"]
+        let pipe = Pipe()
+        networkTask.standardOutput = pipe
+        networkTask.standardError = FileHandle.nullDevice
+
+        do {
+            try networkTask.run()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            networkTask.waitUntilExit()
+            if let output = String(data: data, encoding: .utf8) {
+                let establishedCount = output.components(separatedBy: "\n")
+                    .filter { $0.contains("ESTABLISHED") }.count
+                if establishedCount > 5 {
+                    return true
+                }
+            }
+        } catch {
+            // ignore
+        }
+
+        return false
+    }
+
+    // MARK: - Stay Awake While App Active
 
     @objc private func toggleStayAwakeForApp(_ sender: NSMenuItem) {
         guard let app = sender.representedObject as? WatchableApp else { return }

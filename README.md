@@ -6,8 +6,9 @@ macOS menu bar application that keeps your Mac awake when the lid is closed and 
 
 - Prevents sleep with closed lid via `pmset disablesleep`
 - Prevents screen dimming with open lid via `caffeinate`
-- **Allow Display Sleep** — let the screen turn off while the system stays awake (amber icon)
-- **Stay Awake Until...** — automatically disable wake mode when a selected app quits
+- **Prevent Display Sleep** — keep the screen on while the system stays awake (amber icon when display sleep is allowed)
+- **Don't Sleep During Downloads** — automatically enable wake mode when download processes (curl, wget, aria2c) or active network connections are detected
+- **Don't Sleep While Active App...** — automatically disable wake mode when a selected app quits
 - Minimalist menu bar icon (shield + symbol) with 5 style variants
 - Green icon when wake mode is active, amber when display sleep is allowed
 - Timer showing wake mode duration
@@ -22,14 +23,14 @@ macOS menu bar application that keeps your Mac awake when the lid is closed and 
 | State | Display | Lid Open | Lid Closed |
 |-------|---------|----------|------------|
 | Wake Mode ON | Screen stays on | Lock screen works normally | Screen off (hardware), system stays awake |
-| Wake Mode ON + Allow Display Sleep | Screen can turn off | Lock screen works normally, system stays awake | System stays awake |
+| Wake Mode ON + Prevent Display Sleep | Screen stays on | Lock screen works normally | System stays awake |
 | Wake Mode OFF | Standard macOS | Standard macOS | Standard macOS |
 
 ## Installation
 
 ### From DMG
 
-1. Download `ClamKeep-1.3.1.dmg` from [Releases](https://github.com/M3etis/ClamKeep/releases)
+1. Download `ClamKeep-1.4.0.dmg` from [Releases](https://github.com/M3etis/ClamKeep/releases)
 2. Open the DMG and drag ClamKeep to Applications
 3. Launch ClamKeep — on first run, approve the helper daemon installation (one-time password)
 
@@ -48,13 +49,14 @@ make dmg      # Create DMG installer
 
 1. Click the shield icon in the menu bar to open the menu
 2. Select **"Enable Wake Mode"** to prevent sleep — the icon turns green and a timer starts
-3. **"Allow Display Sleep"** — toggle to let the screen turn off while keeping the system awake (icon turns amber)
-4. **"Stay Awake Until..."** — pick a running app; wake mode auto-disables when that app quits
-5. Open **Settings** to configure:
+3. **"Prevent Display Sleep"** — toggle to keep the screen on while the system stays awake (icon turns amber when display sleep is allowed)
+4. **"Don't Sleep During Downloads"** — automatically keep the system awake while download processes or active network connections are detected
+5. **"Don't Sleep While Active App..."** — pick a running app; wake mode auto-disables when that app quits
+6. Open **Settings** to configure:
    - **Launch at Login** — start ClamKeep automatically on login
    - **Language** — switch between English, Russian, and Kazakh
    - **Icon** — choose between Moon, Bolt, Eye, Coffee, or Shield styles
-6. Select **"Disable Wake Mode"** to restore normal sleep behavior
+7. Select **"Disable Wake Mode"** to restore normal sleep behavior
 
 ## Requirements
 
@@ -62,6 +64,12 @@ make dmg      # Create DMG installer
 - Xcode Command Line Tools (for building from source)
 
 ## Changelog
+
+### 1.4.0
+- Added "Don't Sleep During Downloads" — monitors download processes (curl, wget, aria2c) and active network connections, automatically enabling wake mode when downloads are detected
+- Renamed "Allow Display Sleep" to "Prevent Display Sleep" with inverted logic for clearer semantics
+- Renamed "Stay Awake Until..." to "Don't Sleep While Active App..." for better clarity
+- Updated localization strings for all three languages (EN, RU, KZ)
 
 ### 1.3.1
 - Fixed IPC permissions that prevented Wake Mode from working after update (directory 1731→1733, result file 600→644)

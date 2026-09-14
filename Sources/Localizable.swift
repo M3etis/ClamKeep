@@ -115,12 +115,12 @@ enum L {
 
     // MARK: - About dialog
     static var aboutTitle: String { "ClamKeep" }
-    static var aboutVersion: String { "1.3.1" }
+    static var aboutVersion: String { "1.4.0" }
     static var aboutDescription: String {
         switch current {
-        case .english: return "Version 1.3.1\n\nKeeps your Mac awake with lid closed and prevents screen dimming with lid open.\n\nhttps://github.com/M3etis/ClamKeep\n\nAuthor: m3etis@gmail.com"
-        case .russian: return "Версия 1.3.1\n\nДержит Mac активным при закрытой крышке и предотвращает затемнение экрана при открытой.\n\nhttps://github.com/M3etis/ClamKeep\n\nАвтор: m3etis@gmail.com"
-        case .kazakh:  return "Нұсқа 1.3.1\n\nMac құрылғыңызды қақпағы жабылған кезде ояу ұстайды және қақпағы ашылған кезде экранның өшуіне жол бермейді.\n\nhttps://github.com/M3etis/ClamKeep\n\nАвтор: m3etis@gmail.com"
+        case .english: return "Version 1.4.0\n\nKeeps your Mac awake with lid closed and prevents screen dimming with lid open.\n\nhttps://github.com/M3etis/ClamKeep\n\nAuthor: m3etis@gmail.com"
+        case .russian: return "Версия 1.4.0\n\nДержит Mac активным при закрытой крышке и предотвращает затемнение экрана при открытой.\n\nhttps://github.com/M3etis/ClamKeep\n\nАвтор: m3etis@gmail.com"
+        case .kazakh:  return "Нұсқа 1.4.0\n\nMac құрылғыңызды қақпағы жабылған кезде ояу ұстайды және қақпағы ашылған кезде экранның өшуіне жол бермейді.\n\nhttps://github.com/M3etis/ClamKeep\n\nАвтор: m3etis@gmail.com"
         }
     }
 
@@ -157,9 +157,9 @@ enum L {
     // MARK: - Display Sleep Option
     static var keepScreenOn: String {
         switch current {
-        case .english: return "Allow Display Sleep"
-        case .russian: return "Разрешить сон дисплея"
-        case .kazakh:  return "Дисплей ұйқысына рұқсат ету"
+        case .english: return "Prevent Display Sleep"
+        case .russian: return "Запретить сон дисплея"
+        case .kazakh:  return "Дисплей ұйқысына тыйым салу"
         }
     }
     static var statusActiveDisplaySleep: String {
@@ -170,12 +170,21 @@ enum L {
         }
     }
 
-    // MARK: - Stay Awake Until
+    // MARK: - Don't Sleep During Downloads
+    static var dontSleepDuringDownloads: String {
+        switch current {
+        case .english: return "Don't Sleep During Downloads"
+        case .russian: return "Не засыпать пока идет загрузка"
+        case .kazakh:  return "Жүктеу кезінде ұйықтамау"
+        }
+    }
+
+    // MARK: - Stay Awake While App Active
     static var stayAwakeUntil: String {
         switch current {
-        case .english: return "Stay Awake Until…"
-        case .russian: return "Не засыпать до…"
-        case .kazakh:  return "Ояу болып тұру…"
+        case .english: return "Don't Sleep While Active App…"
+        case .russian: return "Не засыпать пока активное приложение…"
+        case .kazakh:  return "Белсенді қолданба кезінде ұйықтамау…"
         }
     }
     static var noRunningApps: String {
