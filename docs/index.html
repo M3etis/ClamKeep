@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ClamKeep — keep your Mac awake</title>
+  <meta name="description" content="ClamKeep is a macOS menu bar app that keeps your Mac awake with the lid closed. Screen stays on and auto-lock waits by default — Allow Display Sleep / Allow Auto Lock are optional exceptions." />
+  <style>
+    :root {
+      --bg: #1c1c1e;
+      --card: #2a2a2e;
+      --text: #ebebf0;
+      --muted: #9898a0;
+      --green: #4cc864;
+      --amber: #ffb340;
+      --blue: #60a5fa;
+      --border: #464650;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 48px 24px 80px; }
+    header h1 {
+      font-size: 2.4rem;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+    .tagline { color: var(--muted); font-size: 1.15rem; margin: 0 0 28px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 36px; }
+    .btn {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .btn-primary { background: var(--green); color: #0b1a0f; }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn:hover { filter: brightness(1.08); text-decoration: none; }
+    .hero {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      margin-bottom: 40px;
+      display: block;
+    }
+    h2 {
+      font-size: 1.35rem;
+      margin: 36px 0 14px;
+      letter-spacing: -0.01em;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      display: inline-block;
+    }
+    .dot.g { background: var(--green); }
+    .dot.a { background: var(--amber); }
+    .dot.b { background: var(--blue); }
+    .dot.m { background: var(--muted); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      margin-top: 8px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--card); }
+    .changelog {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 22px;
+    }
+    .changelog h3 { margin-top: 22px; }
+    .changelog ul { margin: 8px 0 0; padding-left: 1.2em; color: var(--muted); }
+    .changelog li { margin: 4px 0; }
+    footer {
+      margin-top: 48px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    code {
+      background: #222226;
+      padding: 1px 6px;
+      border-radius: 5px;
+      font-size: 0.88em;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>ClamKeep 1.7.0</h1>
+      <p class="tagline">Menu bar utility for macOS — keep your Mac awake with the lid closed. Screen stays on and auto-lock waits by default.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="https://github.com/M3etis/ClamKeep/releases/latest">Download DMG</a>
+        <a class="btn btn-secondary" href="https://github.com/M3etis/ClamKeep">View on GitHub</a>
+      </div>
+    </header>
+
+    <img class="hero" src="screenshot.png" alt="ClamKeep 1.7.0 menu and features" width="1280" height="800" />
+
+    <h2>Features</h2>
+    <div class="grid">
+      <div class="card">
+        <h3><span class="dot g"></span>Wake Mode</h3>
+        <p>Everything at once: keeps your Mac awake with the lid closed, keeps the screen on, and delays auto-lock.</p>
+      </div>
+      <div class="card">
+        <h3><span class="dot g"></span>Allow Display Sleep</h3>
+        <p>Exception: lets the screen turn off while Wake Mode is on. Off by default.</p>
+      </div>
+      <div class="card">
+        <h3><span class="dot g"></span>Allow Auto Lock</h3>
+        <p>Exception: lets the Mac lock after idle while Wake Mode is on. Off by default. Manual lock (⌃⌘Q) is always immediate.</p>
+      </div>
+      <div class="card">
+        <h3><span class="dot a"></span>Don't Sleep During Downloads</h3>
+        <p>Standing policy: holds wake for download processes and recent activity in your Downloads folder.</p>
+      </div>
+      <div class="card">
+        <h3><span class="dot a"></span>Don't Sleep While Active App…</h3>
+        <p>Keeps wake on while a selected app runs. When it quits, only that reason is cleared.</p>
+      </div>
+      <div class="card">
+        <h3><span class="dot b"></span>Auto-off Timer</h3>
+        <p>5–60 minute presets or custom hours:minutes. The menu header shows a live countdown.</p>
+      </div>
+      <div class="card">
+        <h3><span class="dot m"></span>Wake reasons</h3>
+        <p>manual / downloads / watched app — one source ending does not cancel the others.</p>
+      </div>
+      <div class="card">
+        <h3><span class="dot m"></span>Extras</h3>
+        <p>EN / RU / KK, launch at login, five icon styles, universal binary, passwordless helper.</p>
+      </div>
+    </div>
+
+    <h2>Behavior</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>State</th>
+          <th>Display</th>
+          <th>Auto lock</th>
+          <th>Lid closed</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Wake Mode (default)</td>
+          <td>Screen stays on</td>
+          <td>Delayed</td>
+          <td>Screen off (hardware), system awake</td>
+        </tr>
+        <tr>
+          <td>+ Allow Display Sleep</td>
+          <td>Display may sleep</td>
+          <td>Delayed</td>
+          <td>Screen off (hardware), system awake</td>
+        </tr>
+        <tr>
+          <td>+ Allow Auto Lock</td>
+          <td>Screen stays on (unless also allowed)</td>
+          <td>Normal after idle; manual lock immediate</td>
+          <td>Screen off (hardware), system awake</td>
+        </tr>
+        <tr>
+          <td>+ Auto-off Timer</td>
+          <td colspan="3">Header countdown; session ends at 00:00:00</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Install</h2>
+    <ol>
+      <li>Download <code>ClamKeep-1.7.0.dmg</code> from <a href="https://github.com/M3etis/ClamKeep/releases/latest">Releases</a></li>
+      <li>Drag ClamKeep to <strong>Applications</strong></li>
+      <li>Launch and approve the one-time helper daemon install (admin password)</li>
+    </ol>
+    <p>Requires macOS 13+. Universal binary (Apple Silicon + Intel).</p>
+
+    <h2>Changelog</h2>
+    <div class="changelog">
+      <h3>1.7.0</h3>
+      <ul>
+        <li>Wake Mode does everything at once: Mac awake, display on, auto-lock delayed</li>
+        <li>Child options are exceptions: <strong>Allow Display Sleep</strong> / <strong>Allow Auto Lock</strong> (defaults OFF)</li>
+        <li>Existing preferences migrate automatically (same effective behavior)</li>
+        <li>Menu header chips show hold vs allowed state</li>
+        <li>About and docs explain every feature in plain language</li>
+        <li>Manual lock (⌘⌃Q) still locks immediately</li>
+      </ul>
+      <h3>1.6.0</h3>
+      <ul>
+        <li>Single <strong>Wake Mode</strong> toggle (replaces Enable/Disable Wake Mode)</li>
+        <li><strong>Auto-off Timer</strong>: 5–60 min presets and custom hours/minutes; header countdown</li>
+        <li>Active options: green title + <strong>ON</strong> in the system shortcut column</li>
+        <li>Turning Wake Mode off ends the session (timer, app watchdog, download policy)</li>
+        <li>Header shows only modes that are actually holding the system</li>
+        <li>Fixed Custom Timer dialog layout</li>
+      </ul>
+      <h3>1.5.0</h3>
+      <ul>
+        <li>Added <strong>Prevent Auto Lock</strong></li>
+        <li>Wake reasons (manual / downloads / app) no longer cancel each other</li>
+        <li>Standing download policy with <code>~/Downloads</code> activity detection</li>
+        <li><code>caffeinate -d</code> for display sleep prevention</li>
+        <li>Synchronous wake teardown on quit</li>
+      </ul>
+      <h3>1.4.0</h3>
+      <ul>
+        <li>Download monitor, Prevent Display Sleep rename, Don't Sleep While Active App</li>
+      </ul>
+    </div>
+
+    <footer>
+      ClamKeep 1.7.0 · <a href="https://github.com/M3etis/ClamKeep">github.com/M3etis/ClamKeep</a> · m3etis@gmail.com
+    </footer>
+  </div>
+</body>
+</html>
