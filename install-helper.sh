@@ -25,6 +25,7 @@ info "Installing helper daemon..."
 launchctl bootout system/com.m3etis.clamkeep.helper 2>/dev/null || true
 
 # Copy helper script
+mkdir -p "$(dirname "${HELPER_SCRIPT}")"
 cp "${SCRIPT_DIR}/clamkeep-helper.sh" "${HELPER_SCRIPT}"
 chmod 755 "${HELPER_SCRIPT}"
 
