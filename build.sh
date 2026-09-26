@@ -7,8 +7,8 @@ set -euo pipefail
 
 APP_NAME="ClamKeep"
 BUNDLE_ID="com.m3etis.clamkeep"
-VERSION="1.8.0"
-BUILD_NUMBER="9"
+VERSION="1.8.1"
+BUILD_NUMBER="10"
 MIN_MACOS="13.0"
 
 BUILD_DIR="build"
