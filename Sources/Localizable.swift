@@ -367,6 +367,57 @@ enum L {
         }
     }
 
+    // MARK: - System metrics
+    static func battery(_ percent: Int, charging: Bool) -> String {
+        let state: String
+        switch current {
+        case .english: state = charging ? "charging" : "discharging"
+        case .russian: state = charging ? "заряжается" : "разряжается"
+        case .kazakh:  state = charging ? "зарядталуда" : "босап жатыр"
+        }
+        switch current {
+        case .english: return "Battery: \(percent)% (\(state))"
+        case .russian: return "Батарея: \(percent)% (\(state))"
+        case .kazakh:  return "Батарея: \(percent)% (\(state))"
+        }
+    }
+    static func cpuLoad(_ percent: Int) -> String {
+        switch current {
+        case .english: return "CPU: \(percent)%"
+        case .russian: return "ЦП: \(percent)%"
+        case .kazakh:  return "CPU: \(percent)%"
+        }
+    }
+    static func ramUsage(usedGB: String, totalGB: String, percent: Int) -> String {
+        switch current {
+        case .english: return "RAM: \(usedGB) / \(totalGB) GB (\(percent)%)"
+        case .russian: return "ОЗУ: \(usedGB) / \(totalGB) ГБ (\(percent)%)"
+        case .kazakh:  return "ЖЖҚ: \(usedGB) / \(totalGB) ГБ (\(percent)%)"
+        }
+    }
+    static func temperature(_ celsius: Int) -> String {
+        switch current {
+        case .english: return "Temperature: \(celsius)°C"
+        case .russian: return "Температура: \(celsius)°C"
+        case .kazakh:  return "Температура: \(celsius)°C"
+        }
+    }
+    static func fans(_ rpm: Int) -> String {
+        switch current {
+        case .english: return "Fans: \(rpm) RPM"
+        case .russian: return "Вентилятор: \(rpm) об/мин"
+        case .kazakh:  return "Желдеткіш: \(rpm) айн/мин"
+        }
+    }
+    static func fansMulti(_ list: [Int]) -> String {
+        let joined = list.map(String.init).joined(separator: " / ")
+        switch current {
+        case .english: return "Fans: \(joined) RPM"
+        case .russian: return "Вентиляторы: \(joined) об/мин"
+        case .kazakh:  return "Желдеткіштер: \(joined) айн/мин"
+        }
+    }
+
     // MARK: - Common buttons
     static var okButton: String {
         switch current {

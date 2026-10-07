@@ -25,6 +25,7 @@ SWIFT_SOURCES=(
     "Sources/Localizable.swift"
     "Sources/IconRenderer.swift"
     "Sources/AppWatchdog.swift"
+    "Sources/SystemMetrics.swift"
 )
 
 ENTITLEMENTS_FILE="ClamKeep.entitlements"
@@ -116,6 +117,7 @@ for ARCH in "${ARCHS[@]}"; do
         "${SWIFT_SOURCES[@]}" \
         -framework AppKit \
         -framework ServiceManagement \
+        -framework IOKit \
         -O \
         -whole-module-optimization \
         -target "${ARCH}-apple-macos${MIN_MACOS}" \

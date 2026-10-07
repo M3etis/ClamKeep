@@ -23,6 +23,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var stayAwakeSubmenu: NSMenu!
     private var timerSubmenuItem: NSMenuItem!
     private var timerSubmenu: NSMenu!
+    private var batteryMenuItem: NSMenuItem!
+    private var cpuMenuItem: NSMenuItem!
+    private var ramMenuItem: NSMenuItem!
+    private var temperatureMenuItem: NSMenuItem!
+    private var fansMenuItem: NSMenuItem!
 
     private var isActive = false
     private var wakeStartTime: Date?
@@ -234,6 +239,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         stayAwakeMenuItem.submenu = stayAwakeSubmenu
         setMenuItem(stayAwakeMenuItem, title: L.stayAwakeUntil, active: watchdog.isWatching, since: watchdog.isWatching ? watchedAppSince : nil)
         menu.addItem(stayAwakeMenuItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        // System metrics (read-only, refreshed on open)
+        batteryMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        batteryMenuItem.isEnabled = false
+        menu.addItem(batteryMenuItem)
+
+        cpuMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        cpuMenuItem.isEnabled = false
+        menu.addItem(cpuMenuItem)
+
+        ramMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        ramMenuItem.isEnabled = false
+        menu.addItem(ramMenuItem)
+
+        temperatureMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        temperatureMenuItem.isEnabled = false
+        menu.addItem(temperatureMenuItem)
+
+        fansMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        fansMenuItem.isEnabled = false
+        menu.addItem(fansMenuItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -1261,6 +1289,59 @@ extension AppDelegate: NSMenuDelegate {
         }
         if menu === timerSubmenu {
             populateTimerSubmenu()
+        }
+        if menu === statusItem.menu {
+            refreshSystemMetrics()
+        }
+    }
+}
+
+// MARK: - System metrics
+
+extension AppDelegate {
+    private func refreshSystemMetrics() {
+        let snap = SystemMetrics.snapshot()
+
+        if let pct = snap.batteryPercent, let charging = snap.batteryIsCharging {
+            setMenuItem(batteryMenuItem, title: L.battery(pct, charging: charging), active: false, enabled: false)
+            batteryMenuItem.isHidden = false
+        } else {
+            batteryMenuItem.isHidden = true
+        }
+
+        if let cpu = snap.cpuPercent {
+            setMenuItem(cpuMenuItem, title: L.cpuLoad(Int(cpu.rounded())), active: false, enabled: false)
+            cpuMenuItem.isHidden = false
+        } else {
+            cpuMenuItem.isHidden = true
+        }
+
+        if let used = snap.ramUsedBytes, let total = snap.ramTotalBytes, total > 0 {
+            let usedGB = String(format: "%.1f", Double(used) / 1_073_741_824)
+            let totalGB = String(format: "%.1f", Double(total) / 1_073_741_824)
+            let pct = Int((Double(used) / Double(total) * 100).rounded())
+            setMenuItem(ramMenuItem, title: L.ramUsage(usedGB: usedGB, totalGB: totalGB, percent: pct), active: false, enabled: false)
+            ramMenuItem.isHidden = false
+        } else {
+            ramMenuItem.isHidden = true
+        }
+
+        if let temp = snap.cpuTemperatureCelsius {
+            setMenuItem(temperatureMenuItem, title: L.temperature(Int(temp.rounded())), active: false, enabled: false)
+            temperatureMenuItem.isHidden = false
+        } else {
+            temperatureMenuItem.isHidden = true
+        }
+
+        let rpms = snap.fanRPMs.map { Int($0.rounded()) }
+        if rpms.isEmpty {
+            fansMenuItem.isHidden = true
+        } else if rpms.count == 1 {
+            setMenuItem(fansMenuItem, title: L.fans(rpms[0]), active: false, enabled: false)
+            fansMenuItem.isHidden = false
+        } else {
+            setMenuItem(fansMenuItem, title: L.fansMulti(rpms), active: false, enabled: false)
+            fansMenuItem.isHidden = false
         }
     }
 }
