@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ClamKeep — keep your Mac awake</title>
-  <meta name="description" content="ClamKeep is a macOS menu bar app that keeps your Mac awake with the lid closed. Screen stays on and auto-lock waits by default — Display Sleep / Auto Lock are optional [ON]/[OFF] exceptions." />
+  <meta name="description" content="ClamKeep is a macOS menu bar app that keeps your Mac awake with the lid closed. Live system stats, Screen stays on and auto-lock waits by default — Display Sleep / Auto Lock are optional [ON]/[OFF] exceptions." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -687,9 +687,9 @@
     </nav>
 
     <header class="hero">
-      <div class="pill"><span class="dot"></span> v1.8.0 · macOS 13+</div>
+      <div class="pill"><span class="dot"></span> v1.9.0 · macOS 13+</div>
       <h1>Keep your Mac awake<br /><span class="gradient-text">with the lid closed</span></h1>
-      <p class="tagline">ClamKeep lives in the menu bar. Wake Mode holds the system, the display, and auto-lock — then you can re-enable Display Sleep or Auto Lock as exceptions. Turning it off ends the entire session.</p>
+      <p class="tagline">ClamKeep lives in the menu bar. Wake Mode holds the system, the display, and auto-lock — then you can re-enable Display Sleep or Auto Lock as exceptions. A live system-stats dashboard sits at the top of the menu.</p>
       <div class="actions">
         <a class="btn btn-primary" href="https://github.com/M3etis/ClamKeep/releases/latest">Download DMG</a>
         <a class="btn btn-secondary" href="https://github.com/M3etis/ClamKeep">View on GitHub</a>
@@ -700,7 +700,7 @@
       <div class="shot-glow"></div>
       <div class="shot-frame">
         <div class="shot-chrome" aria-hidden="true"><i></i><i></i><i></i></div>
-        <img src="screenshot.png" alt="ClamKeep 1.8.0 menu and features" width="1280" height="800" />
+        <img src="screenshot.png" alt="ClamKeep 1.9.0 menu with system stats and features" width="1280" height="800" />
       </div>
     </div>
 
@@ -710,6 +710,10 @@
         <p class="section-sub">Everything at a glance — plain language, no power jargon.</p>
       </div>
       <div class="grid">
+        <article class="card reveal">
+          <h3><span class="dot g"></span>System Stats</h3>
+          <p>Live battery, CPU, RAM, temperature, and fans at the top of the menu — icon, value, label. Missing sensors hide automatically. Toggle in Settings.</p>
+        </article>
         <article class="card reveal">
           <h3><span class="dot g"></span>Wake Mode</h3>
           <p>Everything at once: keeps your Mac awake with the lid closed, keeps the screen on, and delays auto-lock. On enable those holds are automatic; on disable the whole session ends. Shows <span class="onoff on">ON</span> / <span class="onoff off">OFF</span>.</p>
@@ -740,7 +744,7 @@
         </article>
         <article class="card reveal">
           <h3><span class="dot m"></span>Extras</h3>
-          <p>EN / RU / KK, launch at login, five icon styles, universal binary, passwordless helper.</p>
+          <p>EN / RU / KK, launch at login, show/hide system stats, five icon styles, universal binary, passwordless helper.</p>
         </article>
       </div>
     </section>
@@ -803,7 +807,7 @@
         <div class="step reveal">
           <div class="step-num">1</div>
           <h3>Download</h3>
-          <p>Get <code>ClamKeep-1.8.0.dmg</code> from <a href="https://github.com/M3etis/ClamKeep/releases/latest">Releases</a>.</p>
+          <p>Get <code>ClamKeep-1.9.0.dmg</code> from <a href="https://github.com/M3etis/ClamKeep/releases/latest">Releases</a>.</p>
         </div>
         <div class="step reveal">
           <div class="step-num">2</div>
@@ -827,9 +831,25 @@
       <div class="timeline">
         <article class="release reveal">
           <div class="release-head">
-            <span class="ver latest">1.8.0</span>
+            <span class="ver latest">1.9.0</span>
             <span class="tag-latest">Latest</span>
           </div>
+          <ul>
+            <li><strong>System Stats dashboard</strong> — battery, CPU, RAM, temperature, fans at the top of the menu</li>
+            <li>Unavailable sensors (e.g. fans) hide automatically</li>
+            <li><strong>Settings → Show System Stats</strong> toggle, applies immediately</li>
+            <li>Cleaner menu header — removed the redundant “Active: …” modes line</li>
+          </ul>
+        </article>
+        <article class="release reveal">
+          <div class="release-head"><span class="ver">1.8.1</span></div>
+          <ul>
+            <li>Fixed helper install when <code>/usr/local/bin</code> was missing</li>
+            <li>Wake Mode stays on after toggle on affected systems</li>
+          </ul>
+        </article>
+        <article class="release reveal">
+          <div class="release-head"><span class="ver">1.8.0</span></div>
           <ul>
             <li>Wake Mode on <strong>forbids Display Sleep and Auto Lock</strong> — re-enable them manually as exceptions</li>
             <li>Wake Mode off cancels <strong>all</strong> other options (timer, downloads, watched app, exceptions)</li>
@@ -878,7 +898,7 @@
     </section>
 
     <footer>
-      <span>ClamKeep 1.8.0 · <a href="https://github.com/M3etis/ClamKeep">github.com/M3etis/ClamKeep</a> · m3etis@gmail.com</span>
+      <span>ClamKeep 1.9.0 · <a href="https://github.com/M3etis/ClamKeep">github.com/M3etis/ClamKeep</a> · m3etis@gmail.com</span>
       <span>macOS menu bar utility</span>
     </footer>
   </div>

@@ -3,11 +3,20 @@
 [![Version](https://img.shields.io/github/v/release/M3etis/ClamKeep?label=version)](https://github.com/M3etis/ClamKeep/releases/latest)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey)](https://github.com/M3etis/ClamKeep#requirements)
 
-macOS menu bar application that keeps your Mac awake with the lid closed. Turning Wake Mode on holds the system, the display, and auto-lock; you can re-enable the last two as exceptions. Turning it off ends the whole session.
+macOS menu bar application that keeps your Mac awake with the lid closed. Turning Wake Mode on holds the system, the display, and auto-lock; you can re-enable the last two as exceptions. Turning it off ends the whole session. A compact system-stats dashboard sits at the top of the menu.
 
-![ClamKeep features](https://github.com/M3etis/ClamKeep/releases/download/v1.8.0/screenshot.png)
+![ClamKeep features](https://github.com/M3etis/ClamKeep/releases/download/v1.9.0/screenshot.png)
 
 ## Features
+
+### System Stats *(new in 1.9)*
+- Live metrics at the top of the menu: **Battery · CPU · RAM · Temperature · Fans**
+- Each metric is a compact section with an icon, value, and label
+- Battery icon reflects charge level; a green tint marks charging
+- CPU / RAM / Temp turn orange under load or heat
+- Unavailable sensors are hidden automatically (e.g. Fans on fanless Macs)
+- Toggle in **Settings → Show System Stats** — applies immediately, no relaunch
+- Read via user-space IOKit / AppleSMC (no root, no `powermetrics`)
 
 ### Wake Mode
 - Keeps your Mac awake with the lid closed — downloads, background tasks, and apps keep running
@@ -15,7 +24,7 @@ macOS menu bar application that keeps your Mac awake with the lid closed. Turnin
 - **On disable:** ends the session and cancels timer, download policy, and watched app
 - Menu shows **Wake Mode [ON]** / **[OFF]** — only the status badge is green
 - Green menu-bar icon while active; amber when Display Sleep is allowed
-- Header shows active modes and either session time or auto-off countdown
+- Header shows either session time or auto-off countdown
 
 ### Display Sleep *(exception)*
 - Re-enable manually while Wake Mode is on if you want the screen to turn off
@@ -52,6 +61,7 @@ Wake Mode tracks why it is on: `manual` / `downloads` / `watched app`.
 
 ### Settings
 - **Launch at Login** (SMAppService)
+- **Show System Stats** — show or hide the metrics dashboard
 - **Language** — English, Russian, Kazakh
 - **Icon** — Moon, Bolt, Eye, Coffee, Shield
 - **About** with repository link
@@ -80,7 +90,7 @@ Menu items **Wake Mode** / **Display Sleep** / **Auto Lock** show a trailing **[
 
 ### From DMG
 
-1. Download `ClamKeep-1.8.0.dmg` from [Releases](https://github.com/M3etis/ClamKeep/releases)
+1. Download `ClamKeep-1.9.0.dmg` from [Releases](https://github.com/M3etis/ClamKeep/releases)
 2. Open the DMG and drag ClamKeep to Applications
 3. Launch ClamKeep — on first run, approve the helper daemon installation (one-time password)
 
@@ -98,14 +108,15 @@ make dmg      # Create DMG installer
 ## Usage
 
 1. Click the shield icon in the menu bar
-2. **Wake Mode** — toggle keep-awake (⌘W). Status shows **[ON]** / **[OFF]**. Enabling forbids Display Sleep and Auto Lock
-3. **Display Sleep** (⌘S) — **[ON]** lets the screen turn off while Wake Mode is on (optional exception)
-4. **Auto Lock** (⌘L) — **[ON]** lets the Mac lock itself after idle (optional exception)
-5. **Don't Sleep During Downloads** (⌘D) — hold wake while downloads are detected
-6. **Auto-off Timer** — 5…60 min or custom hours/minutes; countdown in the header
-7. **Don't Sleep While Active App…** — hold wake while a selected app runs
-8. **Settings** — login item, language, icon style
-9. **Wake Mode** again ends the session (timer, watchdog, download policy)
+2. **System Stats** at the top — battery, CPU, RAM, temperature, fans (hide via Settings)
+3. **Wake Mode** — toggle keep-awake (⌘W). Status shows **[ON]** / **[OFF]**. Enabling forbids Display Sleep and Auto Lock
+4. **Display Sleep** (⌘S) — **[ON]** lets the screen turn off while Wake Mode is on (optional exception)
+5. **Auto Lock** (⌘L) — **[ON]** lets the Mac lock itself after idle (optional exception)
+6. **Don't Sleep During Downloads** (⌘D) — hold wake while downloads are detected
+7. **Auto-off Timer** — 5…60 min or custom hours/minutes; countdown in the header
+8. **Don't Sleep While Active App…** — hold wake while a selected app runs
+9. **Settings** — login item, system stats, language, icon style
+10. **Wake Mode** again ends the session (timer, watchdog, download policy)
 
 ## Requirements
 
@@ -115,12 +126,23 @@ make dmg      # Create DMG installer
 ## Architecture notes
 
 - Menu bar UI: AppKit `NSStatusItem` / `NSMenu`
+- System stats: user-space IOKit (`IOPSCopyPowerSourcesInfo`, `host_processor_info`, `host_statistics64`) + `AppleSMC` for temperature/fans
 - Sleep control: root `launchd` helper `clamkeep-helper.sh` → `pmset` (file IPC under `/Library/Application Support/com.m3etis.clamkeep`)
 - Helper IPC is authenticated: single instance, allowlisted commands, trigger owner UID check
 - Display wake: `caffeinate -d -i` while display hold is active (Display Sleep [OFF])
 - Auto lock: per-user `askForPasswordDelay` save/restore (no helper change)
 
 ## Changelog
+
+### 1.9.0
+- **System Stats dashboard** at the top of the menu: battery, CPU, RAM, temperature, fans (icon + value + label)
+- Sensors that are unavailable are hidden automatically
+- **Settings → Show System Stats** toggle — applies immediately
+- Cleaner menu header: redundant “Active: …” modes line removed
+
+### 1.8.1
+- Fixed helper install failing when `/usr/local/bin` did not exist
+- Wake Mode stays on after toggling on systems that hit the setup error above
 
 ### 1.8.0
 - Wake Mode on now **forbids Display Sleep and Auto Lock** automatically; re-enable them manually as exceptions

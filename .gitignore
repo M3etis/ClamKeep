@@ -11,6 +11,7 @@ Resources/icon_1024x1024.png
 
 # Tooling
 .mimocode/
+.metrics-harness/
 
 # macOS
 .DS_Store

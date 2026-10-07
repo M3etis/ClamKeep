@@ -7,7 +7,7 @@ set -euo pipefail
 
 APP_NAME="ClamKeep"
 BUNDLE_ID="com.m3etis.clamkeep"
-VERSION="1.8.1"
+VERSION="1.9.0"
 BUILD_NUMBER="10"
 MIN_MACOS="13.0"
 
@@ -26,6 +26,7 @@ SWIFT_SOURCES=(
     "Sources/IconRenderer.swift"
     "Sources/AppWatchdog.swift"
     "Sources/SystemMetrics.swift"
+    "Sources/SystemMetricsHeader.swift"
 )
 
 ENTITLEMENTS_FILE="ClamKeep.entitlements"

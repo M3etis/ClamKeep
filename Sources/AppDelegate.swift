@@ -23,11 +23,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var stayAwakeSubmenu: NSMenu!
     private var timerSubmenuItem: NSMenuItem!
     private var timerSubmenu: NSMenu!
-    private var batteryMenuItem: NSMenuItem!
-    private var cpuMenuItem: NSMenuItem!
-    private var ramMenuItem: NSMenuItem!
-    private var temperatureMenuItem: NSMenuItem!
-    private var fansMenuItem: NSMenuItem!
+    private var metricsHeaderMenuItem: NSMenuItem!
+    private var metricsHeader: SystemMetricsHeader!
+    private var metricsSeparatorItem: NSMenuItem!
+    private var statsMenuItem: NSMenuItem!
+    private var showSystemMetrics = true
+    private let showSystemMetricsKey = "ClamKeepShowSystemMetrics"
 
     private var isActive = false
     private var wakeStartTime: Date?
@@ -93,6 +94,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         watchdog.delegate = self
+        // Must precede setupMenu() so the metrics header respects the saved toggle.
+        showSystemMetrics = UserDefaults.standard.object(forKey: showSystemMetricsKey) as? Bool ?? true
         setupStatusItem()
         setupMenu()
         migrateAllowFlags()
@@ -102,6 +105,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         checkInitialState()
+        if showSystemMetrics {
+            SystemMetrics.warmUp()
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -190,6 +196,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         menu.delegate = self
 
+        // System metrics dashboard (header, refreshed on open).
+        // Custom-view items ignore isHidden on some macOS versions — add/remove instead.
+        metricsHeader = SystemMetricsHeader(frame: NSRect(
+            x: 0, y: 0,
+            width: SystemMetricsHeader.preferredWidth,
+            height: SystemMetricsHeader.preferredHeight
+        ))
+        metricsHeaderMenuItem = NSMenuItem()
+        metricsHeaderMenuItem.view = metricsHeader
+        // Enabled but action-less: custom-view items dim themselves when disabled.
+        metricsHeaderMenuItem.isEnabled = true
+        metricsHeaderMenuItem.target = nil
+
+        metricsSeparatorItem = NSMenuItem.separator()
+
+        if showSystemMetrics {
+            menu.addItem(metricsHeaderMenuItem)
+            menu.addItem(metricsSeparatorItem)
+        }
+
         statusMenuItem = NSMenuItem(title: L.statusInactive, action: nil, keyEquivalent: "")
         setMenuItem(statusMenuItem, title: L.statusInactive, active: false, enabled: false)
         menu.addItem(statusMenuItem)
@@ -242,29 +268,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        // System metrics (read-only, refreshed on open)
-        batteryMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        batteryMenuItem.isEnabled = false
-        menu.addItem(batteryMenuItem)
-
-        cpuMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        cpuMenuItem.isEnabled = false
-        menu.addItem(cpuMenuItem)
-
-        ramMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        ramMenuItem.isEnabled = false
-        menu.addItem(ramMenuItem)
-
-        temperatureMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        temperatureMenuItem.isEnabled = false
-        menu.addItem(temperatureMenuItem)
-
-        fansMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        fansMenuItem.isEnabled = false
-        menu.addItem(fansMenuItem)
-
-        menu.addItem(NSMenuItem.separator())
-
         // Settings submenu
         let settingsItem = NSMenuItem(title: L.settings, action: nil, keyEquivalent: ",")
         let settingsMenu = NSMenu()
@@ -274,6 +277,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         loginItem.target = self
         setMenuItem(loginItem, title: L.launchAtLogin, active: LoginItem.isEnabled())
         settingsMenu.addItem(loginItem)
+
+        // System stats header
+        statsMenuItem = NSMenuItem(title: L.showSystemStats, action: #selector(toggleSystemStats), keyEquivalent: "")
+        statsMenuItem.target = self
+        setMenuItem(statsMenuItem, title: L.showSystemStats, active: showSystemMetrics)
+        settingsMenu.addItem(statsMenuItem)
 
         settingsMenu.addItem(NSMenuItem.separator())
 
@@ -444,24 +453,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func updateHeaderHints() {
-        var modes: [String] = []
-        if isActive { modes.append(L.modeWake) }
-        if isActive && shouldHoldDisplay { modes.append(L.modeDisplay) }
-        if isActive && allowDisplaySleep { modes.append(L.modeDisplayMaySleep) }
-        if isActive && shouldHoldAutoLock { modes.append(L.modeNoAutoLock) }
-        if isActive && allowAutoLock { modes.append(L.modeAutoLockAllowed) }
-        if wakeReasons.contains(.downloads) { modes.append(L.modeDownloads) }
-        if watchdog.isWatching, let name = watchdog.watchedApp?.name {
-            modes.append(L.modeApp(name))
+        statusMenuItem.isHidden = isActive
+        if !isActive {
+            setMenuItem(statusMenuItem, title: L.statusInactive, active: false, enabled: false)
         }
-
-        let title: String
-        if modes.isEmpty {
-            title = L.statusInactive
-        } else {
-            title = "\(L.activeModesPrefix) \(modes.joined(separator: " · "))"
-        }
-        setMenuItem(statusMenuItem, title: title, active: false, enabled: false)
 
         if isActive {
             let text: String
@@ -915,6 +910,44 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         rebuildMenu()
     }
 
+    @objc private func toggleSystemStats() {
+        showSystemMetrics.toggle()
+        UserDefaults.standard.set(showSystemMetrics, forKey: showSystemMetricsKey)
+        applySystemMetricsVisibility()
+    }
+
+    /// Show/hide the metrics header on the live menu immediately (no app restart).
+    private func applySystemMetricsVisibility() {
+        guard let menu = statusItem.menu else {
+            rebuildMenu()
+            return
+        }
+
+        if showSystemMetrics {
+            setMetricsHeaderVisible(true, in: menu)
+            SystemMetrics.warmUp()
+            refreshSystemMetrics()
+        } else {
+            setMetricsHeaderVisible(false, in: menu)
+        }
+
+        if let statsMenuItem {
+            setMenuItem(statsMenuItem, title: L.showSystemStats, active: showSystemMetrics)
+        }
+    }
+
+    private func setMetricsHeaderVisible(_ visible: Bool, in menu: NSMenu) {
+        if visible {
+            if metricsHeaderMenuItem.menu !== menu {
+                menu.insertItem(metricsHeaderMenuItem, at: 0)
+                menu.insertItem(metricsSeparatorItem, at: 1)
+            }
+        } else if metricsHeaderMenuItem.menu === menu {
+            menu.removeItem(metricsHeaderMenuItem)
+            menu.removeItem(metricsSeparatorItem)
+        }
+    }
+
     @objc private func changeLanguage(_ sender: NSMenuItem) {
         guard let raw = sender.representedObject as? String,
               let lang = Language(rawValue: raw) else { return }
@@ -1300,49 +1333,10 @@ extension AppDelegate: NSMenuDelegate {
 
 extension AppDelegate {
     private func refreshSystemMetrics() {
-        let snap = SystemMetrics.snapshot()
-
-        if let pct = snap.batteryPercent, let charging = snap.batteryIsCharging {
-            setMenuItem(batteryMenuItem, title: L.battery(pct, charging: charging), active: false, enabled: false)
-            batteryMenuItem.isHidden = false
-        } else {
-            batteryMenuItem.isHidden = true
-        }
-
-        if let cpu = snap.cpuPercent {
-            setMenuItem(cpuMenuItem, title: L.cpuLoad(Int(cpu.rounded())), active: false, enabled: false)
-            cpuMenuItem.isHidden = false
-        } else {
-            cpuMenuItem.isHidden = true
-        }
-
-        if let used = snap.ramUsedBytes, let total = snap.ramTotalBytes, total > 0 {
-            let usedGB = String(format: "%.1f", Double(used) / 1_073_741_824)
-            let totalGB = String(format: "%.1f", Double(total) / 1_073_741_824)
-            let pct = Int((Double(used) / Double(total) * 100).rounded())
-            setMenuItem(ramMenuItem, title: L.ramUsage(usedGB: usedGB, totalGB: totalGB, percent: pct), active: false, enabled: false)
-            ramMenuItem.isHidden = false
-        } else {
-            ramMenuItem.isHidden = true
-        }
-
-        if let temp = snap.cpuTemperatureCelsius {
-            setMenuItem(temperatureMenuItem, title: L.temperature(Int(temp.rounded())), active: false, enabled: false)
-            temperatureMenuItem.isHidden = false
-        } else {
-            temperatureMenuItem.isHidden = true
-        }
-
-        let rpms = snap.fanRPMs.map { Int($0.rounded()) }
-        if rpms.isEmpty {
-            fansMenuItem.isHidden = true
-        } else if rpms.count == 1 {
-            setMenuItem(fansMenuItem, title: L.fans(rpms[0]), active: false, enabled: false)
-            fansMenuItem.isHidden = false
-        } else {
-            setMenuItem(fansMenuItem, title: L.fansMulti(rpms), active: false, enabled: false)
-            fansMenuItem.isHidden = false
-        }
+        guard showSystemMetrics, let menu = statusItem.menu else { return }
+        metricsHeader.reload(with: SystemMetrics.snapshot())
+        // Empty snapshot: drop the row so a lone separator is not left behind.
+        setMetricsHeaderVisible(!metricsHeader.isHidden, in: menu)
     }
 }
 

@@ -16,18 +16,29 @@ struct SystemSnapshot {
 }
 
 enum SystemMetrics {
+    /// Guards `previousCPUInfo` and SMC I/O — `warmUp()` runs off the main thread.
+    private static let stateLock = NSLock()
+
     static func snapshot() -> SystemSnapshot {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+
         var s = SystemSnapshot()
         readBattery(into: &s)
         readCPU(into: &s)
-        // First call after launch has no tick delta yet; one short sample fills it.
-        if s.cpuPercent == nil {
-            Thread.sleep(forTimeInterval: 0.08)
-            readCPU(into: &s)
-        }
         readRAM(into: &s)
         SMCReader.shared.read(into: &s)
         return s
+    }
+
+    /// Two samples with a short gap so `cpuPercent` is ready before the first menu open.
+    /// Call off the main thread — this blocks for ~80 ms.
+    static func warmUp() {
+        DispatchQueue.global(qos: .utility).async {
+            _ = snapshot()
+            Thread.sleep(forTimeInterval: 0.08)
+            _ = snapshot()
+        }
     }
 
     // MARK: - Battery
@@ -241,9 +252,11 @@ private final class SMCClient {
     }
 
     private func call(_ input: inout SMCParamStruct) -> kern_return_t {
-        let inputSize = MemoryLayout<SMCParamStruct>.stride
+        // SMCParamStruct is a flat 80-byte C mirror — both must match `SMCKeyData_t`.
+        assert(MemoryLayout<SMCParamStruct>.size == 80 && MemoryLayout<SMCParamStruct>.stride == 80)
+        let inputSize = MemoryLayout<SMCParamStruct>.size
         var output = SMCParamStruct()
-        var outputSize = MemoryLayout<SMCParamStruct>.stride
+        var outputSize = MemoryLayout<SMCParamStruct>.size
         let kr = IOConnectCallStructMethod(connection, kSMCHandleYPCEvent, &input, inputSize, &output, &outputSize)
         input = output
         return kr

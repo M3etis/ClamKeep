@@ -51,64 +51,6 @@ enum L {
         }
     }
 
-    // MARK: - Active mode hints (menu header)
-    static var activeModesPrefix: String {
-        switch current {
-        case .english: return "Active:"
-        case .russian: return "Активно:"
-        case .kazakh:  return "Белсенді:"
-        }
-    }
-    static var modeWake: String {
-        switch current {
-        case .english: return "wake mode"
-        case .russian: return "бодрствование"
-        case .kazakh:  return "ояу режим"
-        }
-    }
-    static var modeDisplay: String {
-        switch current {
-        case .english: return "display on"
-        case .russian: return "экран включён"
-        case .kazakh:  return "экран қосулы"
-        }
-    }
-    static var modeDisplayMaySleep: String {
-        switch current {
-        case .english: return "display may sleep"
-        case .russian: return "экран может спать"
-        case .kazakh:  return "экран өше алады"
-        }
-    }
-    static var modeNoAutoLock: String {
-        switch current {
-        case .english: return "no auto lock"
-        case .russian: return "без автоблокировки"
-        case .kazakh:  return "автоблоктаусыз"
-        }
-    }
-    static var modeAutoLockAllowed: String {
-        switch current {
-        case .english: return "auto lock allowed"
-        case .russian: return "автоблокировка разрешена"
-        case .kazakh:  return "автоблоктау рұқсат"
-        }
-    }
-    static var modeDownloads: String {
-        switch current {
-        case .english: return "downloads"
-        case .russian: return "загрузки"
-        case .kazakh:  return "жүктеулер"
-        }
-    }
-    static func modeApp(_ name: String) -> String {
-        switch current {
-        case .english: return "app: \(name)"
-        case .russian: return "приложение: \(name)"
-        case .kazakh:  return "қолданба: \(name)"
-        }
-    }
-
     // MARK: - Actions
     static var wakeMode: String {
         switch current {
@@ -204,6 +146,13 @@ enum L {
         case .kazakh:  return "Жүйеге кіргенде іске қосу"
         }
     }
+    static var showSystemStats: String {
+        switch current {
+        case .english: return "Show System Stats"
+        case .russian: return "Показывать статистику"
+        case .kazakh:  return "Статистиканы көрсету"
+        }
+    }
     static var language: String {
         switch current {
         case .english: return "Language"
@@ -237,12 +186,12 @@ enum L {
 
     // MARK: - About dialog
     static var aboutTitle: String { "ClamKeep" }
-    static var aboutVersion: String { "1.8.1" }
+    static var aboutVersion: String { "1.9.0" }
     static var aboutDescription: String {
         switch current {
-        case .english: return "Version 1.8.1\n\n• Wake Mode — keeps your Mac awake with the lid closed. Turning it on forbids Display Sleep and Auto Lock (you can re-enable them manually). Turning it off ends the session and cancels timer, downloads, and watched app.\n• Display Sleep — [ON] lets the screen turn off while Wake Mode is on; [OFF] keeps it on (default).\n• Auto Lock — [ON] lets the Mac lock after idle; [OFF] delays auto-lock (default). Manual lock (⌘⌃Q) always locks immediately.\n• Don't Sleep During Downloads — holds wake while downloads are active.\n• Don't Sleep While Active App… — holds wake while a chosen app runs.\n• Auto-off Timer — turns Wake Mode off after the time you pick (remaining time survives relaunch).\n\nhttps://github.com/M3etis/ClamKeep\n\nAuthor: m3etis@gmail.com"
-        case .russian: return "Версия 1.8.1\n\n• Бодрствование — Mac не засыпает при закрытой крышке. При включении сон дисплея и автоблокировка запрещаются (можно включить вручную). Выключение завершает сессию и отменяет таймер, загрузки и слежение за приложением.\n• Сон дисплея — [ON]: экран может гаснуть при включённом бодрствовании; [OFF]: экран остаётся включённым (по умолчанию).\n• Автоблокировка — [ON]: Mac может блокироваться по бездействию; [OFF]: автоблокировка отложена (по умолчанию). Ручная блокировка (⌘⌃Q) срабатывает сразу.\n• Не засыпать пока идет загрузка — не даёт Mac заснуть, пока идут загрузки.\n• Не засыпать пока активное приложение… — не даёт Mac заснуть, пока работает выбранное приложение.\n• Таймер — выключает бодрствование через выбранное время (остаток сохраняется при перезапуске).\n\nhttps://github.com/M3etis/ClamKeep\n\nАвтор: m3etis@gmail.com"
-        case .kazakh:  return "Нұсқа 1.8.1\n\n• Ояу режим — қақпақ жабылғанда Mac ұйымайды. Қосқанда дисплей ұйқысы мен автоблоктау тыйым салынады (қолмен қосуға болады). Өшіргенде сессия бітіп, таймер, жүктеулер және қолданба бақылауы тоқтайды.\n• Дисплей ұйқысы — [ON]: ояу режимде экран өше алады; [OFF]: экран қосулы қалады (әдепкі).\n• Автоблоктау — [ON]: Mac бос уақытта блокталуы мүмкін; [OFF]: автоблоктау кейінге қалады (әдепкі). Қолмен блоктау (⌘⌃Q) бірден жұмыс істейді.\n• Жүктеу кезінде ұйықтамау — жүктеулер жүріп жатқанда ояу ұстайды.\n• Белсенді қолданба кезінде ұйықтамау… — таңдалған қолданба жұмыс істегенде ояу ұстайды.\n• Таймер — таңдалған уақыттан кейін ояу режимді өшіреді (қалған уақыт қайта іске қосқанда сақталады).\n\nhttps://github.com/M3etis/ClamKeep\n\nАвтор: m3etis@gmail.com"
+        case .english: return "Version 1.9.0\n\n• System Stats — live battery, CPU, RAM, temperature, and fans at the top of the menu. Toggle in Settings.\n• Wake Mode — keeps your Mac awake with the lid closed. Turning it on forbids Display Sleep and Auto Lock (you can re-enable them manually). Turning it off ends the session and cancels timer, downloads, and watched app.\n• Display Sleep — [ON] lets the screen turn off while Wake Mode is on; [OFF] keeps it on (default).\n• Auto Lock — [ON] lets the Mac lock after idle; [OFF] delays auto-lock (default). Manual lock (⌘⌃Q) always locks immediately.\n• Don't Sleep During Downloads — holds wake while downloads are active.\n• Don't Sleep While Active App… — holds wake while a chosen app runs.\n• Auto-off Timer — turns Wake Mode off after the time you pick (remaining time survives relaunch).\n\nhttps://github.com/M3etis/ClamKeep\n\nAuthor: m3etis@gmail.com"
+        case .russian: return "Версия 1.9.0\n\n• Статистика — заряд, ЦП, ОЗУ, температура и вентиляторы вверху меню. Переключатель в настройках.\n• Бодрствование — Mac не засыпает при закрытой крышке. При включении сон дисплея и автоблокировка запрещаются (можно включить вручную). Выключение завершает сессию и отменяет таймер, загрузки и слежение за приложением.\n• Сон дисплея — [ON]: экран может гаснуть при включённом бодрствовании; [OFF]: экран остаётся включённым (по умолчанию).\n• Автоблокировка — [ON]: Mac может блокироваться по бездействию; [OFF]: автоблокировка отложена (по умолчанию). Ручная блокировка (⌘⌃Q) срабатывает сразу.\n• Не засыпать пока идет загрузка — не даёт Mac заснуть, пока идут загрузки.\n• Не засыпать пока активное приложение… — не даёт Mac заснуть, пока работает выбранное приложение.\n• Таймер — выключает бодрствование через выбранное время (остаток сохраняется при перезапуске).\n\nhttps://github.com/M3etis/ClamKeep\n\nАвтор: m3etis@gmail.com"
+        case .kazakh:  return "Нұсқа 1.9.0\n\n• Статистика — батарея, CPU, ЖЖҚ, температура және желдеткіштер мәзірдің жоғарғы жағында. Баптаулардан өшіруге/қосуға болады.\n• Ояу режим — қақпақ жабылғанда Mac ұйымайды. Қосқанда дисплей ұйқысы мен автоблоктау тыйым салынады (қолмен қосуға болады). Өшіргенде сессия бітіп, таймер, жүктеулер және қолданба бақылауы тоқтайды.\n• Дисплей ұйқысы — [ON]: ояу режимде экран өше алады; [OFF]: экран қосулы қалады (әдепкі).\n• Автоблоктау — [ON]: Mac бос уақытта блокталуы мүмкін; [OFF]: автоблоктау кейінге қалады (әдепкі). Қолмен блоктау (⌘⌃Q) бірден жұмыс істейді.\n• Жүктеу кезінде ұйықтамау — жүктеулер жүріп жатқанда ояу ұстайды.\n• Белсенді қолданба кезінде ұйықтамау… — таңдалған қолданба жұмыс істегенде ояу ұстайды.\n• Таймер — таңдалған уақыттан кейін ояу режимді өшіреді (қалған уақыт қайта іске қосқанда сақталады).\n\nhttps://github.com/M3etis/ClamKeep\n\nАвтор: m3etis@gmail.com"
         }
     }
 
@@ -367,54 +316,40 @@ enum L {
         }
     }
 
-    // MARK: - System metrics
-    static func battery(_ percent: Int, charging: Bool) -> String {
-        let state: String
+    // MARK: - System metrics (compact labels for the menu header)
+    static var batteryLabel: String {
         switch current {
-        case .english: state = charging ? "charging" : "discharging"
-        case .russian: state = charging ? "заряжается" : "разряжается"
-        case .kazakh:  state = charging ? "зарядталуда" : "босап жатыр"
-        }
-        switch current {
-        case .english: return "Battery: \(percent)% (\(state))"
-        case .russian: return "Батарея: \(percent)% (\(state))"
-        case .kazakh:  return "Батарея: \(percent)% (\(state))"
+        case .english: return "Battery"
+        case .russian: return "Батарея"
+        case .kazakh:  return "Батарея"
         }
     }
-    static func cpuLoad(_ percent: Int) -> String {
+    static var cpuLabel: String {
         switch current {
-        case .english: return "CPU: \(percent)%"
-        case .russian: return "ЦП: \(percent)%"
-        case .kazakh:  return "CPU: \(percent)%"
+        case .english: return "CPU"
+        case .russian: return "ЦП"
+        case .kazakh:  return "CPU"
         }
     }
-    static func ramUsage(usedGB: String, totalGB: String, percent: Int) -> String {
+    static var ramLabel: String {
         switch current {
-        case .english: return "RAM: \(usedGB) / \(totalGB) GB (\(percent)%)"
-        case .russian: return "ОЗУ: \(usedGB) / \(totalGB) ГБ (\(percent)%)"
-        case .kazakh:  return "ЖЖҚ: \(usedGB) / \(totalGB) ГБ (\(percent)%)"
+        case .english: return "RAM"
+        case .russian: return "ОЗУ"
+        case .kazakh:  return "ЖЖҚ"
         }
     }
-    static func temperature(_ celsius: Int) -> String {
+    static var temperatureLabel: String {
         switch current {
-        case .english: return "Temperature: \(celsius)°C"
-        case .russian: return "Температура: \(celsius)°C"
-        case .kazakh:  return "Температура: \(celsius)°C"
+        case .english: return "Temp"
+        case .russian: return "Темп."
+        case .kazakh:  return "Темп."
         }
     }
-    static func fans(_ rpm: Int) -> String {
+    static var fansLabel: String {
         switch current {
-        case .english: return "Fans: \(rpm) RPM"
-        case .russian: return "Вентилятор: \(rpm) об/мин"
-        case .kazakh:  return "Желдеткіш: \(rpm) айн/мин"
-        }
-    }
-    static func fansMulti(_ list: [Int]) -> String {
-        let joined = list.map(String.init).joined(separator: " / ")
-        switch current {
-        case .english: return "Fans: \(joined) RPM"
-        case .russian: return "Вентиляторы: \(joined) об/мин"
-        case .kazakh:  return "Желдеткіштер: \(joined) айн/мин"
+        case .english: return "Fans"
+        case .russian: return "Вент."
+        case .kazakh:  return "Желдеткіш"
         }
     }
 
