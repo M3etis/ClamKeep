@@ -17,17 +17,11 @@ CONTENTS_DIR="${APP_BUNDLE}/Contents"
 MACOS_DIR="${CONTENTS_DIR}/MacOS"
 RESOURCES_DIR="${CONTENTS_DIR}/Resources"
 
-SWIFT_SOURCES=(
-    "Sources/main.swift"
-    "Sources/AppDelegate.swift"
-    "Sources/PrivilegedShell.swift"
-    "Sources/LoginItem.swift"
-    "Sources/Localizable.swift"
-    "Sources/IconRenderer.swift"
-    "Sources/AppWatchdog.swift"
-    "Sources/SystemMetrics.swift"
-    "Sources/SystemMetricsHeader.swift"
-)
+# Every Swift file under Sources/ (including DesignSystem/, MenuBar/, Windows/).
+SWIFT_SOURCES=()
+while IFS= read -r source; do
+    SWIFT_SOURCES+=("$source")
+done < <(find Sources -name '*.swift' | sort)
 
 ENTITLEMENTS_FILE="ClamKeep.entitlements"
 SIGN_IDENTITY="-"
@@ -117,6 +111,7 @@ for ARCH in "${ARCHS[@]}"; do
         -o "${ARCH_DIR}/${APP_NAME}" \
         "${SWIFT_SOURCES[@]}" \
         -framework AppKit \
+        -framework SwiftUI \
         -framework ServiceManagement \
         -framework IOKit \
         -O \
@@ -150,6 +145,12 @@ xattr -cr "${APP_BUNDLE}"
 # ============================================================
 # Step 6: Install to /Applications
 # ==================================================""
+# SKIP_INSTALL=1 ./build.sh — build into build/ only, leave /Applications untouched.
+if [ "${SKIP_INSTALL:-0}" = "1" ]; then
+    info "Сборка готова: ${APP_BUNDLE} (установка пропущена)"
+    exit 0
+fi
+
 info "Установка в /Applications..."
 if [ -d "/Applications/${APP_NAME}.app" ]; then
     rm -rf "/Applications/${APP_NAME}.app"
