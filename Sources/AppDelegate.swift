@@ -94,6 +94,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         watchdog.delegate = self
+        // Before migrateAllowFlags(): it writes keys used to detect an upgrade.
+        MenuBarIcon.migrateDefaults()
         // Must precede setupMenu() so the metrics header respects the saved toggle.
         showSystemMetrics = UserDefaults.standard.object(forKey: showSystemMetricsKey) as? Bool ?? true
         setupStatusItem()
@@ -185,7 +187,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
-            button.image = IconRenderer.makeIcon(style: IconStyle.current, active: false)
+            button.image = MenuBarIcon.image(style: IconStyle.current, state: .inactive)
             button.toolTip = "ClamKeep"
         }
     }
@@ -308,7 +310,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             item.target = self
             item.representedObject = style.rawValue
             item.state = IconStyle.current == style ? .on : .off
-            item.image = IconRenderer.makeIcon(style: style, active: false)
+            item.image = MenuBarIcon.image(style: style, state: .inactive, tinted: false)
             iconMenu.addItem(item)
         }
         iconItem.submenu = iconMenu
@@ -444,11 +446,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setMenuItem(timerSubmenuItem, title: L.timerMenu, active: autoOffMinutes != nil && active, enabled: true)
         setMenuItem(stayAwakeMenuItem, title: L.stayAwakeUntil, active: watchdog.isWatching, since: watchdog.isWatching ? watchedAppSince : nil)
 
-        if active && !shouldHoldDisplay {
-            statusItem.button?.image = IconRenderer.makeIcon(style: IconStyle.current, active: true, displaySleepAllowed: true)
-        } else {
-            statusItem.button?.image = IconRenderer.makeIcon(style: IconStyle.current, active: active, displaySleepAllowed: false)
-        }
+        let iconState: MenuBarIconState = !active ? .inactive : (shouldHoldDisplay ? .active : .activeDisplaySleepAllowed)
+        statusItem.button?.image = MenuBarIcon.image(style: IconStyle.current, state: iconState)
+        statusItem.button?.setAccessibilityLabel(MenuBarIcon.accessibilityDescription(for: iconState))
         refreshLiveTimers()
     }
 

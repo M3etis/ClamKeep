@@ -369,3 +369,30 @@ enum L {
         }
     }
 }
+
+// MARK: - Redesign (1.10)
+
+extension L {
+    /// English, Russian, Kazakh — in that order.
+    static func tr(_ en: String, _ ru: String, _ kk: String) -> String {
+        switch current {
+        case .english: return en
+        case .russian: return ru
+        case .kazakh:  return kk
+        }
+    }
+
+    // Menu bar icon styles
+    static var iconLid: String { tr("Lid", "Крышка", "Қақпақ") }
+    static var iconMoon: String { tr("Moon", "Луна", "Ай") }
+    static var iconBolt: String { tr("Bolt", "Энергия", "Қуат") }
+    static var iconEye: String { tr("Eye", "Глаз", "Көз") }
+    static var iconCoffee: String { tr("Coffee", "Кофе", "Кофе") }
+    static var iconShield: String { tr("Shield", "Щит", "Қалқан") }
+
+    // Status header
+    static var statusAwake: String { tr("Mac is awake", "Mac не спит", "Mac ояу") }
+    static var statusTurningOn: String { tr("Turning on…", "Включается…", "Қосылуда…") }
+    static var statusSleepingNormally: String { tr("Sleeping normally", "Обычный режим сна", "Қалыпты ұйқы режимі") }
+    static var statusHint: String { tr("Turn on to keep your Mac awake", "Включите, чтобы Mac не засыпал", "Mac ұйықтамауы үшін қосыңыз") }
+}
