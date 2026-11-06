@@ -3,7 +3,7 @@ import os.log
 
 private let logger = Logger(subsystem: "com.m3etis.clamkeep", category: "app")
 
-private struct WakeReason: OptionSet {
+struct WakeReason: OptionSet {
     let rawValue: Int
     static let manual    = WakeReason(rawValue: 1 << 0)
     static let downloads = WakeReason(rawValue: 1 << 1)
@@ -12,37 +12,35 @@ private struct WakeReason: OptionSet {
 
 class AppDelegate: NSObject, NSApplicationDelegate {
 
-    private var statusItem: NSStatusItem!
-    private var statusMenuItem: NSMenuItem!
-    private var timerMenuItem: NSMenuItem!
-    private var toggleMenuItem: NSMenuItem!
-    private var allowDisplaySleepMenuItem: NSMenuItem!
-    private var allowAutoLockMenuItem: NSMenuItem!
-    private var downloadMonitorMenuItem: NSMenuItem!
-    private var stayAwakeMenuItem: NSMenuItem!
-    private var stayAwakeSubmenu: NSMenu!
-    private var timerSubmenuItem: NSMenuItem!
-    private var timerSubmenu: NSMenu!
-    private var metricsHeaderMenuItem: NSMenuItem!
-    private var metricsHeader: SystemMetricsHeader!
-    private var metricsSeparatorItem: NSMenuItem!
-    private var statsMenuItem: NSMenuItem!
-    private var showSystemMetrics = true
-    private let showSystemMetricsKey = "ClamKeepShowSystemMetrics"
+    var statusItem: NSStatusItem!
+    var allowDisplaySleepMenuItem: NSMenuItem!
+    var allowAutoLockMenuItem: NSMenuItem!
+    var downloadMonitorMenuItem: NSMenuItem!
+    var stayAwakeMenuItem: NSMenuItem!
+    var stayAwakeSubmenu: NSMenu!
+    var timerSubmenuItem: NSMenuItem!
+    var timerSubmenu: NSMenu!
+    var showSystemMetrics = true
+    var headerMenuItem: NSMenuItem!
+    var statusHeader: StatusHeaderView!
+    var wakeShortcutItem: NSMenuItem!
+    let model = AppModel()
+    lazy var settingsWindow = SettingsWindowController(model: model)
+    let showSystemMetricsKey = "ClamKeepShowSystemMetrics"
 
-    private var isActive = false
-    private var wakeStartTime: Date?
-    private var displayTimer: Timer?
-    private var caffeinateProcess: Process?
-    private var allowDisplaySleep = false
-    private let allowDisplaySleepKey = "ClamKeepAllowDisplaySleep"
+    var isActive = false
+    var wakeStartTime: Date?
+    var displayTimer: Timer?
+    var caffeinateProcess: Process?
+    var allowDisplaySleep = false
+    let allowDisplaySleepKey = "ClamKeepAllowDisplaySleep"
     /// Display hold is the default Wake Mode behavior; Display Sleep [ON] turns it off.
-    private var shouldHoldDisplay: Bool { !allowDisplaySleep }
-    private var downloadMonitorEnabled = false
-    private let downloadMonitorKey = "ClamKeepDownloadMonitor"
-    private var downloadMonitorTimer: Timer?
+    var shouldHoldDisplay: Bool { !allowDisplaySleep }
+    var downloadMonitorEnabled = false
+    let downloadMonitorKey = "ClamKeepDownloadMonitor"
+    var downloadMonitorTimer: Timer?
 
-    private var autoOffMinutes: Int? {
+    var autoOffMinutes: Int? {
         didSet {
             if let minutes = autoOffMinutes {
                 UserDefaults.standard.set(minutes, forKey: autoOffMinutesKey)
@@ -56,39 +54,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
     }
-    private var autoOffDeadline: Date?
-    private let autoOffMinutesKey = "ClamKeepAutoOffMinutes"
-    private let autoOffDeadlineKey = "ClamKeepAutoOffDeadline"
-    private static let timerPresets = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+    var autoOffDeadline: Date?
+    let autoOffMinutesKey = "ClamKeepAutoOffMinutes"
+    let autoOffDeadlineKey = "ClamKeepAutoOffDeadline"
+    static let timerPresets = [15, 30, 45, 60, 120, 240]
 
-    private var allowAutoLock = false
-    private let allowAutoLockKey = "ClamKeepAllowAutoLock"
+    var allowAutoLock = false
+    let allowAutoLockKey = "ClamKeepAllowAutoLock"
     /// Auto-lock hold is the default Wake Mode behavior; Auto Lock [ON] turns it off.
-    private var shouldHoldAutoLock: Bool { !allowAutoLock }
-    private let autoLockOverrideActiveKey = "ClamKeepAutoLockOverrideActive"
-    private let autoLockSavedDelayKey = "ClamKeepAutoLockSavedDelay"
-    private let autoLockSavedHadKeyKey = "ClamKeepAutoLockSavedHadKey"
-    private let autoLockOverrideDelay = 315_360_000.0
+    var shouldHoldAutoLock: Bool { !allowAutoLock }
+    let autoLockOverrideActiveKey = "ClamKeepAutoLockOverrideActive"
+    let autoLockSavedDelayKey = "ClamKeepAutoLockSavedDelay"
+    let autoLockSavedHadKeyKey = "ClamKeepAutoLockSavedHadKey"
+    let autoLockOverrideDelay = 315_360_000.0
 
 
-    private var downloadMonitorSince: Date?
-    private var watchedAppSince: Date?
+    var downloadMonitorSince: Date?
+    var watchedAppSince: Date?
 
-    private var wakeReasons: WakeReason = []
-    private var displayOverrideHeld = false
-    private let displayOverrideHeldKey = "ClamKeepDisplayOverrideHeld"
-    private var isEnablingWake = false
+    var wakeReasons: WakeReason = []
+    var displayOverrideHeld = false
+    let displayOverrideHeldKey = "ClamKeepDisplayOverrideHeld"
+    var isEnablingWake = false
     /// Bumped on every enable/disable so a stale async enable cannot resurrect a cancelled session.
-    private var wakeGeneration = 0
+    var wakeGeneration = 0
     /// Serializes enable/disable IPC so a cancelled enable cannot land after disable.
-    private let lifecycleLock = NSLock()
+    let lifecycleLock = NSLock()
 
-    private var watchdog = AppWatchdog()
+    var watchdog = AppWatchdog()
 
-    private let wakeStartKey = "ClamKeepWakeStartTime"
-    private let expectedDaemonVersion = "1.4.0"
+    let wakeStartKey = "ClamKeepWakeStartTime"
 
-    private var screensaverDefaults: UserDefaults? {
+    var screensaverDefaults: UserDefaults? {
         UserDefaults(suiteName: "com.apple.screensaver")
     }
 
@@ -100,11 +97,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         showSystemMetrics = UserDefaults.standard.object(forKey: showSystemMetricsKey) as? Bool ?? true
         setupStatusItem()
         setupMenu()
+        MainMenu.install(target: self, settings: #selector(openSettings), quit: #selector(quitApp))
         migrateAllowFlags()
-
-        if !isDaemonInstalled() || !isDaemonUpToDate() {
-            setupDaemon()
-        }
+        configureModel()
+        // Non-blocking: the onboarding window appears only if the helper is missing or outdated.
+        refreshHelperState(presentSetupIfNeeded: true)
 
         checkInitialState()
         if showSystemMetrics {
@@ -116,232 +113,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         performWakeTeardownSync()
     }
 
-    // MARK: - Daemon
-
-    private func isDaemonInstalled() -> Bool {
-        return FileManager.default.fileExists(atPath: "/Library/LaunchDaemons/com.m3etis.clamkeep.helper.plist") &&
-               FileManager.default.fileExists(atPath: "/usr/local/bin/clamkeep-helper.sh")
-    }
-
-    private func isDaemonUpToDate() -> Bool {
-        let installed = PrivilegedShell.getDaemonVersion()
-        return installed == expectedDaemonVersion
-    }
-
-    private func setupDaemon() {
-        let alert = NSAlert()
-        alert.messageText = L.setupTitle
-        alert.informativeText = L.setupMessage
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: L.setupButton)
-        alert.addButton(withTitle: L.cancelButton)
-
-        if alert.runModal() == .alertFirstButtonReturn {
-            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                self?.executeInstallScript()
-            }
-        }
-    }
-
-    private func executeInstallScript() {
-        let bundlePath = Bundle.main.resourcePath ?? ""
-        let tempDir = NSTemporaryDirectory() + "clamkeep-install-\(UUID().uuidString)"
-        do {
-            try FileManager.default.createDirectory(atPath: tempDir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-            try FileManager.default.copyItem(atPath: "\(bundlePath)/clamkeep-helper.sh", toPath: "\(tempDir)/clamkeep-helper.sh")
-            try FileManager.default.copyItem(atPath: "\(bundlePath)/install-helper.sh", toPath: "\(tempDir)/install-helper.sh")
-        } catch {
-            logger.error("Failed to prepare install scripts: \(error.localizedDescription)")
-            return
-        }
-
-        let escapedPrompt = L.promptExplanation
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\"", with: "\\\"")
-        let script = "do shell script \"bash \\\"\(tempDir)/install-helper.sh\\\"\" with administrator privileges with prompt \"\(escapedPrompt)\""
-        var error: NSDictionary?
-        if let appleScript = NSAppleScript(source: script) {
-            appleScript.executeAndReturnError(&error)
-            if let error = error {
-                let msg = error[NSAppleScript.errorMessage] as? String ?? "Unknown error"
-                logger.error("Daemon setup failed: \(msg)")
-                DispatchQueue.main.async {
-                    let failAlert = NSAlert()
-                    failAlert.messageText = L.setupErrorTitle
-                    failAlert.informativeText = msg
-                    failAlert.alertStyle = .warning
-                    failAlert.addButton(withTitle: L.okButton)
-                    failAlert.runModal()
-                }
-            }
-        }
-        do {
-            try FileManager.default.removeItem(atPath: tempDir)
-        } catch {
-            logger.warning("Failed to clean up temp dir: \(error.localizedDescription)")
-        }
-    }
-
-    // MARK: - Status Item
-
-    private func setupStatusItem() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        if let button = statusItem.button {
-            button.image = MenuBarIcon.image(style: IconStyle.current, state: .inactive)
-            button.toolTip = "ClamKeep"
-        }
-    }
-
-    // MARK: - Menu
-
-    private func setupMenu() {
-        let menu = NSMenu()
-        menu.delegate = self
-
-        // System metrics dashboard (header, refreshed on open).
-        // Custom-view items ignore isHidden on some macOS versions — add/remove instead.
-        metricsHeader = SystemMetricsHeader(frame: NSRect(
-            x: 0, y: 0,
-            width: SystemMetricsHeader.preferredWidth,
-            height: SystemMetricsHeader.preferredHeight
-        ))
-        metricsHeaderMenuItem = NSMenuItem()
-        metricsHeaderMenuItem.view = metricsHeader
-        // Enabled but action-less: custom-view items dim themselves when disabled.
-        metricsHeaderMenuItem.isEnabled = true
-        metricsHeaderMenuItem.target = nil
-
-        metricsSeparatorItem = NSMenuItem.separator()
-
-        if showSystemMetrics {
-            menu.addItem(metricsHeaderMenuItem)
-            menu.addItem(metricsSeparatorItem)
-        }
-
-        statusMenuItem = NSMenuItem(title: L.statusInactive, action: nil, keyEquivalent: "")
-        setMenuItem(statusMenuItem, title: L.statusInactive, active: false, enabled: false)
-        menu.addItem(statusMenuItem)
-
-        timerMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        timerMenuItem.isHidden = true
-        timerMenuItem.isEnabled = false
-        menu.addItem(timerMenuItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        toggleMenuItem = NSMenuItem(title: L.wakeMode, action: #selector(toggleWake), keyEquivalent: "w")
-        toggleMenuItem.target = self
-        setOnOffMenuItem(toggleMenuItem, title: L.wakeMode, isOn: isActive, enabled: true, shortcut: "w")
-        menu.addItem(toggleMenuItem)
-
-        // Display Sleep exception while Wake Mode is on
-        allowDisplaySleepMenuItem = NSMenuItem(title: L.allowDisplaySleep, action: #selector(toggleAllowDisplaySleep), keyEquivalent: "s")
-        allowDisplaySleepMenuItem.target = self
-        setOnOffMenuItem(allowDisplaySleepMenuItem, title: L.allowDisplaySleep, isOn: allowDisplaySleep && isActive, enabled: isActive, shortcut: "s")
-        menu.addItem(allowDisplaySleepMenuItem)
-
-        // Auto Lock exception while Wake Mode is on
-        allowAutoLockMenuItem = NSMenuItem(title: L.allowAutoLock, action: #selector(toggleAllowAutoLock), keyEquivalent: "l")
-        allowAutoLockMenuItem.target = self
-        setOnOffMenuItem(allowAutoLockMenuItem, title: L.allowAutoLock, isOn: allowAutoLock && isActive, enabled: isActive, shortcut: "l")
-        menu.addItem(allowAutoLockMenuItem)
-
-        // Don't Sleep During Downloads toggle
-        downloadMonitorMenuItem = NSMenuItem(title: L.dontSleepDuringDownloads, action: #selector(toggleDownloadMonitor), keyEquivalent: "d")
-        downloadMonitorMenuItem.target = self
-        setMenuItem(downloadMonitorMenuItem, title: L.dontSleepDuringDownloads, active: downloadMonitorEnabled, shortcut: "d", since: downloadMonitorEnabled ? downloadMonitorSince : nil)
-        menu.addItem(downloadMonitorMenuItem)
-
-        // Auto-off timer submenu
-        timerSubmenuItem = NSMenuItem(title: L.timerMenu, action: nil, keyEquivalent: "")
-        timerSubmenu = NSMenu()
-        timerSubmenu.delegate = self
-        timerSubmenuItem.submenu = timerSubmenu
-        setMenuItem(timerSubmenuItem, title: L.timerMenu, active: autoOffMinutes != nil && isActive)
-        menu.addItem(timerSubmenuItem)
-
-        // Stay Awake While App Active submenu
-        stayAwakeMenuItem = NSMenuItem(title: L.stayAwakeUntil, action: nil, keyEquivalent: "")
-        stayAwakeSubmenu = NSMenu()
-        stayAwakeSubmenu.delegate = self
-        stayAwakeMenuItem.submenu = stayAwakeSubmenu
-        setMenuItem(stayAwakeMenuItem, title: L.stayAwakeUntil, active: watchdog.isWatching, since: watchdog.isWatching ? watchedAppSince : nil)
-        menu.addItem(stayAwakeMenuItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        // Settings submenu
-        let settingsItem = NSMenuItem(title: L.settings, action: nil, keyEquivalent: ",")
-        let settingsMenu = NSMenu()
-
-        // Launch at login
-        let loginItem = NSMenuItem(title: L.launchAtLogin, action: #selector(toggleLogin), keyEquivalent: "")
-        loginItem.target = self
-        setMenuItem(loginItem, title: L.launchAtLogin, active: LoginItem.isEnabled())
-        settingsMenu.addItem(loginItem)
-
-        // System stats header
-        statsMenuItem = NSMenuItem(title: L.showSystemStats, action: #selector(toggleSystemStats), keyEquivalent: "")
-        statsMenuItem.target = self
-        setMenuItem(statsMenuItem, title: L.showSystemStats, active: showSystemMetrics)
-        settingsMenu.addItem(statsMenuItem)
-
-        settingsMenu.addItem(NSMenuItem.separator())
-
-        // Language submenu
-        let langItem = NSMenuItem(title: L.language, action: nil, keyEquivalent: "")
-        let langMenu = NSMenu()
-
-        for lang in Language.allCases {
-            let item = NSMenuItem(title: lang.displayName, action: #selector(changeLanguage(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = lang.rawValue
-            item.state = L.current == lang ? .on : .off
-            langMenu.addItem(item)
-        }
-        langItem.submenu = langMenu
-        settingsMenu.addItem(langItem)
-
-        // Icon submenu
-        let iconItem = NSMenuItem(title: L.iconStyle, action: nil, keyEquivalent: "")
-        let iconMenu = NSMenu()
-        for style in IconStyle.allCases {
-            let item = NSMenuItem(title: style.localizedName, action: #selector(changeIcon(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = style.rawValue
-            item.state = IconStyle.current == style ? .on : .off
-            item.image = MenuBarIcon.image(style: style, state: .inactive, tinted: false)
-            iconMenu.addItem(item)
-        }
-        iconItem.submenu = iconMenu
-        settingsMenu.addItem(iconItem)
-
-        settingsItem.submenu = settingsMenu
-        menu.addItem(settingsItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        let aboutItem = NSMenuItem(title: L.about, action: #selector(showAbout), keyEquivalent: "")
-        aboutItem.target = self
-        menu.addItem(aboutItem)
-
-        let quitItem = NSMenuItem(title: L.quit, action: #selector(quitApp), keyEquivalent: "q")
-        quitItem.target = self
-        menu.addItem(quitItem)
-
-        statusItem.menu = menu
-    }
-
-    private func rebuildMenu() {
-        statusItem.menu = nil
-        setupMenu()
-    }
-
     // MARK: - State
 
     /// One-time invert of 1.6 Prevent* prefs into Allow* exceptions.
     /// Fresh installs default to both Allow OFF (= hold display + hold auto lock).
-    private func migrateAllowFlags() {
+    func migrateAllowFlags() {
         let d = UserDefaults.standard
         let oldDisplay = "ClamKeepPreventDisplaySleep"
         let oldLock = "ClamKeepPreventAutoLock"
@@ -365,7 +141,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         d.removeObject(forKey: oldLock)
     }
 
-    private func checkInitialState() {
+    func checkInitialState() {
         allowDisplaySleep = UserDefaults.standard.bool(forKey: allowDisplaySleepKey)
         downloadMonitorEnabled = UserDefaults.standard.bool(forKey: downloadMonitorKey)
         allowAutoLock = UserDefaults.standard.bool(forKey: allowAutoLockKey)
@@ -436,132 +212,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func updateUI(active: Bool) {
-        updateHeaderHints()
-        setOnOffMenuItem(toggleMenuItem, title: L.wakeMode, isOn: active, enabled: true, shortcut: "w")
-        // Display Sleep / Auto Lock reflect live exception state while Wake Mode is on.
-        setOnOffMenuItem(allowDisplaySleepMenuItem, title: L.allowDisplaySleep, isOn: allowDisplaySleep && active, enabled: active, shortcut: "s")
-        setOnOffMenuItem(allowAutoLockMenuItem, title: L.allowAutoLock, isOn: allowAutoLock && active, enabled: active, shortcut: "l")
-        setMenuItem(downloadMonitorMenuItem, title: L.dontSleepDuringDownloads, active: downloadMonitorEnabled, shortcut: "d", since: downloadMonitorEnabled ? downloadMonitorSince : nil)
-        setMenuItem(timerSubmenuItem, title: L.timerMenu, active: autoOffMinutes != nil && active, enabled: true)
-        setMenuItem(stayAwakeMenuItem, title: L.stayAwakeUntil, active: watchdog.isWatching, since: watchdog.isWatching ? watchedAppSince : nil)
-
-        let iconState: MenuBarIconState = !active ? .inactive : (shouldHoldDisplay ? .active : .activeDisplaySleepAllowed)
-        statusItem.button?.image = MenuBarIcon.image(style: IconStyle.current, state: iconState)
-        statusItem.button?.setAccessibilityLabel(MenuBarIcon.accessibilityDescription(for: iconState))
-        refreshLiveTimers()
-    }
-
-    private func updateHeaderHints() {
-        statusMenuItem.isHidden = isActive
-        if !isActive {
-            setMenuItem(statusMenuItem, title: L.statusInactive, active: false, enabled: false)
-        }
-
-        if isActive {
-            let text: String
-            if let deadline = autoOffDeadline {
-                let remaining = max(0, Int(deadline.timeIntervalSinceNow))
-                let hours = remaining / 3600
-                let minutes = (remaining % 3600) / 60
-                let seconds = remaining % 60
-                text = "\(L.wakeTimeRemaining): \(String(format: "%02d:%02d:%02d", hours, minutes, seconds))"
-            } else {
-                let elapsed = formattedDuration(since: wakeStartTime, long: true)
-                text = "\(L.wakeTime): \(elapsed)"
-            }
-            timerMenuItem.attributedTitle = NSAttributedString(string: text, attributes: [
-                .font: NSFont.menuFont(ofSize: 0),
-                .foregroundColor: NSColor.secondaryLabelColor
-            ])
-            timerMenuItem.title = text
-            timerMenuItem.isHidden = false
-        } else {
-            timerMenuItem.isHidden = true
-        }
-    }
-
-    /// Active toggles are shown in green instead of a checkmark.
-    /// Shade is tuned per appearance so the label stays readable in menus.
-    private var activeToggleColor: NSColor {
-        NSColor(name: nil) { appearance in
-            let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-            return isDark
-                ? NSColor(srgbRed: 0.45, green: 0.90, blue: 0.50, alpha: 1)
-                : NSColor(srgbRed: 0.08, green: 0.52, blue: 0.24, alpha: 1)
-        }
-    }
-
-    private func setMenuItem(_ item: NSMenuItem, title: String, active: Bool, enabled: Bool = true, shortcut: String? = nil, since: Date? = nil) {
-        let color: NSColor = !enabled
-            ? .disabledControlTextColor
-            : (active ? activeToggleColor : .labelColor)
-        let menuFont = NSFont.menuFont(ofSize: 0)
-        let font: NSFont = (active && enabled)
-            ? NSFontManager.shared.convert(menuFont, toHaveTrait: .boldFontMask)
-            : menuFont
-
-        item.view = nil
-        item.attributedTitle = NSAttributedString(string: title, attributes: [
-            .font: font,
-            .foregroundColor: color
-        ])
-        item.title = title
-
-        if active {
-            // Live toggles only: ON while this option is in effect.
-            item.keyEquivalent = "ON"
-            item.keyEquivalentModifierMask = []
-        } else if let shortcut {
-            item.keyEquivalent = shortcut
-            item.keyEquivalentModifierMask = [.command]
-        } else {
-            item.keyEquivalent = ""
-            item.keyEquivalentModifierMask = []
-        }
-
-        item.state = .off
-        item.isEnabled = enabled
-    }
-
-    /// Wake Mode / Display Sleep / Auto Lock: plain title + ` [ON]` / ` [OFF]` badge.
-    /// Only the status badge is green when on — the label itself stays neutral.
-    private func setOnOffMenuItem(_ item: NSMenuItem, title: String, isOn: Bool, enabled: Bool = true, shortcut: String? = nil) {
-        let menuFont = NSFont.menuFont(ofSize: 0)
-        let titleColor: NSColor = enabled ? .labelColor : .disabledControlTextColor
-        let statusText = isOn ? " [\(L.statusOn)]" : " [\(L.statusOff)]"
-        let statusColor: NSColor = {
-            if !enabled { return .disabledControlTextColor }
-            return isOn ? activeToggleColor : .secondaryLabelColor
-        }()
-
-        let attributed = NSMutableAttributedString()
-        attributed.append(NSAttributedString(string: title, attributes: [
-            .font: menuFont,
-            .foregroundColor: titleColor
-        ]))
-        attributed.append(NSAttributedString(string: statusText, attributes: [
-            .font: NSFontManager.shared.convert(menuFont, toHaveTrait: .boldFontMask),
-            .foregroundColor: statusColor
-        ]))
-
-        item.view = nil
-        item.attributedTitle = attributed
-        item.title = title + statusText
-
-        if let shortcut {
-            item.keyEquivalent = shortcut
-            item.keyEquivalentModifierMask = [.command]
-        } else {
-            item.keyEquivalent = ""
-            item.keyEquivalentModifierMask = []
-        }
-
-        item.state = .off
-        item.isEnabled = enabled
-    }
-
-    private func formattedDuration(since: Date?, long: Bool) -> String {
+    func formattedDuration(since: Date?, long: Bool) -> String {
         guard let since else { return long ? "00:00:00" : "0s" }
         let elapsed = max(0, Int(Date().timeIntervalSince(since)))
         let hours = elapsed / 3600
@@ -588,53 +239,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func refreshLiveTimers() {
-        updateHeaderHints()
-        if downloadMonitorEnabled {
-            setMenuItem(downloadMonitorMenuItem, title: L.dontSleepDuringDownloads, active: true, shortcut: "d", since: downloadMonitorSince)
-        }
-        if autoOffMinutes != nil && isActive {
-            setMenuItem(timerSubmenuItem, title: L.timerMenu, active: true)
-        }
-        if watchdog.isWatching {
-            setMenuItem(stayAwakeMenuItem, title: L.stayAwakeUntil, active: true, since: watchedAppSince)
-        }
-    }
-
     // MARK: - Auto-off Timer
 
-    private func populateTimerSubmenu() {
-        timerSubmenu.removeAllItems()
-
-        let offItem = NSMenuItem(title: L.timerOff, action: #selector(setAutoOffOff), keyEquivalent: "")
-        offItem.target = self
-        offItem.state = autoOffMinutes == nil ? .on : .off
-        timerSubmenu.addItem(offItem)
-
-        timerSubmenu.addItem(NSMenuItem.separator())
-
-        for minutes in Self.timerPresets {
-            let item = NSMenuItem(title: L.timerMinutes(minutes), action: #selector(setAutoOffPreset(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = minutes
-            item.state = autoOffMinutes == minutes ? .on : .off
-            timerSubmenu.addItem(item)
-        }
-
-        timerSubmenu.addItem(NSMenuItem.separator())
-
-        let customItem = NSMenuItem(title: L.timerCustom, action: #selector(promptCustomTimer), keyEquivalent: "")
-        customItem.target = self
-        timerSubmenu.addItem(customItem)
-    }
-
-    @objc private func setAutoOffOff() {
+    @objc func setAutoOffOff() {
         autoOffDeadline = nil
         autoOffMinutes = nil
         rebuildMenu()
     }
 
-    @objc private func setAutoOffPreset(_ sender: NSMenuItem) {
+    @objc func setAutoOffPreset(_ sender: NSMenuItem) {
         guard let minutes = sender.representedObject as? Int else { return }
         autoOffDeadline = nil
         autoOffMinutes = minutes
@@ -644,59 +257,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         rebuildMenu()
     }
 
-    @objc private func promptCustomTimer() {
-        let alert = NSAlert()
-        alert.messageText = L.timerCustomTitle
-        alert.informativeText = L.timerCustomMessage
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: L.okButton)
-        alert.addButton(withTitle: L.cancelButton)
-
-        // Frame-based accessory: NSAlert manages accessoryView's frame and
-        // breaks when Auto Layout is enabled on the view itself.
-        let accessory = NSView(frame: NSRect(x: 0, y: 0, width: 240, height: 60))
-
-        let hoursLabel = NSTextField(labelWithString: L.timerHoursLabel)
-        hoursLabel.frame = NSRect(x: 0, y: 32, width: 70, height: 22)
-
-        let hoursField = NSTextField(frame: NSRect(x: 78, y: 30, width: 70, height: 24))
-        hoursField.stringValue = "0"
-
-        let minutesLabel = NSTextField(labelWithString: L.timerMinutesLabel)
-        minutesLabel.frame = NSRect(x: 0, y: 4, width: 70, height: 22)
-
-        let minutesField = NSTextField(frame: NSRect(x: 78, y: 2, width: 70, height: 24))
-        minutesField.stringValue = "30"
-
-        accessory.addSubview(hoursLabel)
-        accessory.addSubview(hoursField)
-        accessory.addSubview(minutesLabel)
-        accessory.addSubview(minutesField)
-
-        alert.accessoryView = accessory
-        alert.layout()
-        alert.window.initialFirstResponder = hoursField
-
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-
-        let hours = max(0, hoursField.integerValue)
-        let minutes = max(0, min(59, minutesField.integerValue))
-        let total = hours * 60 + minutes
-        guard total > 0 else {
-            autoOffDeadline = nil
-            autoOffMinutes = nil
-            rebuildMenu()
-            return
-        }
-        autoOffDeadline = nil
-        autoOffMinutes = total
-        if !isActive {
-            addWakeReason(.manual)
-        }
-        rebuildMenu()
-    }
-
-    private func checkAutoOff() {
+    func checkAutoOff() {
         guard let deadline = autoOffDeadline, Date() >= deadline else { return }
         clearAllWakeReasons()
         rebuildMenu()
@@ -704,14 +265,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Wake Reasons
 
-    private func addWakeReason(_ reason: WakeReason) {
+    func addWakeReason(_ reason: WakeReason) {
         wakeReasons.insert(reason)
         if !isActive && !isEnablingWake {
             enableWakeMode()
         }
     }
 
-    private func removeWakeReason(_ reason: WakeReason) {
+    func removeWakeReason(_ reason: WakeReason) {
         guard wakeReasons.contains(reason) else { return }
         wakeReasons.remove(reason)
         if wakeReasons.isEmpty && (isActive || isEnablingWake) {
@@ -719,7 +280,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func clearAllWakeReasons() {
+    func clearAllWakeReasons() {
         // Manual off / auto-off expiry ends the whole keep-awake session.
         autoOffMinutes = nil
         wakeReasons = []
@@ -736,19 +297,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         disableWakeMode()
     }
 
-    private func setAllowDisplaySleep(_ value: Bool) {
+    func setAllowDisplaySleep(_ value: Bool) {
         allowDisplaySleep = value
         UserDefaults.standard.set(value, forKey: allowDisplaySleepKey)
     }
 
-    private func setAllowAutoLock(_ value: Bool) {
+    func setAllowAutoLock(_ value: Bool) {
         allowAutoLock = value
         UserDefaults.standard.set(value, forKey: allowAutoLockKey)
     }
 
     // MARK: - Actions
 
-    @objc private func toggleWake() {
+    @objc func toggleWake() {
         // While enable IPC is in flight a second click must not cancel the
         // session — the user is trying to turn Wake Mode on, not off.
         if isEnablingWake { return }
@@ -761,7 +322,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         addWakeReason(.manual)
     }
 
-    private func enableWakeMode() {
+    func enableWakeMode() {
         if isActive || isEnablingWake { return }
 
         // Fresh session: Display Sleep and Auto Lock are forbidden until the
@@ -811,7 +372,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func finishEnable(generation: Int, sleepOk: Bool, displayOk: Bool, holdDisplay: Bool) {
+    func finishEnable(generation: Int, sleepOk: Bool, displayOk: Bool, holdDisplay: Bool) {
         lifecycleLock.lock()
         let isCurrent = generation == wakeGeneration
         lifecycleLock.unlock()
@@ -840,7 +401,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func disableWakeMode() {
+    func disableWakeMode() {
         lifecycleLock.lock()
         // Bump generation so a stale async enable cannot resurrect this session.
         wakeGeneration += 1
@@ -885,7 +446,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func performWakeTeardownSync() {
+    func performWakeTeardownSync() {
         stopDownloadMonitor()
         stopCaffeinate()
         watchdog.stopWatching()
@@ -905,99 +466,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setDisplayOverrideHeld(false)
     }
 
-    @objc private func toggleLogin() {
-        let _ = LoginItem.toggle()
-        rebuildMenu()
-    }
-
-    @objc private func toggleSystemStats() {
-        showSystemMetrics.toggle()
-        UserDefaults.standard.set(showSystemMetrics, forKey: showSystemMetricsKey)
-        applySystemMetricsVisibility()
-    }
-
-    /// Show/hide the metrics header on the live menu immediately (no app restart).
-    private func applySystemMetricsVisibility() {
-        guard let menu = statusItem.menu else {
-            rebuildMenu()
-            return
-        }
-
-        if showSystemMetrics {
-            setMetricsHeaderVisible(true, in: menu)
-            SystemMetrics.warmUp()
-            refreshSystemMetrics()
-        } else {
-            setMetricsHeaderVisible(false, in: menu)
-        }
-
-        if let statsMenuItem {
-            setMenuItem(statsMenuItem, title: L.showSystemStats, active: showSystemMetrics)
-        }
-    }
-
-    private func setMetricsHeaderVisible(_ visible: Bool, in menu: NSMenu) {
-        if visible {
-            if metricsHeaderMenuItem.menu !== menu {
-                menu.insertItem(metricsHeaderMenuItem, at: 0)
-                menu.insertItem(metricsSeparatorItem, at: 1)
-            }
-        } else if metricsHeaderMenuItem.menu === menu {
-            menu.removeItem(metricsHeaderMenuItem)
-            menu.removeItem(metricsSeparatorItem)
-        }
-    }
-
-    @objc private func changeLanguage(_ sender: NSMenuItem) {
-        guard let raw = sender.representedObject as? String,
-              let lang = Language(rawValue: raw) else { return }
-        L.current = lang
-        updateUI(active: isActive)
-        rebuildMenu()
-    }
-
-    @objc private func changeIcon(_ sender: NSMenuItem) {
-        guard let raw = sender.representedObject as? String,
-              let style = IconStyle(rawValue: raw) else { return }
-        IconStyle.current = style
-        updateUI(active: isActive)
-        rebuildMenu()
-    }
-
-    @objc private func showAbout() {
-        let alert = NSAlert()
-        alert.messageText = L.aboutTitle
-        alert.informativeText = L.aboutDescription
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: L.githubButton)
-        alert.addButton(withTitle: L.okButton)
-        if alert.runModal() == .alertFirstButtonReturn {
-            if let url = URL(string: "https://github.com/M3etis/ClamKeep") {
-                NSWorkspace.shared.open(url)
-            }
-        }
-    }
-
-    @objc private func quitApp() {
-        if isActive {
-            let alert = NSAlert()
-            alert.messageText = L.quitConfirmTitle
-            alert.informativeText = L.quitConfirmMessage
-            alert.alertStyle = .warning
-            alert.addButton(withTitle: L.quitButton)
-            alert.addButton(withTitle: L.cancelButton)
-            if alert.runModal() == .alertFirstButtonReturn {
-                performWakeTeardownSync()
-                NSApp.terminate(nil)
-            }
-        } else {
-            NSApp.terminate(nil)
-        }
-    }
-
     // MARK: - Caffeinate
 
-    private func startCaffeinate(holdDisplay: Bool) {
+    func startCaffeinate(holdDisplay: Bool) {
         stopCaffeinate()
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/caffeinate")
@@ -1022,7 +493,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func stopCaffeinate() {
+    func stopCaffeinate() {
         if let process = caffeinateProcess, process.isRunning {
             process.terminationHandler = nil
             process.terminate()
@@ -1032,7 +503,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Timer
 
-    private func startDisplayTimer() {
+    func startDisplayTimer() {
         stopDisplayTimer()
         let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.updateTimerDisplay()
@@ -1041,12 +512,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         displayTimer = timer
     }
 
-    private func stopDisplayTimer() {
+    func stopDisplayTimer() {
         displayTimer?.invalidate()
         displayTimer = nil
     }
 
-    private func updateTimerDisplay() {
+    func updateTimerDisplay() {
         checkAutoOff()
         refreshLiveTimers()
     }
@@ -1054,7 +525,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Display Sleep
 
     /// Keeps `pmset displaysleep` in sync with the Allow flag while Wake Mode is held.
-    private func syncDisplayHold() {
+    func syncDisplayHold() {
         let holdDisplay = shouldHoldDisplay
         if holdDisplay && !displayOverrideHeld {
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
@@ -1073,12 +544,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func setDisplayOverrideHeld(_ held: Bool) {
+    func setDisplayOverrideHeld(_ held: Bool) {
         displayOverrideHeld = held
         UserDefaults.standard.set(held, forKey: displayOverrideHeldKey)
     }
 
-    @objc private func toggleAllowDisplaySleep() {
+    @objc func toggleAllowDisplaySleep() {
         setAllowDisplaySleep(!allowDisplaySleep)
 
         if isActive {
@@ -1109,13 +580,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Auto Lock
 
-    @objc private func toggleAllowAutoLock() {
+    @objc func toggleAllowAutoLock() {
         setAllowAutoLock(!allowAutoLock)
         syncAutoLock()
         updateUI(active: isActive)
     }
 
-    private func syncAutoLock() {
+    func syncAutoLock() {
         if isActive && shouldHoldAutoLock {
             applyAutoLockOverride()
         } else {
@@ -1123,7 +594,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func applyAutoLockOverride() {
+    func applyAutoLockOverride() {
         guard !UserDefaults.standard.bool(forKey: autoLockOverrideActiveKey) else { return }
         guard let defaults = screensaverDefaults else { return }
 
@@ -1141,7 +612,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         defaults.synchronize()
     }
 
-    private func restoreAutoLockOverride() {
+    func restoreAutoLockOverride() {
         guard UserDefaults.standard.bool(forKey: autoLockOverrideActiveKey) else { return }
         guard let defaults = screensaverDefaults else { return }
 
@@ -1158,7 +629,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Download Monitor
 
-    @objc private func toggleDownloadMonitor() {
+    @objc func toggleDownloadMonitor() {
         downloadMonitorEnabled.toggle()
         UserDefaults.standard.set(downloadMonitorEnabled, forKey: downloadMonitorKey)
         downloadMonitorSince = downloadMonitorEnabled ? Date() : nil
@@ -1173,7 +644,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateUI(active: isActive)
     }
 
-    private func startDownloadMonitor() {
+    func startDownloadMonitor() {
         stopDownloadMonitor()
         downloadMonitorTimer = Timer(timeInterval: 15.0, repeats: true) { [weak self] _ in
             self?.checkDownloads()
@@ -1181,12 +652,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         RunLoop.main.add(downloadMonitorTimer!, forMode: .common)
     }
 
-    private func stopDownloadMonitor() {
+    func stopDownloadMonitor() {
         downloadMonitorTimer?.invalidate()
         downloadMonitorTimer = nil
     }
 
-    private func checkDownloads() {
+    func checkDownloads() {
         guard downloadMonitorEnabled else { return }
 
         if hasActiveDownloads() {
@@ -1196,7 +667,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func hasActiveDownloads() -> Bool {
+    func hasActiveDownloads() -> Bool {
         let downloadProcesses = ["curl", "wget", "aria2c", "httpdownloader"]
 
         for name in downloadProcesses {
@@ -1220,7 +691,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return hasRecentDownloadsFolderActivity()
     }
 
-    private func hasRecentDownloadsFolderActivity() -> Bool {
+    func hasRecentDownloadsFolderActivity() -> Bool {
         let fileManager = FileManager.default
         guard let downloads = fileManager.urls(for: .downloadsDirectory, in: .userDomainMask).first else {
             return false
@@ -1256,7 +727,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Stay Awake While App Active
 
-    @objc private func toggleStayAwakeForApp(_ sender: NSMenuItem) {
+    @objc func toggleStayAwakeForApp(_ sender: NSMenuItem) {
         guard let app = sender.representedObject as? WatchableApp else { return }
 
         if watchdog.toggleWatching(app) {
@@ -1274,70 +745,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         rebuildMenu()
     }
 
-    private func populateStayAwakeSubmenu() {
-        stayAwakeSubmenu.removeAllItems()
-
-        if watchdog.isWatching, let watched = watchdog.watchedApp {
-            let sinceText = formattedDuration(since: watchedAppSince, long: false)
-            let label = NSMenuItem(title: "\(L.watchingApp(watched.name))  \(sinceText)", action: nil, keyEquivalent: "")
-            label.isEnabled = false
-            stayAwakeSubmenu.addItem(label)
-            stayAwakeSubmenu.addItem(NSMenuItem.separator())
-        }
-
-        let apps = AppWatchdog.runningUserApps(excludingBundleID: Bundle.main.bundleIdentifier)
-
-        if apps.isEmpty {
-            let emptyItem = NSMenuItem(title: L.noRunningApps, action: nil, keyEquivalent: "")
-            emptyItem.isEnabled = false
-            stayAwakeSubmenu.addItem(emptyItem)
-            return
-        }
-
-        for app in apps {
-            let item = NSMenuItem(title: app.name, action: #selector(toggleStayAwakeForApp(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = app
-            item.state = (watchdog.watchedApp?.bundleIdentifier == app.bundleIdentifier) ? .on : .off
-
-            if let runningApp = NSRunningApplication(processIdentifier: app.processIdentifier) {
-                item.image = runningApp.icon
-                item.image?.size = NSSize(width: 16, height: 16)
-            }
-
-            stayAwakeSubmenu.addItem(item)
-        }
-    }
-}
-
-// MARK: - NSMenuDelegate
-
-extension AppDelegate: NSMenuDelegate {
-    func menuWillOpen(_ menu: NSMenu) {
-        // Full refresh: toggle badges must match live state every open,
-        // not only after an async enable/disable callback.
-        updateUI(active: isActive)
-        if menu === stayAwakeSubmenu {
-            populateStayAwakeSubmenu()
-        }
-        if menu === timerSubmenu {
-            populateTimerSubmenu()
-        }
-        if menu === statusItem.menu {
-            refreshSystemMetrics()
-        }
-    }
-}
-
-// MARK: - System metrics
-
-extension AppDelegate {
-    private func refreshSystemMetrics() {
-        guard showSystemMetrics, let menu = statusItem.menu else { return }
-        metricsHeader.reload(with: SystemMetrics.snapshot())
-        // Empty snapshot: drop the row so a lone separator is not left behind.
-        setMetricsHeaderVisible(!metricsHeader.isHidden, in: menu)
-    }
 }
 
 // MARK: - Menu Validation

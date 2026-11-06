@@ -18,7 +18,7 @@ extension DS {
         static var success: NSColor { .systemGreen }
         static var warning: NSColor { .systemOrange }
         static var danger: NSColor { .systemRed }
-        static var inactive: NSColor { .tertiaryLabelColor }
+        static var inactive: NSColor { .systemGray }
     }
 }
 

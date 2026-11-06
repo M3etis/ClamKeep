@@ -28,29 +28,6 @@ enum L {
         }
     }
 
-    // MARK: - Status
-    static var statusInactive: String {
-        switch current {
-        case .english: return "Sleep: standard"
-        case .russian: return "Режим сна: стандартный"
-        case .kazakh:  return "Ұйқы: стандартты"
-        }
-    }
-    static var wakeTime: String {
-        switch current {
-        case .english: return "Active time"
-        case .russian: return "Время работы"
-        case .kazakh:  return "Белсенді уақыт"
-        }
-    }
-    static var wakeTimeRemaining: String {
-        switch current {
-        case .english: return "Time left"
-        case .russian: return "Осталось"
-        case .kazakh:  return "Қалды"
-        }
-    }
-
     // MARK: - Actions
     static var wakeMode: String {
         switch current {
@@ -61,20 +38,6 @@ enum L {
     }
 
     // MARK: - Auto-off timer
-    static var timerMenu: String {
-        switch current {
-        case .english: return "Auto-off Timer"
-        case .russian: return "Таймер"
-        case .kazakh:  return "Таймер"
-        }
-    }
-    static var timerOff: String {
-        switch current {
-        case .english: return "Off"
-        case .russian: return "Выкл."
-        case .kazakh:  return "Өш."
-        }
-    }
     static var timerCustom: String {
         switch current {
         case .english: return "Custom…"
@@ -110,35 +73,8 @@ enum L {
         case .kazakh:  return "Минут"
         }
     }
-    static func timerMinutes(_ minutes: Int) -> String {
-        switch current {
-        case .english: return "\(minutes) min"
-        case .russian: return "\(minutes) мин"
-        case .kazakh:  return "\(minutes) мин"
-        }
-    }
-    static func timerDuration(_ hours: Int, _ minutes: Int) -> String {
-        switch current {
-        case .english:
-            if hours > 0 { return String(format: "%dh %02dm", hours, minutes) }
-            return "\(minutes) min"
-        case .russian:
-            if hours > 0 { return String(format: "%dч %02dм", hours, minutes) }
-            return "\(minutes) мин"
-        case .kazakh:
-            if hours > 0 { return String(format: "%dс %02dм", hours, minutes) }
-            return "\(minutes) мин"
-        }
-    }
 
     // MARK: - Settings
-    static var settings: String {
-        switch current {
-        case .english: return "Settings"
-        case .russian: return "Настройки"
-        case .kazakh:  return "Баптаулар"
-        }
-    }
     static var launchAtLogin: String {
         switch current {
         case .english: return "Launch at Login"
@@ -160,40 +96,6 @@ enum L {
         case .kazakh:  return "Тіл"
         }
     }
-    static var iconStyle: String {
-        switch current {
-        case .english: return "Icon"
-        case .russian: return "Иконка"
-        case .kazakh:  return "Белгіше"
-        }
-    }
-
-    // MARK: - About & Quit
-    static var about: String {
-        switch current {
-        case .english: return "About ClamKeep"
-        case .russian: return "О приложении"
-        case .kazakh:  return "Қолданба туралы"
-        }
-    }
-    static var quit: String {
-        switch current {
-        case .english: return "Quit"
-        case .russian: return "Выход"
-        case .kazakh:  return "Шығу"
-        }
-    }
-
-    // MARK: - About dialog
-    static var aboutTitle: String { "ClamKeep" }
-    static var aboutVersion: String { "1.9.0" }
-    static var aboutDescription: String {
-        switch current {
-        case .english: return "Version 1.9.0\n\n• System Stats — live battery, CPU, RAM, temperature, and fans at the top of the menu. Toggle in Settings.\n• Wake Mode — keeps your Mac awake with the lid closed. Turning it on forbids Display Sleep and Auto Lock (you can re-enable them manually). Turning it off ends the session and cancels timer, downloads, and watched app.\n• Display Sleep — [ON] lets the screen turn off while Wake Mode is on; [OFF] keeps it on (default).\n• Auto Lock — [ON] lets the Mac lock after idle; [OFF] delays auto-lock (default). Manual lock (⌘⌃Q) always locks immediately.\n• Don't Sleep During Downloads — holds wake while downloads are active.\n• Don't Sleep While Active App… — holds wake while a chosen app runs.\n• Auto-off Timer — turns Wake Mode off after the time you pick (remaining time survives relaunch).\n\nhttps://github.com/M3etis/ClamKeep\n\nAuthor: m3etis@gmail.com"
-        case .russian: return "Версия 1.9.0\n\n• Статистика — заряд, ЦП, ОЗУ, температура и вентиляторы вверху меню. Переключатель в настройках.\n• Бодрствование — Mac не засыпает при закрытой крышке. При включении сон дисплея и автоблокировка запрещаются (можно включить вручную). Выключение завершает сессию и отменяет таймер, загрузки и слежение за приложением.\n• Сон дисплея — [ON]: экран может гаснуть при включённом бодрствовании; [OFF]: экран остаётся включённым (по умолчанию).\n• Автоблокировка — [ON]: Mac может блокироваться по бездействию; [OFF]: автоблокировка отложена (по умолчанию). Ручная блокировка (⌘⌃Q) срабатывает сразу.\n• Не засыпать пока идет загрузка — не даёт Mac заснуть, пока идут загрузки.\n• Не засыпать пока активное приложение… — не даёт Mac заснуть, пока работает выбранное приложение.\n• Таймер — выключает бодрствование через выбранное время (остаток сохраняется при перезапуске).\n\nhttps://github.com/M3etis/ClamKeep\n\nАвтор: m3etis@gmail.com"
-        case .kazakh:  return "Нұсқа 1.9.0\n\n• Статистика — батарея, CPU, ЖЖҚ, температура және желдеткіштер мәзірдің жоғарғы жағында. Баптаулардан өшіруге/қосуға болады.\n• Ояу режим — қақпақ жабылғанда Mac ұйымайды. Қосқанда дисплей ұйқысы мен автоблоктау тыйым салынады (қолмен қосуға болады). Өшіргенде сессия бітіп, таймер, жүктеулер және қолданба бақылауы тоқтайды.\n• Дисплей ұйқысы — [ON]: ояу режимде экран өше алады; [OFF]: экран қосулы қалады (әдепкі).\n• Автоблоктау — [ON]: Mac бос уақытта блокталуы мүмкін; [OFF]: автоблоктау кейінге қалады (әдепкі). Қолмен блоктау (⌘⌃Q) бірден жұмыс істейді.\n• Жүктеу кезінде ұйықтамау — жүктеулер жүріп жатқанда ояу ұстайды.\n• Белсенді қолданба кезінде ұйықтамау… — таңдалған қолданба жұмыс істегенде ояу ұстайды.\n• Таймер — таңдалған уақыттан кейін ояу режимді өшіреді (қалған уақыт қайта іске қосқанда сақталады).\n\nhttps://github.com/M3etis/ClamKeep\n\nАвтор: m3etis@gmail.com"
-        }
-    }
 
     // MARK: - Quit dialog
     static var quitConfirmTitle: String {
@@ -208,13 +110,6 @@ enum L {
         case .english: return "Wake mode will be disabled before quitting. Continue?"
         case .russian: return "Режим бодрствования будет отключён перед выходом. Продолжить?"
         case .kazakh:  return "Шығар алдында ояу режимі өшіріледі. Жалғастыру керек пе?"
-        }
-    }
-    static var quitButton: String {
-        switch current {
-        case .english: return "Quit"
-        case .russian: return "Выйти"
-        case .kazakh:  return "Шығу"
         }
     }
     static var cancelButton: String {
@@ -234,43 +129,7 @@ enum L {
         }
     }
 
-    // MARK: - Auto Lock
-    static var allowAutoLock: String {
-        switch current {
-        case .english: return "Auto Lock"
-        case .russian: return "Автоблокировка"
-        case .kazakh:  return "Автоблоктау"
-        }
-    }
-
-    // MARK: - ON/OFF status badge
-    static var statusOn: String { "ON" }
-    static var statusOff: String { "OFF" }
-
-    // MARK: - Don't Sleep During Downloads
-    static var dontSleepDuringDownloads: String {
-        switch current {
-        case .english: return "Don't Sleep During Downloads"
-        case .russian: return "Не засыпать пока идет загрузка"
-        case .kazakh:  return "Жүктеу кезінде ұйықтамау"
-        }
-    }
-
     // MARK: - Stay Awake While App Active
-    static var stayAwakeUntil: String {
-        switch current {
-        case .english: return "Don't Sleep While Active App…"
-        case .russian: return "Не засыпать пока активное приложение…"
-        case .kazakh:  return "Белсенді қолданба кезінде ұйықтамау…"
-        }
-    }
-    static var noRunningApps: String {
-        switch current {
-        case .english: return "No running apps"
-        case .russian: return "Нет запущенных приложений"
-        case .kazakh:  return "Іске қосылған қолданбалар жоқ"
-        }
-    }
     static func watchingApp(_ name: String) -> String {
         switch current {
         case .english: return "Watching: \(name)"
@@ -280,34 +139,6 @@ enum L {
     }
 
     // MARK: - Setup dialog
-    static var setupTitle: String {
-        switch current {
-        case .english: return "Setup Required"
-        case .russian: return "Требуется настройка"
-        case .kazakh:  return "Баптау қажет"
-        }
-    }
-    static var setupMessage: String {
-        switch current {
-        case .english: return "ClamKeep needs to install a background component to control Mac sleep mode.\n\nYou will be asked for your administrator password."
-        case .russian: return "ClamKeep нужно установить фоновый компонент для управления режимом сна Mac.\n\nВам будет предложено ввести пароль администратора."
-        case .kazakh:  return "ClamKeep Mac ұйқы режимін басқару үшін фондық компонентті орнатуы керек.\n\nСізден әкімші құпия сөзі сұралады."
-        }
-    }
-    static var setupButton: String {
-        switch current {
-        case .english: return "Continue"
-        case .russian: return "Продолжить"
-        case .kazakh:  return "Жалғастыру"
-        }
-    }
-    static var setupErrorTitle: String {
-        switch current {
-        case .english: return "Setup Error"
-        case .russian: return "Ошибка настройки"
-        case .kazakh:  return "Баптау қатесі"
-        }
-    }
     static var promptExplanation: String {
         switch current {
         case .english: return "ClamKeep requires administrator privileges to install its helper daemon. This daemon uses pmset to prevent your Mac from sleeping when the lid is closed."
@@ -352,25 +183,9 @@ enum L {
         case .kazakh:  return "Желдеткіш"
         }
     }
-
-    // MARK: - Common buttons
-    static var okButton: String {
-        switch current {
-        case .english: return "OK"
-        case .russian: return "OK"
-        case .kazakh:  return "OK"
-        }
-    }
-    static var githubButton: String {
-        switch current {
-        case .english: return "GitHub"
-        case .russian: return "GitHub"
-        case .kazakh:  return "GitHub"
-        }
-    }
 }
 
-// MARK: - Redesign (1.10)
+// MARK: - Interface strings
 
 extension L {
     /// English, Russian, Kazakh — in that order.
@@ -395,4 +210,83 @@ extension L {
     static var statusTurningOn: String { tr("Turning on…", "Включается…", "Қосылуда…") }
     static var statusSleepingNormally: String { tr("Sleeping normally", "Обычный режим сна", "Қалыпты ұйқы режимі") }
     static var statusHint: String { tr("Turn on to keep your Mac awake", "Включите, чтобы Mac не засыпал", "Mac ұйықтамауы үшін қосыңыз") }
+    static func statusElapsed(_ time: String) -> String { tr("Active for \(time)", "Работает \(time)", "Белсенді: \(time)") }
+    static func statusRemaining(_ time: String) -> String { tr("Turns off in \(time)", "Выключится через \(time)", "\(time) кейін өшеді") }
+
+    // Menu
+    static var menuAllowDisplaySleep: String { tr("Allow Display Sleep", "Разрешить сон дисплея", "Дисплей ұйқысына рұқсат ету") }
+    static var menuAllowAutoLock: String { tr("Allow Auto Lock", "Разрешить автоблокировку", "Автоблоктауға рұқсат ету") }
+    static var menuDownloads: String { tr("Keep Awake During Downloads", "Не засыпать во время загрузок", "Жүктеу кезінде ұйықтамау") }
+    static var menuWhileAppRuns: String { tr("Keep Awake While App Runs", "Не засыпать, пока работает приложение", "Қолданба жұмыс істегенде ұйықтамау") }
+    static var menuTurnOffAfter: String { tr("Turn Off After", "Выключить через", "Өшіру уақыты") }
+    static var menuNever: String { tr("Never", "Никогда", "Ешқашан") }
+    static func menuCustomCurrent(_ duration: String) -> String { tr("Custom (\(duration))", "Своё время (\(duration))", "Басқа уақыт (\(duration))") }
+    static var menuNoApps: String { tr("No apps with windows are open", "Нет открытых приложений с окнами", "Терезесі бар қолданбалар ашылмаған") }
+    static var menuNoAppsHint: String { tr("Open an app, then choose it here", "Откройте приложение и выберите его здесь", "Қолданбаны ашып, осы жерден таңдаңыз") }
+    static var menuSettings: String { tr("Settings…", "Настройки…", "Баптаулар…") }
+    static var menuAbout: String { tr("About ClamKeep", "О ClamKeep", "ClamKeep туралы") }
+    static var menuQuit: String { tr("Quit ClamKeep", "Выйти из ClamKeep", "ClamKeep-тен шығу") }
+
+    /// "15 min", "1 h", "1 h 30 min".
+    static func duration(minutes total: Int) -> String {
+        let h = total / 60, m = total % 60
+        let (hs, ms) = (tr("h", "ч", "сағ"), tr("min", "мин", "мин"))
+        if h == 0 { return "\(m) \(ms)" }
+        if m == 0 { return "\(h) \(hs)" }
+        return "\(h) \(hs) \(m) \(ms)"
+    }
+
+    // Helper
+    static var helperMissingBanner: String { tr("Install the helper to keep the Mac awake with the lid closed.", "Установите помощник, чтобы Mac не засыпал с закрытой крышкой.", "Mac қақпағы жабық кезде ұйықтамауы үшін көмекшіні орнатыңыз.") }
+    static var helperOutdatedBanner: String { tr("The helper needs an update.", "Помощник нужно обновить.", "Көмекшіні жаңарту қажет.") }
+    static var helperInstallEllipsis: String { tr("Install…", "Установить…", "Орнату…") }
+    static var helperInstalledTitle: String { tr("Helper installed", "Помощник установлен", "Көмекші орнатылған") }
+    static func helperVersion(_ v: String) -> String { tr("Version \(v)", "Версия \(v)", "Нұсқа \(v)") }
+    static var helperMissingTitle: String { tr("Helper isn't installed", "Помощник не установлен", "Көмекші орнатылмаған") }
+    static var helperOutdatedTitle: String { tr("Helper needs an update", "Помощник нужно обновить", "Көмекшіні жаңарту қажет") }
+    static var helperWhy: String { tr("It's needed to keep the Mac awake with the lid closed.", "Он нужен, чтобы Mac не засыпал с закрытой крышкой.", "Ол Mac қақпағы жабық кезде ұйықтамауы үшін қажет.") }
+    static var helperInstall: String { tr("Install Helper", "Установить помощник", "Көмекшіні орнату") }
+    static var helperUpdate: String { tr("Update Helper", "Обновить помощник", "Көмекшіні жаңарту") }
+    static var helperReinstall: String { tr("Reinstall…", "Переустановить…", "Қайта орнату…") }
+    static var helperChecking: String { tr("Checking the helper…", "Проверка помощника…", "Көмекші тексерілуде…") }
+    static var helperInstalling: String { tr("Installing helper…", "Установка помощника…", "Көмекші орнатылуда…") }
+    static var helperFailedTitle: String { tr("Couldn't install the helper", "Не удалось установить помощник", "Көмекшіні орнату мүмкін болмады") }
+    static var helperFailedMessage: String { tr("Make sure you entered an administrator password, then try again.", "Проверьте, что введён пароль администратора, и попробуйте ещё раз.", "Әкімші құпия сөзі енгізілгенін тексеріп, қайталап көріңіз.") }
+    static var helperPrepareFailed: String { tr("ClamKeep couldn't prepare the installer files.", "ClamKeep не смог подготовить файлы установки.", "ClamKeep орнату файлдарын дайындай алмады.") }
+    static var tryAgain: String { tr("Try Again", "Повторить", "Қайталау") }
+    static var details: String { tr("Details", "Подробности", "Толығырақ") }
+
+    // Onboarding
+    static var onboardingTitle: String { tr("Set up ClamKeep", "Настройка ClamKeep", "ClamKeep-ті баптау") }
+    static var onboardingSubtitle: String { tr("A one-time step so ClamKeep can control sleep.", "Один раз, чтобы ClamKeep мог управлять сном.", "ClamKeep ұйқыны басқара алуы үшін бір рет қажет.") }
+    static var onboardingPoint1: String { tr("Installs a small background helper that runs pmset.", "Ставит маленький фоновый помощник, который вызывает pmset.", "pmset шақыратын шағын фондық көмекшіні орнатады.") }
+    static var onboardingPoint2: String { tr("Asks for your administrator password once.", "Пароль администратора нужен один раз.", "Әкімші құпия сөзі бір рет қажет.") }
+    static var onboardingPoint3: String { tr("After that, every toggle works without a password.", "Дальше все переключения — без пароля.", "Содан кейін барлық ауыстыру құпия сөзсіз жұмыс істейді.") }
+    static var notNow: String { tr("Not Now", "Не сейчас", "Қазір емес") }
+    static var done: String { tr("Done", "Готово", "Дайын") }
+    static var onboardingDone: String { tr("ClamKeep is ready. Turn on Wake Mode from the menu bar.", "ClamKeep готов. Включите бодрствование в строке меню.", "ClamKeep дайын. Ояу режимді мәзір жолынан қосыңыз.") }
+
+    // Settings window
+    static var tabGeneral: String { tr("General", "Основные", "Негізгі") }
+    static var tabMenuBarIcon: String { tr("Menu Bar Icon", "Значок", "Белгіше") }
+    static var tabAbout: String { tr("About", "О программе", "Бағдарлама туралы") }
+    static var sectionStartup: String { tr("Startup and Menu", "Запуск и меню", "Іске қосу және мәзір") }
+    static var sectionHelper: String { tr("Helper", "Помощник", "Көмекші") }
+    static var settingsStatsHint: String { tr("Battery, CPU, RAM, temperature and fans at the top of the menu.", "Батарея, ЦП, ОЗУ, температура и вентиляторы вверху меню.", "Мәзірдің жоғарғы жағында батарея, CPU, ЖЖҚ, температура және желдеткіштер.") }
+    static var settingsConfirmQuit: String { tr("Ask before quitting while Wake Mode is on", "Спрашивать перед выходом при включённом бодрствовании", "Ояу режим қосулы кезде шығу алдында сұрау") }
+    static var iconPaneHint: String { tr("Outline when Wake Mode is off, filled when it's on.", "Контур — бодрствование выключено, заливка — включено.", "Контур — ояу режим өшік, толық — қосулы.") }
+    static var iconTint: String { tr("Color the icon while Wake Mode is on", "Подсвечивать значок цветом при бодрствовании", "Ояу режим қосулы кезде белгішені түспен белгілеу") }
+    static var iconTintHint: String { tr("Green when awake, orange when the display may sleep.", "Зелёный — Mac не спит, оранжевый — экрану разрешено гаснуть.", "Жасыл — Mac ояу, қызғылт сары — экранның өшуіне рұқсат.") }
+    static var aboutTagline: String { tr("Keep your Mac awake with the lid closed.", "Mac не спит с закрытой крышкой.", "Қақпақ жабық кезде Mac ояу.") }
+    static func aboutVersionLine(_ v: String, _ b: String) -> String { tr("Version \(v) (\(b))", "Версия \(v) (\(b))", "Нұсқа \(v) (\(b))") }
+    static var reportIssue: String { tr("Report an Issue", "Сообщить о проблеме", "Мәселе туралы хабарлау") }
+
+    // Custom timer
+    static func timerTurnsOffAt(_ time: String) -> String { tr("Wake Mode turns off at \(time).", "Бодрствование выключится в \(time).", "Ояу режим \(time) кезінде өшеді.") }
+    static var timerValidation: String { tr("Choose at least 1 minute.", "Выберите хотя бы 1 минуту.", "Кемінде 1 минут таңдаңыз.") }
+    static var timerStart: String { tr("Start", "Запустить", "Бастау") }
+
+    // Quit
+    static var quitAndTurnOff: String { tr("Quit and Turn Off", "Выйти и выключить", "Шығу және өшіру") }
+    static var dontAskAgain: String { tr("Don't ask again", "Больше не спрашивать", "Қайта сұрамау") }
 }

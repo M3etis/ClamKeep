@@ -183,7 +183,7 @@ struct IconTile<Preview: View>: View {
                     .lineLimit(1)
             }
             .padding(DS.Spacing.s)
-            .frame(width: DS.Size.iconTile)
+            .frame(maxWidth: .infinity, minHeight: DS.Size.iconTile)
             .background(
                 RoundedRectangle(cornerRadius: DS.Radius.large, style: .continuous)
                     .fill(isHovering && !isSelected ? Color.dsTextPrimary.opacity(DS.Opacity.subtleFill) : .clear)

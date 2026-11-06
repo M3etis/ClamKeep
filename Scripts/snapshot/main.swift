@@ -60,3 +60,65 @@ func snapshotMenuBarIcons() {
 }
 
 snapshotMenuBarIcons()
+
+// MARK: - Views
+
+func snapshotView(_ view: NSView, appearance: NSAppearance.Name, name: String) {
+    let size = view.frame.size.height > 0 ? view.frame.size : view.fittingSize
+    let window = NSWindow(contentRect: NSRect(origin: .zero, size: size),
+                          styleMask: [.borderless], backing: .buffered, defer: false)
+    window.appearance = NSAppearance(named: appearance)
+    let container = NSView(frame: NSRect(origin: .zero, size: size))
+    container.wantsLayer = true
+    container.layer?.backgroundColor = (appearance == .darkAqua ? NSColor(white: 0.17, alpha: 1) : NSColor(white: 0.97, alpha: 1)).cgColor
+    view.frame = container.bounds
+    container.addSubview(view)
+    window.contentView = container
+    container.layoutSubtreeIfNeeded()
+    let rep = container.bitmapImageRepForCachingDisplay(in: container.bounds)!
+    container.cacheDisplay(in: container.bounds, to: rep)
+    save(rep, name)
+}
+
+func hosting<V: View>(_ view: V) -> NSView {
+    let host = NSHostingView(rootView: view)
+    host.frame = NSRect(origin: .zero, size: host.fittingSize)
+    return host
+}
+
+let languages: [Language] = [.english, .russian, .kazakh]
+let appearances: [(NSAppearance.Name, String)] = [(.aqua, "light"), (.darkAqua, "dark")]
+
+let snap = SystemSnapshot(batteryPercent: 78, batteryIsCharging: false, batteryTimeRemaining: nil, cpuPercent: 84, ramUsedBytes: 12_000_000_000,
+                          ramTotalBytes: 16_000_000_000, cpuTemperatureCelsius: 52, fanRPMs: [])
+
+for lang in languages {
+    L.current = lang
+    for (appearance, suffix) in appearances {
+        let states: [(String, StatusHeaderState)] = [
+            ("off", StatusHeaderState(mode: .off, subtitle: L.statusHint, helperBanner: nil)),
+            ("on", StatusHeaderState(mode: .on, subtitle: L.statusElapsed("01:23:45"), helperBanner: nil)),
+            ("timer", StatusHeaderState(mode: .onDisplayMaySleep, subtitle: L.statusRemaining("00:14:59"), helperBanner: nil)),
+            ("helper", StatusHeaderState(mode: .off, subtitle: L.statusHint, helperBanner: L.helperMissingBanner)),
+        ]
+        for (label, state) in states {
+            let header = StatusHeaderView()
+            header.reloadMetrics(snap)
+            header.apply(state)
+            snapshotView(header, appearance: appearance, name: "header-\(label)-\(lang.rawValue)-\(suffix).png")
+        }
+
+        let model = AppModel()
+        model.helper = .installed(version: "1.4.0")
+        snapshotView(hosting(GeneralPane(model: model)), appearance: appearance, name: "settings-general-\(lang.rawValue)-\(suffix).png")
+        model.helper = .failed(details: "User canceled. (-128)")
+        snapshotView(hosting(GeneralPane(model: model)), appearance: appearance, name: "settings-general-failed-\(lang.rawValue)-\(suffix).png")
+        snapshotView(hosting(MenuBarIconPane(model: model)), appearance: appearance, name: "settings-icon-\(lang.rawValue)-\(suffix).png")
+        snapshotView(hosting(AboutPane(model: model)), appearance: appearance, name: "settings-about-\(lang.rawValue)-\(suffix).png")
+        model.helper = .missing
+        snapshotView(hosting(HelperSetupView(model: model, onInstall: {}, onClose: {})), appearance: appearance, name: "onboarding-\(lang.rawValue)-\(suffix).png")
+        model.helper = .installing
+        snapshotView(hosting(HelperSetupView(model: model, onInstall: {}, onClose: {})), appearance: appearance, name: "onboarding-installing-\(lang.rawValue)-\(suffix).png")
+        snapshotView(hosting(CustomTimerView(initialMinutes: 95, onStart: { _ in }, onCancel: {})), appearance: appearance, name: "timer-\(lang.rawValue)-\(suffix).png")
+    }
+}
