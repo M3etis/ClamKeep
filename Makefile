@@ -11,6 +11,4 @@ dmg: build
 
 clean:
 	@rm -rf build
-	@rm -f Resources/AppIcon.icns
-	@rm -f Resources/icon_1024x1024.png
 	@echo "Очистка завершена"

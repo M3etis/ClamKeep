@@ -6,6 +6,10 @@ import SwiftUI
 let outDir = URL(fileURLWithPath: CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "build/snapshots")
 try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
 _ = NSApplication.shared
+// Use the built app's icon (run ./build.sh first) so About/onboarding previews are realistic.
+if FileManager.default.fileExists(atPath: "build/ClamKeep.app") {
+    NSApplication.shared.applicationIconImage = NSWorkspace.shared.icon(forFile: "build/ClamKeep.app")
+}
 
 func save(_ rep: NSBitmapImageRep, _ name: String) {
     let url = outDir.appendingPathComponent(name)

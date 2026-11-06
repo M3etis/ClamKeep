@@ -44,39 +44,20 @@ rm -rf "${BUILD_DIR}"
 mkdir -p "${MACOS_DIR}" "${RESOURCES_DIR}"
 
 # ============================================================
-# Step 1: Generate icon if needed
+# Step 1: App icon (Icon Composer → Assets.car + AppIcon.icns fallback)
 # ============================================================
-if [ ! -f "Resources/AppIcon.icns" ]; then
-    info "Генерация иконки приложения..."
-    ICON_SRC="Resources/icon_1024x1024.png"
-
-    if [ ! -f "${ICON_SRC}" ]; then
-        swiftc -o /tmp/gen_icon generate_icon.swift -framework AppKit -target "${ARCHS[0]:-arm64}-apple-macos${MIN_MACOS}" 2>/dev/null
-        /tmp/gen_icon "${ICON_SRC}"
-    fi
-
-    ICONSET_DIR="Resources/AppIcon.iconset"
-    mkdir -p "${ICONSET_DIR}"
-
-    for SIZE_SPEC in \
-        "16:icon_16x16.png" \
-        "32:icon_16x16@2x.png" \
-        "32:icon_32x32.png" \
-        "64:icon_32x32@2x.png" \
-        "128:icon_128x128.png" \
-        "256:icon_128x128@2x.png" \
-        "256:icon_256x256.png" \
-        "512:icon_256x256@2x.png" \
-        "512:icon_512x512.png" \
-        "1024:icon_512x512@2x.png"; do
-        SIZE="${SIZE_SPEC%%:*}"
-        FILENAME="${SIZE_SPEC##*:}"
-        sips -z "$SIZE" "$SIZE" "${ICON_SRC}" --out "${ICONSET_DIR}/${FILENAME}" 2>/dev/null
-    done
-
-    iconutil -c icns "${ICONSET_DIR}" -o "Resources/AppIcon.icns"
-    rm -rf "${ICONSET_DIR}"
-fi
+info "Компиляция иконки приложения..."
+# actool runs through a long-lived service: pass absolute paths only.
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+xcrun actool "${ROOT_DIR}/Design/AppIcon/AppIcon.icon" \
+    --compile "${ROOT_DIR}/${RESOURCES_DIR}" \
+    --platform macosx \
+    --minimum-deployment-target "${MIN_MACOS}" \
+    --app-icon AppIcon \
+    --output-partial-info-plist "${ROOT_DIR}/${BUILD_DIR}/icon-partial.plist" \
+    --output-format human-readable-text > "${BUILD_DIR}/actool.log" 2>&1 \
+    || { cat "${BUILD_DIR}/actool.log"; error "actool не смог собрать иконку"; }
+[ -f "${RESOURCES_DIR}/Assets.car" ] || error "Assets.car не создан"
 
 # ============================================================
 # Step 2: Info.plist
@@ -85,11 +66,8 @@ info "Создание Info.plist..."
 cp Resources/Info.plist "${CONTENTS_DIR}/Info.plist"
 
 # ============================================================
-# Step 3: Copy icon and helper files
+# Step 3: Copy helper files
 # ============================================================
-if [ -f "Resources/AppIcon.icns" ]; then
-    cp Resources/AppIcon.icns "${RESOURCES_DIR}/AppIcon.icns"
-fi
 cp clamkeep-helper.sh "${RESOURCES_DIR}/clamkeep-helper.sh"
 cp install-helper.sh "${RESOURCES_DIR}/install-helper.sh"
 
