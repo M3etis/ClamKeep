@@ -26,6 +26,9 @@ final class AppModel: ObservableObject {
     @Published var tintIcon = MenuBarIcon.tintWhenActive
     @Published var confirmQuit = true
     @Published var helper: HelperState = .checking
+    /// Details of the last failed install attempt. Kept separate from `helper`,
+    /// so a failed reinstall never hides a helper that is still installed.
+    @Published var installError: String?
 
     weak var commands: AppCommands?
 

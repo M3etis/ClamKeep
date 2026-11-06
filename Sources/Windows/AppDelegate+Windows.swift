@@ -24,14 +24,22 @@ extension AppDelegate {
     // MARK: - Wake toggle (header switch and ⌘W)
 
     @objc func handleWakeToggle() {
-        // Without the helper an enable would fail after retries — offer setup instead.
-        if !isActive && !isEnablingWake && model.helper.needsInstall {
+        // Only a definitely missing helper skips the attempt. Any other failure is
+        // handled where every enable path ends: see helperEnableFailed().
+        if !isActive && !isEnablingWake && model.helper == .missing {
             presentHelperSetup()
             refreshLiveTimers()
             return
         }
         toggleWake()
         refreshLiveTimers()
+    }
+
+    /// Called when the helper rejected `enable` after retries — from the switch, ⌘W,
+    /// a timer preset, downloads or the app watcher alike. Re-checks the helper and
+    /// offers setup if it is missing or outdated.
+    func helperEnableFailed() {
+        refreshHelperState(presentSetupIfNeeded: true)
     }
 
     // MARK: - Settings and About
@@ -59,6 +67,8 @@ extension AppDelegate {
     }
 
     func presentHelperSetup() {
+        // Opened from the menu banner: close the menu so the window isn't hidden behind it.
+        statusItem.menu?.cancelTracking()
         WindowPresenter.shared.present(id: WindowID.helperSetup, title: L.onboardingTitle, transparentTitlebar: true) {
             HelperSetupView(model: model,
                             onInstall: { [weak self] in self?.installHelper() },
@@ -170,7 +180,8 @@ extension AppDelegate: AppCommands {
 
     func installHelper() {
         guard model.helper != .installing else { return }
-        let previous = model.helper
+        let previous = model.helper == .checking ? HelperState.missing : model.helper
+        model.installError = nil
         model.helper = .installing
         refreshLiveTimers()
         HelperInstaller.install { [weak self] result in
@@ -180,12 +191,11 @@ extension AppDelegate: AppCommands {
                 // The daemon can take a moment to answer IPC; trust the installer result.
                 self.model.helper = .installed(version: HelperInstaller.expectedVersion)
                 self.refreshLiveTimers()
-            case .failure(let failure) where failure.cancelled:
-                // Cancelling the password prompt is a choice, not an error.
-                self.model.helper = previous == .checking ? .missing : previous
-                self.refreshLiveTimers()
             case .failure(let failure):
-                self.model.helper = .failed(details: failure.details)
+                // The helper on disk is unchanged — keep its real state. Cancelling the
+                // password prompt is a choice, not an error.
+                self.model.helper = previous
+                self.model.installError = failure.cancelled ? nil : failure.details
                 self.refreshLiveTimers()
             }
         }

@@ -118,7 +118,7 @@ enum MenuBarIcon {
         switch state {
         case .inactive: return "ClamKeep — \(L.statusSleepingNormally)"
         case .active: return "ClamKeep — \(L.statusAwake)"
-        case .activeDisplaySleepAllowed: return "ClamKeep — \(L.statusAwake), \(L.allowDisplaySleep)"
+        case .activeDisplaySleepAllowed: return "ClamKeep — \(L.statusAwake), \(L.statusDisplayMaySleep)"
         }
     }
 

@@ -8,13 +8,15 @@ enum HelperState: Equatable {
     case checking
     case installed(version: String)
     case missing
+    /// Files are present but the helper reports another version — or did not
+    /// answer at all (`installed == nil`). It may still work, so this never blocks Wake Mode.
     case outdated(installed: String?)
     case installing
-    case failed(details: String)
 
+    /// Offer installation (banner, setup window). Only `.missing` blocks enabling.
     var needsInstall: Bool {
         switch self {
-        case .missing, .outdated, .failed: return true
+        case .missing, .outdated: return true
         default: return false
         }
     }
@@ -37,7 +39,12 @@ enum HelperInstaller {
     static func detectState() -> HelperState {
         let fm = FileManager.default
         guard fm.fileExists(atPath: plistPath), fm.fileExists(atPath: scriptPath) else { return .missing }
-        let version = PrivilegedShell.getDaemonVersion()
+        // One unanswered IPC round trip (busy helper, timeout) is not proof of a stale helper.
+        var version = PrivilegedShell.getDaemonVersion()
+        if version == nil {
+            Thread.sleep(forTimeInterval: 1)
+            version = PrivilegedShell.getDaemonVersion()
+        }
         return version == expectedVersion ? .installed(version: expectedVersion) : .outdated(installed: version)
     }
 

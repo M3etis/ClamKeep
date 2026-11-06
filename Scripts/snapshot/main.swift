@@ -115,11 +115,13 @@ for lang in languages {
         let model = AppModel()
         model.helper = .installed(version: "1.4.0")
         snapshotView(hosting(GeneralPane(model: model)), appearance: appearance, name: "settings-general-\(lang.rawValue)-\(suffix).png")
-        model.helper = .failed(details: "User canceled. (-128)")
+        model.installError = "The administrator user name or password was incorrect. (-60005)"
         snapshotView(hosting(GeneralPane(model: model)), appearance: appearance, name: "settings-general-failed-\(lang.rawValue)-\(suffix).png")
         snapshotView(hosting(MenuBarIconPane(model: model)), appearance: appearance, name: "settings-icon-\(lang.rawValue)-\(suffix).png")
         snapshotView(hosting(AboutPane(model: model)), appearance: appearance, name: "settings-about-\(lang.rawValue)-\(suffix).png")
         model.helper = .missing
+        snapshotView(hosting(HelperSetupView(model: model, onInstall: {}, onClose: {})), appearance: appearance, name: "onboarding-failed-\(lang.rawValue)-\(suffix).png")
+        model.installError = nil
         snapshotView(hosting(HelperSetupView(model: model, onInstall: {}, onClose: {})), appearance: appearance, name: "onboarding-\(lang.rawValue)-\(suffix).png")
         model.helper = .installing
         snapshotView(hosting(HelperSetupView(model: model, onInstall: {}, onClose: {})), appearance: appearance, name: "onboarding-installing-\(lang.rawValue)-\(suffix).png")

@@ -1,5 +1,7 @@
 #!/bin/bash
 set -euo pipefail
+# All paths below are relative to the repository root.
+cd "$(dirname "$0")"
 
 # ============================================================
 # ClamKeep Build Script
@@ -48,7 +50,7 @@ mkdir -p "${MACOS_DIR}" "${RESOURCES_DIR}"
 # ============================================================
 info "Компиляция иконки приложения..."
 # actool runs through a long-lived service: pass absolute paths only.
-ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(pwd)"
 xcrun actool "${ROOT_DIR}/Design/AppIcon/AppIcon.icon" \
     --compile "${ROOT_DIR}/${RESOURCES_DIR}" \
     --platform macosx \

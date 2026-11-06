@@ -772,6 +772,7 @@
                     <div class="m-stat" data-kind="ram"><svg class="ic" aria-hidden="true"><use href="#i-ram"/></svg><b data-stat="ram">74%</b><span data-m="ram">RAM</span></div>
                     <div class="m-stat" data-kind="temp"><svg class="ic" aria-hidden="true"><use href="#i-temp"/></svg><b data-stat="temp">52°</b><span data-m="temp">Temp</span></div>
                   </div>
+                  <button type="button" class="mi" data-toggle="wake" id="m-wake-item"><span class="lbl-wrap"><span class="chk">✓</span><span id="m-wake-label">Turn Off Wake Mode</span></span><kbd>⌘W</kbd></button>
                   <div class="m-sep"></div>
                   <button type="button" class="mi" data-toggle="ds" aria-pressed="false"><span class="lbl-wrap"><span class="chk" data-chk="ds">✓</span><span data-m="ds_allow">Allow Display Sleep</span></span><kbd>⌘S</kbd></button>
                   <button type="button" class="mi" data-toggle="al" aria-pressed="false"><span class="lbl-wrap"><span class="chk" data-chk="al">✓</span><span data-m="al_allow">Allow Auto Lock</span></span><kbd>⌘L</kbd></button>
@@ -1221,6 +1222,7 @@
       en: {
         wake: "Wake Mode", ds: "Display Sleep", al: "Auto Lock", dl: "Keep Awake During Downloads",
         ds_allow: "Allow Display Sleep", al_allow: "Allow Auto Lock", turnoff: "Turn Off After",
+        wake_on: "Turn On Wake Mode", wake_off: "Turn Off Wake Mode",
         timer: "Auto-off Timer", app: "Keep Awake While App Runs", settings: "Settings…",
         about: "About ClamKeep", quit: "Quit ClamKeep", left: "Time left",
         title_on: "Mac is awake", title_off: "Sleeping normally", sub_on: "Active for ", sub_off: "Turn on to keep your Mac awake",
@@ -1241,6 +1243,7 @@
       ru: {
         wake: "Бодрствование", ds: "Сон дисплея", al: "Автоблокировка", dl: "Не засыпать во время загрузок",
         ds_allow: "Разрешить сон дисплея", al_allow: "Разрешить автоблокировку", turnoff: "Выключить через",
+        wake_on: "Включить бодрствование", wake_off: "Выключить бодрствование",
         timer: "Таймер", app: "Не засыпать, пока работает приложение", settings: "Настройки…",
         about: "О ClamKeep", quit: "Выйти из ClamKeep", left: "Осталось",
         title_on: "Mac не спит", title_off: "Обычный режим сна", sub_on: "Работает ", sub_off: "Включите, чтобы Mac не засыпал",
@@ -1261,6 +1264,7 @@
       kk: {
         wake: "Ояу режим", ds: "Дисплей ұйқысы", al: "Автоблоктау", dl: "Жүктеу кезінде ұйықтамау",
         ds_allow: "Дисплей ұйқысына рұқсат ету", al_allow: "Автоблоктауға рұқсат ету", turnoff: "Өшіру уақыты",
+        wake_on: "Ояу режимді қосу", wake_off: "Ояу режимді өшіру",
         timer: "Таймер", app: "Қолданба жұмыс істегенде ұйықтамау", settings: "Баптаулар…",
         about: "ClamKeep туралы", quit: "ClamKeep-тен шығу", left: "Қалды",
         title_on: "Mac ояу", title_off: "Қалыпты ұйқы режимі", sub_on: "Белсенді: ", sub_off: "Mac ұйықтамауы үшін қосыңыз",
@@ -1534,13 +1538,15 @@
       dot.classList.toggle("on", state === "on");
       dot.classList.toggle("amber", state === "amber");
       $("#m-title").textContent = menu.wake ? M[lang].title_on : M[lang].title_off;
+      $("#m-wake-label").textContent = menu.wake ? M[lang].wake_off : M[lang].wake_on;
       renderHead();
     }
     function renderHead() {
       $("#m-sub").textContent = menu.wake ? M[lang].sub_on + fmtDur(Date.now() - menu.start) : M[lang].sub_off;
     }
     function pop(el) {
-      if (hasGsap && !reduce && el) gsap.fromTo(el, { scale: 0.55 }, { scale: 1, duration: 0.45, ease: "back.out(3)" });
+      // clearProps: never leave an inline transform that would override CSS state (switch knob).
+      if (hasGsap && !reduce && el) gsap.fromTo(el, { scale: 0.55 }, { scale: 1, duration: 0.45, ease: "back.out(3)", clearProps: "transform" });
     }
     $$("[data-toggle]").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -1556,7 +1562,7 @@
           menu[k] = !menu[k];
         }
         renderMenu();
-        pop(k === "wake" ? $("#m-switch i") : $('[data-chk="' + k + '"]'));
+        pop(k === "wake" ? $("#m-switch") : $('[data-chk="' + k + '"]'));
       });
     });
 

@@ -16,7 +16,6 @@ final class WindowPresenter: NSObject, NSWindowDelegate {
                  makeController: () -> NSViewController,
                  transparentTitlebar: Bool = false) -> NSWindow {
         if let existing = windows[id] {
-            existing.title = title
             bringForward(existing)
             return existing
         }
@@ -62,6 +61,11 @@ final class WindowPresenter: NSObject, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         guard let window = notification.object as? NSWindow,
               let id = window.identifier?.rawValue else { return }
-        windows[id] = nil
+        // Release on the next turn of the run loop: dropping the last reference while
+        // AppKit is still closing (and animating) the window can crash.
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.windows[id] === window, !window.isVisible else { return }
+            self.windows[id] = nil
+        }
     }
 }

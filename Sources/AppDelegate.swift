@@ -23,7 +23,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var showSystemMetrics = true
     var headerMenuItem: NSMenuItem!
     var statusHeader: StatusHeaderView!
-    var wakeShortcutItem: NSMenuItem!
+    var wakeMenuItem: NSMenuItem!
     let model = AppModel()
     lazy var settingsWindow = SettingsWindowController(model: model)
     let showSystemMetricsKey = "ClamKeepShowSystemMetrics"
@@ -220,7 +220,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let seconds = elapsed % 60
 
         if long {
-            return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+            return Self.clock(elapsed)
         }
 
         switch L.current {
@@ -398,6 +398,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             updateUI(active: false)
             stopDisplayTimer()
             syncAutoLock()
+            helperEnableFailed()
         }
     }
 

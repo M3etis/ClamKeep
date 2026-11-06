@@ -75,14 +75,6 @@ final class StatusHeaderView: NSView {
         resize()
     }
 
-    /// Re-applies localized strings after a language change.
-    func relocalize() {
-        if let mode = state?.mode { applyMode(mode) }
-        bannerButton.title = L.helperInstallEllipsis
-        wakeSwitch.setAccessibilityLabel(L.wakeMode)
-        updateAccessibility()
-    }
-
     // MARK: - Layout
 
     private func build() {
@@ -191,7 +183,10 @@ final class StatusHeaderView: NSView {
             titleLabel.stringValue = L.statusAwake
             color = DS.Palette.warning
         }
-        dot.layer?.backgroundColor = color.cgColor
+        // Resolve the dynamic color for this view's appearance (the menu can differ from the app).
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            dot.layer?.backgroundColor = color.cgColor
+        }
         wakeSwitch.state = mode == .off ? .off : .on
     }
 

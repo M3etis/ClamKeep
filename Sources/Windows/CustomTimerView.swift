@@ -12,11 +12,12 @@ struct CustomTimerView: View {
     @FocusState private var focusedField: Field?
 
     private enum Field { case hours, minutes }
+    static let maxHours = 99
 
     init(initialMinutes: Int, onStart: @escaping (Int) -> Void, onCancel: @escaping () -> Void) {
         self.onStart = onStart
         self.onCancel = onCancel
-        _hours = State(initialValue: min(23, initialMinutes / 60))
+        _hours = State(initialValue: min(Self.maxHours, initialMinutes / 60))
         _minutes = State(initialValue: initialMinutes % 60)
     }
 
@@ -43,7 +44,7 @@ struct CustomTimerView: View {
             Grid(alignment: .leading, horizontalSpacing: DS.Spacing.m, verticalSpacing: DS.Spacing.s) {
                 GridRow {
                     Text(L.timerHoursLabel).gridColumnAlignment(.trailing)
-                    numberField($hours, range: 0...23, field: .hours)
+                    numberField($hours, range: 0...Self.maxHours, field: .hours)
                 }
                 GridRow {
                     Text(L.timerMinutesLabel)
@@ -80,10 +81,15 @@ struct CustomTimerView: View {
 
     private func numberField(_ value: Binding<Int>, range: ClosedRange<Int>, field: Field) -> some View {
         HStack(spacing: DS.Spacing.xs) {
-            TextField("", value: Binding(
-                get: { value.wrappedValue },
-                set: { value.wrappedValue = min(range.upperBound, max(range.lowerBound, $0)) }
-            ), format: .number)
+            // A text binding updates on every keystroke, so Return (the default button)
+            // never starts the timer with a value the field hasn't committed yet.
+            TextField("", text: Binding(
+                get: { String(value.wrappedValue) },
+                set: { text in
+                    let number = Int(text.filter(\.isNumber).prefix(4)) ?? 0
+                    value.wrappedValue = min(range.upperBound, max(range.lowerBound, number))
+                }
+            ))
             .textFieldStyle(.roundedBorder)
             .multilineTextAlignment(.trailing)
             .frame(width: 56)

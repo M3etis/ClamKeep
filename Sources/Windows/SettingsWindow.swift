@@ -14,13 +14,15 @@ final class SettingsWindowController {
     }
 
     func show(_ tab: Tab = .general) {
-        let window = WindowPresenter.shared.present(id: Self.windowID, title: L.tabGeneral, makeController: {
+        let window = WindowPresenter.shared.present(id: Self.windowID, title: Self.title(for: tab), makeController: {
             let controller = NSTabViewController()
             controller.tabStyle = .toolbar
             controller.transitionOptions = [.allowUserInteraction, .crossfade]
             for tab in Tab.allCases {
                 let host = NSHostingController(rootView: Self.pane(for: tab, model: model))
                 host.sizingOptions = [.preferredContentSize]
+                // The tab view controller propagates the selected child's title to the window.
+                host.title = Self.title(for: tab)
                 let item = NSTabViewItem(viewController: host)
                 item.label = Self.title(for: tab)
                 item.image = NSImage(systemSymbolName: Self.symbol(for: tab), accessibilityDescription: nil)
@@ -31,13 +33,16 @@ final class SettingsWindowController {
         })
         window.toolbarStyle = .preference
         tabController?.selectedTabViewItemIndex = tab.rawValue
+        window.title = Self.title(for: tab)
     }
 
     /// Tab labels are AppKit strings — refresh them after a language change.
     func relocalize() {
         guard let controller = tabController else { return }
         for (index, item) in controller.tabViewItems.enumerated() {
-            if let tab = Tab(rawValue: index) { item.label = Self.title(for: tab) }
+            guard let tab = Tab(rawValue: index) else { continue }
+            item.label = Self.title(for: tab)
+            item.viewController?.title = Self.title(for: tab)
         }
         controller.view.window?.title = controller.tabViewItems[controller.selectedTabViewItemIndex].label
     }
@@ -111,6 +116,20 @@ struct HelperStatusView: View {
     @ObservedObject var model: AppModel
 
     var body: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.m) {
+            if let error = model.installError {
+                ErrorState(title: L.helperFailedTitle, message: L.helperFailedMessage, details: error,
+                           retryTitle: L.tryAgain, detailsTitle: L.details) {
+                    model.commands?.installHelper()
+                }
+            }
+            state
+        }
+        .animation(DS.Motion.animation(), value: model.helper)
+        .animation(DS.Motion.animation(), value: model.installError)
+    }
+
+    @ViewBuilder private var state: some View {
         Group {
             switch model.helper {
             case .checking:
@@ -141,14 +160,8 @@ struct HelperStatusView: View {
                 }
             case .installing:
                 LoadingState(label: L.helperInstalling)
-            case .failed(let details):
-                ErrorState(title: L.helperFailedTitle, message: L.helperFailedMessage, details: details,
-                           retryTitle: L.tryAgain, detailsTitle: L.details) {
-                    model.commands?.installHelper()
-                }
             }
         }
-        .animation(DS.Motion.animation(), value: model.helper)
     }
 }
 

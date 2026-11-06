@@ -120,15 +120,6 @@ enum L {
         }
     }
 
-    // MARK: - Display Sleep Option
-    static var allowDisplaySleep: String {
-        switch current {
-        case .english: return "Display Sleep"
-        case .russian: return "Сон дисплея"
-        case .kazakh:  return "Дисплей ұйқысы"
-        }
-    }
-
     // MARK: - Stay Awake While App Active
     static func watchingApp(_ name: String) -> String {
         switch current {
@@ -209,6 +200,9 @@ extension L {
     static var statusAwake: String { tr("Mac is awake", "Mac не спит", "Mac ояу") }
     static var statusTurningOn: String { tr("Turning on…", "Включается…", "Қосылуда…") }
     static var statusSleepingNormally: String { tr("Sleeping normally", "Обычный режим сна", "Қалыпты ұйқы режимі") }
+    static var statusDisplayMaySleep: String { tr("the display may sleep", "экрану можно гаснуть", "экран өше алады") }
+    static var menuTurnOnWake: String { tr("Turn On Wake Mode", "Включить бодрствование", "Ояу режимді қосу") }
+    static var menuTurnOffWake: String { tr("Turn Off Wake Mode", "Выключить бодрствование", "Ояу режимді өшіру") }
     static var statusHint: String { tr("Turn on to keep your Mac awake", "Включите, чтобы Mac не засыпал", "Mac ұйықтамауы үшін қосыңыз") }
     static func statusElapsed(_ time: String) -> String { tr("Active for \(time)", "Работает \(time)", "Белсенді: \(time)") }
     static func statusRemaining(_ time: String) -> String { tr("Turns off in \(time)", "Выключится через \(time)", "\(time) кейін өшеді") }

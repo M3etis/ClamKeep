@@ -32,6 +32,7 @@ struct HelperSetupView: View {
             status
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .animation(DS.Motion.animation(), value: model.helper)
+                .animation(DS.Motion.animation(), value: model.installError)
 
             HStack {
                 Spacer()
@@ -56,27 +57,25 @@ struct HelperSetupView: View {
     }
 
     @ViewBuilder private var status: some View {
-        switch model.helper {
-        case .installing:
+        if model.helper == .installing {
             LoadingState(label: L.helperInstalling)
-        case .installed:
-            StatusBanner(kind: .success, title: L.helperInstalledTitle, message: L.onboardingDone)
-        case .failed(let details):
-            ErrorState(title: L.helperFailedTitle, message: L.helperFailedMessage, details: details,
+        } else if let error = model.installError {
+            ErrorState(title: L.helperFailedTitle, message: L.helperFailedMessage, details: error,
                        retryTitle: L.tryAgain, detailsTitle: L.details, onRetry: onInstall)
-        case .checking, .missing, .outdated:
-            EmptyView()
+        } else if case .installed = model.helper {
+            StatusBanner(kind: .success, title: L.helperInstalledTitle, message: L.onboardingDone)
         }
     }
 
     @ViewBuilder private var buttons: some View {
         switch model.helper {
+        case _ where model.installError != nil && model.helper != .installing:
+            // Retry lives in the error banner; this only dismisses.
+            Button(L.notNow, action: onClose).cancelAction()
         case .installed:
             Button(L.done, action: onClose).primaryAction()
         case .installing:
             Button(L.helperInstall) {}.primaryAction().disabled(true)
-        case .failed:
-            Button(L.notNow, action: onClose).cancelAction()
         case .checking, .missing, .outdated:
             HStack(spacing: DS.Spacing.s) {
                 Button(L.notNow, action: onClose).cancelAction()

@@ -36,12 +36,10 @@ extension AppDelegate {
         headerMenuItem.view = statusHeader
         menu.addItem(headerMenuItem)
 
-        // ⌘W keeps working without a duplicate visible "Wake Mode" row.
-        wakeShortcutItem = NSMenuItem(title: L.wakeMode, action: #selector(handleWakeToggle), keyEquivalent: "w")
-        wakeShortcutItem.target = self
-        wakeShortcutItem.isHidden = true
-        wakeShortcutItem.allowsKeyEquivalentWhenHidden = true
-        menu.addItem(wakeShortcutItem)
+        // The header switch can't be reached with the arrow keys; this row keeps Wake Mode
+        // reachable from the keyboard and VoiceOver, and shows the ⌘W shortcut.
+        wakeMenuItem = item(L.menuTurnOnWake, #selector(handleWakeToggle), key: "w")
+        menu.addItem(wakeMenuItem)
 
         menu.addItem(.separator())
 
@@ -97,6 +95,7 @@ extension AppDelegate {
     // MARK: - State → UI
 
     func updateUI(active: Bool) {
+        wakeMenuItem.title = active ? L.menuTurnOffWake : L.menuTurnOnWake
         // Checkmarks replace the old colored "[ON]" badges.
         // Exceptions only mean something while Wake Mode holds the Mac.
         allowDisplaySleepMenuItem.isEnabled = active
@@ -127,7 +126,7 @@ extension AppDelegate {
 
         let subtitle: String
         if isActive, let deadline = autoOffDeadline {
-            subtitle = L.statusRemaining(Self.clock(max(0, Int(deadline.timeIntervalSinceNow))))
+            subtitle = L.statusRemaining(Self.clock(Int(deadline.timeIntervalSinceNow)))
         } else if isActive {
             subtitle = L.statusElapsed(formattedDuration(since: wakeStartTime, long: true))
         } else {
@@ -136,15 +135,17 @@ extension AppDelegate {
 
         var banner: String?
         switch model.helper {
-        case .missing, .failed: banner = L.helperMissingBanner
+        case .missing: banner = L.helperMissingBanner
         case .outdated: banner = L.helperOutdatedBanner
         default: banner = nil
         }
         return StatusHeaderState(mode: mode, subtitle: subtitle, helperBanner: banner)
     }
 
-    private static func clock(_ seconds: Int) -> String {
-        String(format: "%02d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, seconds % 60)
+    /// HH:MM:SS — shared by the elapsed and remaining timers.
+    static func clock(_ seconds: Int) -> String {
+        let s = max(0, seconds)
+        return String(format: "%02d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60)
     }
 
     func refreshSystemMetrics() {
