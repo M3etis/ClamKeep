@@ -3,1005 +3,1868 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ClamKeep — keep your Mac awake</title>
-  <meta name="description" content="ClamKeep is a macOS menu bar app that keeps your Mac awake with the lid closed. Live system stats, Screen stays on and auto-lock waits by default — Display Sleep / Auto Lock are optional [ON]/[OFF] exceptions." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <title>ClamKeep — keep your Mac awake with the lid closed</title>
+  <meta name="description" content="ClamKeep is a tiny macOS menu bar app that keeps your Mac awake with the lid closed. Wake Mode, Display Sleep and Auto Lock exceptions, downloads, auto-off timer and live system stats." />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="ClamKeep — keep your Mac awake with the lid closed" />
+  <meta property="og:description" content="A tiny macOS menu bar app: close the lid, keep everything running." />
+  <meta property="og:url" content="https://m3etis.is-a.dev/ClamKeep/" />
+  <meta property="og:image" content="https://m3etis.is-a.dev/ClamKeep/screenshot.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2325407a'/%3E%3Cstop offset='1' stop-color='%23101d3a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='url%28%23g%29'/%3E%3Ccircle cx='50' cy='24.2' r='7.4' fill='none' stroke='%233EE6A0' stroke-width='2.4' stroke-opacity='.6'/%3E%3Ccircle cx='50' cy='24.2' r='4' fill='%233EE6A0'/%3E%3Cpath d='M29.3 38.3H70.7C72.9 38.3 74.6 39.5 75.4 41.4L82.6 57.6C83.6 59.8 82.2 61.7 79.9 61.7H20.1C17.8 61.7 16.4 59.8 17.4 57.6L24.6 41.4C25.4 39.5 27.1 38.3 29.3 38.3Z' fill='%23E6E9EE'/%3E%3Crect x='19' y='62.6' width='62' height='2.2' rx='1.1' fill='%233EE6A0'/%3E%3Crect x='12.9' y='65.6' width='74.2' height='6.7' rx='3.3' fill='%239AA2AE'/%3E%3C/svg%3E" />
+  <script>
+    (function () {
+      var d = document.documentElement;
+      try {
+        var t = localStorage.getItem("ck-theme");
+        if (t === "light" || t === "dark") d.setAttribute("data-theme", t);
+      } catch (e) {}
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        d.classList.add("js-motion");
+        setTimeout(function () { d.classList.remove("js-motion"); }, 4000);
+      }
+    })();
+  </script>
   <style>
+    /* ───────────── tokens ───────────── */
     :root {
-      --bg: #070b12;
-      --bg-soft: #0c1220;
-      --card: rgba(255, 255, 255, 0.045);
-      --card-hover: rgba(255, 255, 255, 0.08);
-      --text: #f2f5fb;
-      --muted: #9aa6b8;
-      --green: #3dff8a;
-      --green-deep: #18c964;
-      --amber: #ffc14d;
-      --blue: #6eb6ff;
-      --violet: #a78bfa;
-      --border: rgba(255, 255, 255, 0.1);
-      --glow: rgba(61, 255, 138, 0.35);
-      --radius: 18px;
+      --bg: #ffffff;
+      --surface: #f5f5f7;
+      --surface-2: #e8e8ed;
+      --elev: #ffffff;
+      --text: #1d1d1f;
+      --text-2: #6e6e73;
+      --text-3: #86868b;
+      --line: rgba(0, 0, 0, 0.09);
+      --btn: #1d1d1f;
+      --btn-text: #ffffff;
+      --btn-2: rgba(0, 0, 0, 0.06);
+      --green: #17803a;
+      --green-fill: #30c552;
+      --amber: #b45f00;
+      --amber-fill: #ff9f0a;
+      --blue: #0066cc;
+      --menu-bg: rgba(244, 244, 246, 0.86);
+      --menu-text: #1d1d1f;
+      --menu-dim: rgba(0, 0, 0, 0.48);
+      --menu-line: rgba(0, 0, 0, 0.1);
+      --menu-on: #1f9d47;
+      --alu-1: #e4e5e8;
+      --alu-2: #b6b8bd;
+      --bezel: #0b0b0d;
+      --shadow-lg: 0 40px 100px -20px rgba(0, 0, 0, 0.28);
+      --radius-xl: 44px;
+      --radius-l: 28px;
+      --radius-m: 22px;
       --max: 1080px;
+      --gutter: 24px;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #000000;
+        --surface: #141416;
+        --surface-2: #232326;
+        --elev: #1c1c1e;
+        --text: #f5f5f7;
+        --text-2: #a1a1a6;
+        --text-3: #86868b;
+        --line: rgba(255, 255, 255, 0.12);
+        --btn: #f5f5f7;
+        --btn-text: #000000;
+        --btn-2: rgba(255, 255, 255, 0.1);
+        --green: #3ddc6c;
+        --green-fill: #30d158;
+        --amber: #ffb340;
+        --amber-fill: #ff9f0a;
+        --blue: #2997ff;
+        --menu-bg: rgba(38, 38, 40, 0.88);
+        --menu-text: #f2f2f2;
+        --menu-dim: rgba(255, 255, 255, 0.5);
+        --menu-line: rgba(255, 255, 255, 0.12);
+        --menu-on: #34d158;
+        --alu-1: #66676c;
+        --alu-2: #2c2d31;
+        --shadow-lg: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #000000;
+      --surface: #141416;
+      --surface-2: #232326;
+      --elev: #1c1c1e;
+      --text: #f5f5f7;
+      --text-2: #a1a1a6;
+      --text-3: #86868b;
+      --line: rgba(255, 255, 255, 0.12);
+      --btn: #f5f5f7;
+      --btn-text: #000000;
+      --btn-2: rgba(255, 255, 255, 0.1);
+      --green: #3ddc6c;
+      --green-fill: #30d158;
+      --amber: #ffb340;
+      --amber-fill: #ff9f0a;
+      --blue: #2997ff;
+      --menu-bg: rgba(38, 38, 40, 0.88);
+      --menu-text: #f2f2f2;
+      --menu-dim: rgba(255, 255, 255, 0.5);
+      --menu-line: rgba(255, 255, 255, 0.12);
+      --menu-on: #34d158;
+      --alu-1: #66676c;
+      --alu-2: #2c2d31;
+      --shadow-lg: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
     }
 
-    * { box-sizing: border-box; }
-
-    html { scroll-behavior: smooth; }
-
+    /* ───────────── base ───────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
     body {
       margin: 0;
-      min-height: 100vh;
-      font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.6;
-      overflow-x: hidden;
+      font-family: var(--font);
+      font-size: 17px;
+      line-height: 1.47;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      transition: background-color 0.3s, color 0.3s;
     }
-
     a { color: var(--blue); text-decoration: none; }
-    a:hover { color: var(--green); }
+    a:hover { text-decoration: underline; }
+    img { max-width: 100%; display: block; }
+    button { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+    code, kbd { font-family: var(--mono); font-size: 0.88em; }
+    .ic { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    .container { max-width: calc(var(--max) + var(--gutter) * 2); margin: 0 auto; padding: 0 var(--gutter); }
+    section { scroll-margin-top: 64px; }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .js-motion .hero, .js-motion .showcase { visibility: hidden; }
+    .line { display: block; overflow: hidden; padding-bottom: 0.06em; margin-bottom: -0.06em; }
+    .line-in { display: block; }
 
-    /* ——— animated background ——— */
-    .bg-layer {
-      position: fixed;
-      inset: 0;
-      z-index: -2;
-      overflow: hidden;
-      background:
-        radial-gradient(1200px 700px at 10% -10%, rgba(61, 255, 138, 0.12), transparent 55%),
-        radial-gradient(900px 600px at 90% 10%, rgba(110, 182, 255, 0.14), transparent 50%),
-        radial-gradient(800px 500px at 50% 100%, rgba(167, 139, 250, 0.12), transparent 55%),
-        linear-gradient(180deg, #070b12 0%, #0a101c 45%, #070b12 100%);
+    /* ───────────── nav ───────────── */
+    .nav {
+      position: fixed; inset: 0 0 auto 0; z-index: 50;
+      height: 56px;
+      background: color-mix(in srgb, var(--bg) 78%, transparent);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--line);
     }
+    .nav .container { height: 100%; display: flex; align-items: center; gap: 20px; }
+    .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 17px; letter-spacing: -0.01em; color: var(--text); }
+    .brand:hover { text-decoration: none; }
+    .brand svg { width: 26px; height: 26px; border-radius: 6px; }
+    .nav-links { display: flex; gap: 26px; margin-left: auto; }
+    .nav-links a { color: var(--text-2); font-size: 14px; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .nav-tools { display: flex; align-items: center; gap: 8px; }
+    .nav-links + .nav-tools { margin-left: 8px; }
+    .seg { display: inline-flex; padding: 2px; border-radius: 999px; background: var(--btn-2); }
+    .seg button {
+      border: 0; background: none; cursor: pointer;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+      padding: 4px 9px; border-radius: 999px; color: var(--text-2);
+      transition: background 0.2s, color 0.2s;
+    }
+    .seg button[aria-pressed="true"] { background: var(--elev); color: var(--text); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); }
+    .icon-btn {
+      width: 32px; height: 32px; border-radius: 50%; border: 0; cursor: pointer;
+      display: grid; place-items: center; background: var(--btn-2); color: var(--text);
+    }
+    .icon-btn .ic { width: 17px; height: 17px; }
+    .icon-btn [data-show] { display: none; }
+    .icon-btn[data-mode="auto"] [data-show="auto"],
+    .icon-btn[data-mode="light"] [data-show="light"],
+    .icon-btn[data-mode="dark"] [data-show="dark"] { display: block; }
 
-    .orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(70px);
-      opacity: 0.55;
+    /* ───────────── buttons ───────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border-radius: 980px; font-weight: 600; white-space: nowrap;
+      padding: 16px 30px; font-size: 18px; letter-spacing: -0.01em;
+      background: var(--btn); color: var(--btn-text); border: 0; cursor: pointer;
+      transition: background-color 0.2s, filter 0.2s;
+    }
+    .btn:hover { text-decoration: none; filter: brightness(1.25); }
+    .btn:active { filter: brightness(0.9); }
+    .btn .ic { width: 20px; height: 20px; }
+    .btn-sm { padding: 7px 15px; font-size: 14px; }
+    .btn-ghost { background: var(--btn-2); color: var(--text); }
+    .btn-ghost:hover { filter: none; background: var(--surface-2); }
+
+    /* ───────────── hero ───────────── */
+    .hero { padding: 136px 0 24px; text-align: center; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 19px; font-weight: 600; color: var(--text); margin: 0 0 14px; }
+    .eyebrow svg { width: 24px; height: 24px; border-radius: 6px; }
+    .hero h1 {
+      margin: 0 auto 18px; max-width: 980px;
+      font-size: clamp(42px, 6.9vw, 78px); line-height: 1.04; letter-spacing: -0.035em; font-weight: 800;
+    }
+    .hero .lead { max-width: 720px; margin: 0 auto 30px; font-size: clamp(18px, 1.9vw, 21px); color: var(--text-2); line-height: 1.42; }
+    .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 16px; }
+    .meta { font-size: 14px; color: var(--text-3); margin: 0 0 22px; }
+    .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 0; font-size: 15px; font-weight: 500; color: var(--text-2); margin: 0; padding: 0; list-style: none; }
+    .chips li + li::before { content: "·"; margin: 0 10px; color: var(--text-3); }
+
+    /* ───────────── showcase (MacBook + live menu) ───────────── */
+    .showcase { padding: 56px 0 40px; }
+    .mac { position: relative; width: min(1000px, 100%); margin: 0 auto; perspective: 5200px; perspective-origin: 50% 97%; }
+    .mac-lid {
+      position: relative; aspect-ratio: 16 / 10.35;
+      transform-origin: 50% 100%; transform-style: preserve-3d;
       will-change: transform;
     }
-    .orb-1 {
-      width: 480px; height: 480px;
-      background: radial-gradient(circle, rgba(61, 255, 138, 0.55), transparent 70%);
-      top: -120px; left: -80px;
-      animation: float-a 18s ease-in-out infinite;
+    .lid-front {
+      position: absolute; inset: 0;
+      background: var(--bezel);
+      border-radius: 22px 22px 4px 4px;
+      padding: 1.55% 1.55% 2.3%;
+      box-shadow: inset 0 0 0 1.5px #3b3b40, 0 0 0 1px rgba(0, 0, 0, 0.08);
+      container-type: inline-size;
     }
-    .orb-2 {
-      width: 520px; height: 520px;
-      background: radial-gradient(circle, rgba(110, 182, 255, 0.5), transparent 70%);
-      top: 10%; right: -160px;
-      animation: float-b 22s ease-in-out infinite;
+    .lid-alu {
+      position: absolute; inset: 0; border-radius: 22px 22px 4px 4px;
+      background: linear-gradient(180deg, var(--alu-1), var(--alu-2));
+      opacity: 0; pointer-events: none;
+      transform: translateZ(1px);
     }
-    .orb-3 {
-      width: 420px; height: 420px;
-      background: radial-gradient(circle, rgba(167, 139, 250, 0.45), transparent 70%);
-      bottom: -100px; left: 30%;
-      animation: float-c 20s ease-in-out infinite;
+    .screen {
+      position: relative; width: 100%; height: 100%;
+      border-radius: 10px 10px 2px 2px; overflow: hidden;
+      font-size: 10px; font-size: 1.02cqw;
+      color: var(--menu-text);
+      background:
+        radial-gradient(60% 70% at 18% 20%, rgba(120, 60, 170, 0.95), transparent 70%),
+        radial-gradient(55% 60% at 85% 95%, rgba(250, 210, 100, 0.95), transparent 70%),
+        linear-gradient(128deg, #4b2a84 0%, #8a3a8f 24%, #c2392f 50%, #e3782a 72%, #f4c55e 100%);
     }
+    .screen-dim { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 5; }
+    .notch {
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 14%; height: 2.35em; background: var(--bezel);
+      border-radius: 0 0 0.9em 0.9em; z-index: 3;
+    }
+    .mbar {
+      position: relative; z-index: 2; height: 2.35em;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.1em 0 1.4em; color: #fff; font-size: 1.05em;
+      background: rgba(30, 10, 40, 0.22);
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    }
+    .mbar-left { display: flex; gap: 1.5em; white-space: nowrap; }
+    .mbar-left b { font-weight: 700; }
+    .mbar-right { display: flex; align-items: center; gap: 1.2em; white-space: nowrap; }
+    /* Template glyph, like the app: outline = off, filled = on, ring = display may sleep. */
+    .mbar-icon {
+      position: relative; width: 1.8em; height: 1.6em; border-radius: 0.3em; border: 0; padding: 0; cursor: pointer;
+      display: grid; place-items: center; background: rgba(255, 255, 255, 0.18); color: #fff;
+    }
+    .mbar-icon svg { width: 1.25em; height: 1.25em; fill: currentColor; stroke: none; }
+    .mbar-icon[data-state="off"] { background: none; }
+    .mbar-icon[data-state="off"] svg { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linejoin: round; }
+    .mbar-icon .ring { position: absolute; right: 0.12em; bottom: 0.1em; width: 0.5em; height: 0.5em; border-radius: 50%; border: 0.12em solid #fff; box-shadow: 0 0 0 0.1em rgba(60, 20, 60, 0.6); display: none; }
+    .mbar-icon[data-state="amber"] .ring { display: block; }
 
-    @keyframes float-a {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      50% { transform: translate(60px, 40px) scale(1.08); }
-    }
-    @keyframes float-b {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      50% { transform: translate(-50px, 50px) scale(1.1); }
-    }
-    @keyframes float-c {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      50% { transform: translate(40px, -50px) scale(1.06); }
-    }
-
-    .grid-lines {
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-      background-size: 56px 56px;
-      mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
-      animation: grid-drift 28s linear infinite;
-    }
-    @keyframes grid-drift {
-      from { background-position: 0 0, 0 0; }
-      to { background-position: 56px 56px, 56px 56px; }
-    }
-
-    #particles {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .noise {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
-      opacity: 0.04;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    }
-
-    /* ——— layout ——— */
-    .wrap {
-      position: relative;
-      max-width: var(--max);
-      margin: 0 auto;
-      padding: 72px 24px 96px;
-    }
-
-    /* ——— nav ——— */
-    .nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 56px;
-      padding: 12px 16px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: rgba(10, 16, 28, 0.55);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-      animation: drop-in 0.7s ease both;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-    .brand-badge {
-      width: 28px;
-      height: 28px;
-      border-radius: 9px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(145deg, rgba(61, 255, 138, 0.25), rgba(110, 182, 255, 0.2));
-      border: 1px solid rgba(61, 255, 138, 0.35);
-      box-shadow: 0 0 18px var(--glow);
-      animation: pulse-glow 2.8s ease-in-out infinite;
-    }
-    .brand-badge svg { width: 16px; height: 16px; }
-    .nav-links {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    .nav-links a {
-      color: var(--muted);
-      font-size: 0.86rem;
-      font-weight: 500;
-      padding: 6px 10px;
-      border-radius: 999px;
-      transition: color 0.2s, background 0.2s, transform 0.2s;
-    }
-    .nav-links a:hover {
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.06);
-      transform: translateY(-1px);
-    }
-
-    /* ——— hero ——— */
-    .hero {
-      text-align: center;
-      margin-bottom: 48px;
-    }
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(61, 255, 138, 0.3);
-      background: rgba(61, 255, 138, 0.08);
-      color: var(--green);
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      margin-bottom: 18px;
-      animation: rise-in 0.7s ease both 0.05s;
-    }
-    .pill .dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 10px var(--green);
-      animation: blink 1.8s ease-in-out infinite;
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.35; }
-    }
-
-    h1 {
-      margin: 0 0 14px;
-      font-size: clamp(2.6rem, 6vw, 4.2rem);
-      letter-spacing: -0.04em;
-      line-height: 1.05;
-      font-weight: 800;
-      animation: rise-in 0.75s ease both 0.1s;
-    }
-    .gradient-text {
-      background: linear-gradient(100deg, var(--green) 0%, var(--blue) 45%, var(--violet) 100%);
-      background-size: 200% 200%;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      animation: gradient-shift 6s ease infinite;
-    }
-    @keyframes gradient-shift {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
-
-    .tagline {
-      color: var(--muted);
-      font-size: clamp(1.05rem, 2vw, 1.25rem);
-      max-width: 640px;
-      margin: 0 auto 28px;
-      animation: rise-in 0.75s ease both 0.18s;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      justify-content: center;
-      margin-bottom: 48px;
-      animation: rise-in 0.75s ease both 0.26s;
-    }
-
-    .btn {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 22px;
-      border-radius: 14px;
-      font-weight: 700;
-      font-size: 0.95rem;
-      text-decoration: none;
-      border: 1px solid transparent;
-      overflow: hidden;
-      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s, background 0.25s, color 0.25s;
-    }
-    .btn::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.25) 50%, transparent 80%);
-      transform: translateX(-120%);
-      transition: transform 0.6s ease;
-    }
-    .btn:hover::after { transform: translateX(120%); }
-    .btn:hover {
-      transform: translateY(-2px);
-      text-decoration: none;
-    }
-    .btn:active { transform: translateY(0) scale(0.98); }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--green) 0%, var(--green-deep) 100%);
-      color: #04140b;
-      box-shadow: 0 10px 30px rgba(24, 201, 100, 0.35);
-    }
-    .btn-primary:hover {
-      color: #04140b;
-      box-shadow: 0 14px 40px rgba(24, 201, 100, 0.5);
-    }
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text);
-      border-color: var(--border);
-      backdrop-filter: blur(10px);
-    }
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text);
-    }
-
-    /* ——— hero shot ——— */
-    .shot-wrap {
-      position: relative;
-      margin: 0 auto 72px;
-      max-width: 920px;
-      animation: rise-in 0.9s ease both 0.35s;
-      perspective: 1200px;
-    }
-    .shot-glow {
-      position: absolute;
-      inset: 8% 10% -4%;
-      background: radial-gradient(ellipse, rgba(61, 255, 138, 0.35), rgba(110, 182, 255, 0.18) 45%, transparent 70%);
-      filter: blur(30px);
-      z-index: 0;
-      animation: pulse-glow 4s ease-in-out infinite;
-    }
-    .shot-frame {
-      position: relative;
-      z-index: 1;
-      border-radius: 22px;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      box-shadow:
-        0 30px 80px rgba(0, 0, 0, 0.55),
-        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-      transform: rotateX(4deg) rotateY(-2deg);
-      animation: float-shot 7s ease-in-out infinite;
-      transition: transform 0.4s ease, box-shadow 0.4s ease;
-    }
-    .shot-frame:hover {
-      transform: rotateX(0deg) rotateY(0deg) translateY(-6px) scale(1.01);
-      box-shadow:
-        0 40px 100px rgba(0, 0, 0, 0.6),
-        0 0 60px rgba(61, 255, 138, 0.12);
-    }
-    .shot-frame img {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-    .shot-chrome {
-      display: flex;
-      gap: 7px;
-      padding: 12px 16px;
-      background: rgba(12, 18, 32, 0.9);
-      border-bottom: 1px solid var(--border);
-    }
-    .shot-chrome i {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      display: block;
-    }
-    .shot-chrome i:nth-child(1) { background: #ff5f57; }
-    .shot-chrome i:nth-child(2) { background: #febc2e; }
-    .shot-chrome i:nth-child(3) { background: #28c840; }
-
-    @keyframes float-shot {
-      0%, 100% { transform: rotateX(4deg) rotateY(-2deg) translateY(0); }
-      50% { transform: rotateX(2deg) rotateY(1deg) translateY(-10px); }
-    }
-    @keyframes pulse-glow {
-      0%, 100% { opacity: 0.55; filter: blur(30px); }
-      50% { opacity: 0.95; filter: blur(40px); }
-    }
-
-    /* ——— sections ——— */
-    section { margin-bottom: 72px; }
-
-    .section-head {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 22px;
-      flex-wrap: wrap;
-    }
-    h2 {
-      margin: 0;
-      font-size: 1.7rem;
-      letter-spacing: -0.03em;
-      font-weight: 750;
-    }
-    .section-sub {
-      color: var(--muted);
-      margin: 0;
-      font-size: 0.95rem;
-    }
-
-    /* ——— cards ——— */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 16px;
-    }
-    .card {
-      position: relative;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px 20px 18px;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      overflow: hidden;
-      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s, border-color 0.3s, box-shadow 0.3s;
-    }
-    .card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(400px circle at var(--mx, 50%) var(--my, 50%), rgba(61, 255, 138, 0.14), transparent 40%);
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
-    .card:hover {
-      transform: translateY(-6px);
-      background: var(--card-hover);
-      border-color: rgba(61, 255, 138, 0.28);
-      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35), 0 0 30px rgba(61, 255, 138, 0.08);
-    }
-    .card:hover::before { opacity: 1; }
-
-    .card h3 {
-      margin: 0 0 8px;
-      font-size: 1.02rem;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      letter-spacing: -0.01em;
-    }
-    .card p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-    .dot {
-      width: 9px; height: 9px;
-      border-radius: 50%;
-      display: inline-block;
-      flex-shrink: 0;
-      box-shadow: 0 0 10px currentColor;
-    }
-    .dot.g { background: var(--green); color: var(--green); }
-    .dot.a { background: var(--amber); color: var(--amber); }
-    .dot.b { background: var(--blue); color: var(--blue); }
-    .dot.v { background: var(--violet); color: var(--violet); }
-    .dot.m { background: var(--muted); color: var(--muted); box-shadow: none; }
-
-    /* ——— table ——— */
-    .table-shell {
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      overflow: hidden;
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(12px);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.92rem;
-    }
-    th, td {
-      padding: 14px 16px;
+    .menu {
+      position: absolute; z-index: 4; top: 2.75em; right: 1.6em; width: 26.5em;
+      padding: 0.45em 0;
+      background: var(--menu-bg); color: var(--menu-text);
+      border-radius: 0.95em;
+      border: 0.5px solid var(--menu-line);
+      box-shadow: 0 1.6em 3.2em rgba(0, 0, 0, 0.35), 0 0 0 0.5px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(30px) saturate(160%); -webkit-backdrop-filter: blur(30px) saturate(160%);
+      font-size: 1.04em; line-height: 1.3;
       text-align: left;
-      vertical-align: top;
-      border-bottom: 1px solid var(--border);
     }
-    tr:last-child td { border-bottom: 0; }
-    th {
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--text);
-      font-weight: 650;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+    .m-stats { display: grid; grid-template-columns: repeat(4, 1fr); padding: 0.8em 0.8em 0.9em; text-align: center; }
+    .m-stat { display: flex; flex-direction: column; align-items: center; gap: 0.15em; }
+    .m-stat .ic { width: 1.25em; height: 1.25em; color: var(--menu-dim); stroke-width: 1.9; }
+    .m-stat b { font-size: 1.2em; font-weight: 700; font-variant-numeric: tabular-nums; transition: color 0.4s; }
+    .m-stat span { font-size: 0.86em; color: var(--menu-dim); }
+    .m-stat.hot b { color: #ff9f0a; }
+    .m-stat.charging b { color: var(--menu-on); }
+    .m-sep { height: 1px; background: var(--menu-line); margin: 0.4em 0; }
+    .m-status { display: flex; align-items: center; gap: 0.7em; padding: 0.55em 1.25em 0.2em; }
+    .m-dot { width: 0.6em; height: 0.6em; border-radius: 50%; background: #8e8e93; flex-shrink: 0; transition: background 0.3s; }
+    .m-dot.on { background: #30d158; }
+    .m-dot.amber { background: #ff9f0a; }
+    .m-texts { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+    .m-title { font-weight: 600; }
+    .m-sub { font-size: 0.86em; color: var(--menu-dim); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .m-switch { position: relative; width: 2.6em; height: 1.5em; border-radius: 1em; border: 0; padding: 0; cursor: pointer; background: rgba(120, 120, 128, 0.32); transition: background 0.25s; flex-shrink: 0; }
+    .m-switch i { position: absolute; top: 0.15em; left: 0.15em; width: 1.2em; height: 1.2em; border-radius: 50%; background: #fff; box-shadow: 0 0.1em 0.25em rgba(0, 0, 0, 0.3); transition: transform 0.25s cubic-bezier(.3, 1.4, .5, 1); }
+    .m-switch[aria-checked="true"] { background: #0a84ff; }
+    .m-switch[aria-checked="true"] i { transform: translateX(1.1em); }
+    .chk { width: 1em; flex-shrink: 0; visibility: hidden; font-weight: 600; }
+    .chk.on { visibility: visible; }
+    .mi .lbl-wrap { display: flex; align-items: center; gap: 0.35em; min-width: 0; }
+    .mi {
+      display: flex; align-items: center; justify-content: space-between; gap: 1em;
+      width: calc(100% - 0.9em); margin: 0 0.45em; padding: 0.42em 0.8em 0.42em 0.45em;
+      border-radius: 0.45em; border: 0; background: none; color: inherit; text-align: left;
+      font-size: 1em; line-height: 1.3; cursor: default; white-space: nowrap;
     }
-    td { color: var(--muted); }
-    td:first-child { color: var(--text); font-weight: 600; }
-    tbody tr { transition: background 0.2s; }
-    tbody tr:hover { background: rgba(61, 255, 138, 0.05); }
+    button.mi { cursor: pointer; }
+    button.mi:hover { background: #0a63d8; color: #fff; }
+    button.mi:hover kbd, button.mi:hover .dim { color: #fff; }
+    .mi kbd, .mi .dim { color: var(--menu-dim); font-family: var(--font); font-size: 0.94em; }
+    .mi.is-disabled { opacity: 0.4; }
+    .lid-card {
+      position: absolute; left: 50%; bottom: 34%; z-index: 6;
+      transform: translateX(-50%);
+      min-width: 300px; padding: 18px 22px;
+      border-radius: 22px; background: var(--elev); border: 1px solid var(--line);
+      box-shadow: var(--shadow-lg);
+      opacity: 0; visibility: hidden; text-align: left;
+    }
+    .lid-card h3 { margin: 0 0 10px; font-size: 17px; }
+    .status-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; font-size: 14px; color: var(--text-2); padding: 4px 0; }
+    .status-row b { color: var(--text); font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
+    .led { width: 8px; height: 8px; border-radius: 50%; background: var(--green-fill); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green-fill) 25%, transparent); }
+    .bar { position: relative; height: 6px; width: 96px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+    .bar i { position: absolute; inset: 0 auto 0 0; width: 64%; border-radius: inherit; background: var(--green-fill); }
+    .mac-base {
+      position: relative; height: clamp(12px, 1.7vw, 19px); width: 114%; margin-left: -7%;
+      background: linear-gradient(180deg, var(--alu-1) 0%, var(--alu-2) 100%);
+      border-radius: 2px 2px 22px 22px / 2px 2px 100% 100%;
+      box-shadow: 0 30px 40px -24px rgba(0, 0, 0, 0.45);
+    }
+    .mac-base::before {
+      content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 15%; height: 42%; border-radius: 0 0 10px 10px;
+      background: color-mix(in srgb, var(--alu-2) 70%, #000 30%);
+      opacity: 0.45;
+    }
+    .showcase-hint { text-align: center; color: var(--text-3); font-size: 14px; margin: 26px 0 0; }
 
-    .onoff {
-      display: inline-flex;
-      padding: 2px 8px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.78rem;
-      letter-spacing: 0.03em;
-    }
-    .onoff.on {
-      color: var(--green);
-      background: rgba(61, 255, 138, 0.12);
-      border: 1px solid rgba(61, 255, 138, 0.3);
-    }
-    .onoff.off {
-      color: var(--muted);
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-    }
+    /* ───────────── sections ───────────── */
+    .sec { padding: 120px 0; }
+    .sec-head { text-align: center; max-width: 860px; margin: 0 auto 56px; }
+    .sec-head .kicker { display: block; font-size: 19px; font-weight: 600; color: var(--text-2); margin: 0 0 10px; }
+    .sec-head h2 { margin: 0 0 18px; font-size: clamp(36px, 5.4vw, 60px); line-height: 1.06; letter-spacing: -0.032em; font-weight: 800; }
+    .sec-head p { margin: 0 auto; max-width: 680px; font-size: clamp(17px, 1.8vw, 21px); color: var(--text-2); line-height: 1.45; }
 
-    /* ——— install ——— */
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
+    /* ───────────── bento ───────────── */
+    .bento { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .card {
+      position: relative; overflow: hidden;
+      background: var(--surface); border-radius: var(--radius-xl);
+      padding: 44px 44px 40px;
+      display: flex; flex-direction: column;
+      min-height: 460px;
     }
-    .step {
-      position: relative;
-      padding: 22px 20px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
-    }
-    .step:hover {
-      transform: translateY(-4px);
-      border-color: rgba(110, 182, 255, 0.35);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
-    }
-    .step-num {
-      width: 34px; height: 34px;
-      border-radius: 12px;
-      display: grid;
-      place-items: center;
-      font-weight: 800;
-      font-size: 0.95rem;
-      margin-bottom: 12px;
-      color: #04140b;
-      background: linear-gradient(135deg, var(--green), var(--blue));
-      box-shadow: 0 8px 20px rgba(61, 255, 138, 0.25);
-    }
-    .step h3 { margin: 0 0 6px; font-size: 1rem; }
-    .step p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+    .card--wide { grid-column: span 2; min-height: 0; }
+    .cap { font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-2); margin: 0 0 10px; }
+    .card h3 { margin: 0 0 12px; font-size: clamp(24px, 2.5vw, 30px); line-height: 1.14; letter-spacing: -0.02em; font-weight: 700; max-width: 620px; }
+    .card > p { margin: 0; color: var(--text-2); font-size: 17px; max-width: 560px; }
+    .card p b { color: var(--text); }
+    .viz { margin-top: auto; padding-top: 36px; display: flex; align-items: center; justify-content: center; align-self: stretch; }
+    .card--center { text-align: center; align-items: center; }
+    .card--center > p { margin-inline: auto; }
 
-    code {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--border);
-      padding: 2px 8px;
-      border-radius: 8px;
-      font-size: 0.86em;
-      font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    /* mini menu rows used in cards */
+    .mini {
+      width: 100%; max-width: 360px; padding: 8px 0;
+      background: var(--elev); border: 1px solid var(--line); border-radius: 16px;
+      box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.25);
+      font-size: 15px; text-align: left;
     }
+    .mini-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 16px; }
+    .mini-row .lbl-wrap { display: flex; align-items: center; gap: 6px; }
+    .mini-row kbd { color: var(--text-3); font-family: var(--font); }
+    .mini-sep { height: 1px; background: var(--line); margin: 4px 0; }
+    .mini-note { padding: 6px 16px 4px; font-size: 13px; color: var(--text-2); display: flex; align-items: center; gap: 8px; }
 
-    /* ——— changelog timeline ——— */
-    .timeline {
-      display: grid;
-      gap: 14px;
+    /* lid side view */
+    .lid-viz { width: 100%; display: grid; grid-template-columns: 1.3fr 1fr; gap: 32px; align-items: center; }
+    .lid-viz svg { width: 100%; height: auto; overflow: visible; }
+    .lid-status { background: var(--elev); border: 1px solid var(--line); border-radius: 22px; padding: 18px 22px; }
+    .lid-status .status-row { font-size: 15px; padding: 7px 0; }
+    .lid-status .status-row + .status-row { border-top: 1px solid var(--line); }
+
+    /* monitor viz */
+    .monitor { width: 190px; margin: 0 auto 22px; }
+    .monitor-screen {
+      height: 112px; border-radius: 10px; border: 6px solid var(--bezel);
+      background: linear-gradient(128deg, #4b2a84, #c2392f 55%, #f4c55e);
+      position: relative; overflow: hidden;
     }
-    .release {
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--card);
+    .monitor-screen::after { content: ""; position: absolute; inset: 0; background: #000; opacity: var(--dim, 0); transition: opacity 0.6s; }
+    .monitor-stand { width: 46px; height: 18px; margin: 0 auto; background: linear-gradient(var(--alu-1), var(--alu-2)); clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%); }
+    .awake-pill { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--green); background: color-mix(in srgb, var(--green-fill) 14%, transparent); padding: 5px 11px; border-radius: 999px; }
+
+    .keys { display: flex; gap: 8px; justify-content: center; margin-top: 18px; }
+    .key {
+      min-width: 46px; height: 46px; padding: 0 10px; display: grid; place-items: center;
+      border-radius: 11px; background: var(--elev); border: 1px solid var(--line);
+      box-shadow: 0 3px 0 var(--line); font-size: 20px; font-weight: 500; color: var(--text);
+    }
+    .lock-ic { width: 64px; height: 64px; color: var(--text); margin: 0 auto 6px; display: block; overflow: visible; }
+    .lock-ic .shackle { transition: transform 0.5s cubic-bezier(.3, 1.6, .5, 1); }
+    .lock-ic.open .shackle { transform: translateY(-3px) rotate(-18deg); transform-origin: 16px 10px; transform-box: view-box; }
+
+    /* stats viz */
+    .stats-big { width: 100%; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+    .stat-tile { background: var(--elev); border: 1px solid var(--line); border-radius: 22px; padding: 22px 12px 18px; text-align: center; }
+    .stat-tile .ic { width: 28px; height: 28px; color: var(--text-2); }
+    .stat-tile b { display: block; font-size: clamp(22px, 2.6vw, 32px); font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; margin: 6px 0 2px; transition: color 0.4s; }
+    .stat-tile span { font-size: 14px; color: var(--text-2); }
+    .stat-tile.hot b { color: var(--amber-fill); }
+    .stat-tile.charging b { color: var(--green); }
+    .tiles-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
+    .tiles-row .stat-tile { flex: 1 1 0; min-width: 0; padding: 16px 6px 12px; border-radius: 18px; }
+    .tiles-row .stat-tile b { font-size: 20px; }
+    .tiles-row .stat-tile span { font-size: 12px; }
+    .tiles-row .stat-tile .ic { width: 22px; height: 22px; }
+    .device-label { margin-top: 14px; font-size: 13px; color: var(--text-2); text-align: center; }
+    .graph { width: 100%; height: 150px; display: flex; align-items: flex-end; gap: 5px; padding: 0 4px; }
+    .graph i { flex: 1; border-radius: 4px 4px 2px 2px; background: var(--green-fill); height: 30%; transition: height 0.55s cubic-bezier(.3, .8, .3, 1), background 0.4s; }
+    .graph i.hot { background: var(--amber-fill); }
+    .graph-legend { display: flex; justify-content: space-between; width: 100%; font-size: 13px; color: var(--text-2); margin-top: 10px; }
+    .graph-wrap { width: 100%; }
+
+    /* downloads */
+    .dl-list { width: 100%; max-width: 380px; background: var(--elev); border: 1px solid var(--line); border-radius: 20px; padding: 8px 18px; }
+    .dl-row { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 4px 12px; padding: 11px 0; }
+    .dl-row + .dl-row { border-top: 1px solid var(--line); }
+    .dl-row .ic { width: 26px; height: 26px; color: var(--text-2); grid-row: span 2; }
+    .dl-name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dl-size { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+    .dl-row .bar { grid-column: 2 / 4; width: 100%; height: 5px; }
+
+    /* apps */
+    .apps { width: 100%; max-width: 360px; background: var(--elev); border: 1px solid var(--line); border-radius: 20px; padding: 6px; }
+    .apps-head { font-size: 12px; font-weight: 600; color: var(--text-3); padding: 8px 12px 6px; }
+    .app-row { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 12px; font-size: 15px; transition: background 0.3s, color 0.3s; }
+    .app-row .appi { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 13px; }
+    .app-row .ic { width: 18px; height: 18px; margin-left: auto; opacity: 0; transition: opacity 0.3s; }
+    .app-row.sel { background: color-mix(in srgb, var(--blue) 14%, transparent); }
+    .app-row.sel .ic { opacity: 1; color: var(--blue); }
+
+    /* timer ring */
+    .ring { position: relative; width: 200px; height: 200px; }
+    .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring circle { fill: none; stroke-width: 10; }
+    .ring .track { stroke: var(--surface-2); }
+    .ring .prog { stroke: var(--green-fill); stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+    .ring-text { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+    .ring-text b { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .ring-text span { font-size: 13px; color: var(--text-2); }
+    .presets { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 18px; }
+    .presets span { font-size: 13px; padding: 5px 10px; border-radius: 999px; background: var(--elev); border: 1px solid var(--line); color: var(--text-2); }
+    .presets span.on { background: var(--btn); color: var(--btn-text); border-color: transparent; }
+
+    /* reasons */
+    .reasons { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 340px; }
+    .reason { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 16px; background: var(--elev); border: 1px solid var(--line); font-size: 15px; font-weight: 600; transition: opacity 0.5s; }
+    .reason .ic { width: 20px; height: 20px; color: var(--text-2); }
+    .reason .rs { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--green); }
+    .reason.done { opacity: 0.45; }
+    .reason.done .rs { color: var(--text-3); }
+    .reason-wake { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; font-size: 14px; font-weight: 600; }
+
+    /* ───────────── behavior ───────────── */
+    .states { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 auto 28px; }
+    .states button {
+      border: 1px solid var(--line); background: var(--bg); color: var(--text-2);
+      padding: 10px 18px; border-radius: 999px; font-size: 15px; font-weight: 600; cursor: pointer;
+      transition: background 0.25s, color 0.25s, border-color 0.25s;
+    }
+    .states button:hover { color: var(--text); }
+    .states button[aria-pressed="true"] { background: var(--btn); color: var(--btn-text); border-color: transparent; }
+    .btiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; perspective: 1000px; }
+    .btile { background: var(--surface); border-radius: var(--radius-l); padding: 30px 28px 32px; min-height: 210px; }
+    .btile .ic { width: 30px; height: 30px; color: var(--text-2); margin-bottom: 18px; }
+    .btile h3 { margin: 0 0 6px; font-size: 14px; font-weight: 600; color: var(--text-2); }
+    .bval { font-size: 22px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.25; transform-origin: 50% 0; }
+    .bnote { text-align: center; margin: 22px 0 0; font-size: 15px; color: var(--text-2); }
+
+    /* ───────────── features grid ───────────── */
+    .fgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .fcard { background: var(--surface); border-radius: var(--radius-m); padding: 22px 20px 20px; min-height: 150px; display: flex; flex-direction: column; }
+    .fcard .ic { width: 30px; height: 30px; margin-bottom: auto; color: var(--text); }
+    .fcard h3 { margin: 22px 0 2px; font-size: 15px; font-weight: 600; line-height: 1.3; }
+    .fcard p { margin: 0; font-size: 13px; color: var(--text-2); line-height: 1.35; }
+    .fcard .ico-stack { display: flex; gap: 4px; margin-bottom: auto; flex-wrap: wrap; }
+    .fcard .ico-stack span { width: 24px; height: 24px; display: grid; place-items: center; color: var(--text); }
+    .fcard .ico-stack .ic { width: 18px; height: 18px; margin: 0; color: inherit; }
+    .fcard .ico-stack .ic.lid { fill: currentColor; stroke: none; }
+
+    /* ───────────── languages ───────────── */
+    .langs { background: var(--surface); padding: 96px 0; text-align: center; }
+    .langs h2 { margin: 0 0 12px; font-size: clamp(32px, 4.6vw, 52px); letter-spacing: -0.03em; line-height: 1.08; font-weight: 800; }
+    .langs p { margin: 0 auto 32px; color: var(--text-2); max-width: 560px; font-size: 19px; }
+    .lang-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+    .lang-chips button {
+      display: inline-flex; align-items: baseline; gap: 10px;
+      border: 1px solid var(--line); background: var(--bg); cursor: pointer;
+      border-radius: 999px; padding: 14px 24px; font-size: 18px; font-weight: 600;
+      transition: background 0.25s, color 0.25s;
+    }
+    .lang-chips button small { font-size: 12px; font-weight: 700; color: var(--text-3); letter-spacing: 0.04em; }
+    .lang-chips button[aria-pressed="true"] { background: var(--btn); color: var(--btn-text); border-color: transparent; }
+    .lang-chips button[aria-pressed="true"] small { color: inherit; opacity: 0.6; }
+
+    /* ───────────── install ───────────── */
+    .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+    .step { background: var(--surface); border-radius: var(--radius-l); padding: 32px 30px 34px; }
+    .step-n { font-size: 56px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; color: var(--text-3); margin-bottom: 26px; font-variant-numeric: tabular-nums; }
+    .step h3 { margin: 0 0 6px; font-size: 21px; letter-spacing: -0.015em; }
+    .step p { margin: 0; color: var(--text-2); font-size: 16px; }
+
+    /* ───────────── faq ───────────── */
+    .faq { max-width: 820px; margin: 0 auto; display: grid; gap: 12px; }
+    .faq details { background: var(--surface); border-radius: var(--radius-m); }
+    .faq summary {
+      list-style: none; cursor: pointer; display: flex; align-items: center; gap: 14px;
+      padding: 20px 24px; font-size: 17px; font-weight: 600;
+    }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary .ic { width: 20px; height: 20px; color: var(--text-2); transition: transform 0.3s; }
+    .faq details[open] summary .ic { transform: rotate(45deg); }
+    .faq .ans { padding: 0 24px 22px 58px; color: var(--text-2); font-size: 16px; }
+    .faq .ans p { margin: 0; }
+
+    /* ───────────── changelog ───────────── */
+    .log { max-width: 820px; margin: 0 auto; display: grid; gap: 14px; }
+    .rel { background: var(--surface); border-radius: var(--radius-l); padding: 28px 30px; }
+    .rel-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .rel-head b { font-size: 24px; letter-spacing: -0.02em; }
+    .tag-next { background: color-mix(in srgb, var(--blue) 14%, transparent) !important; color: var(--blue) !important; }
+    .tag { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--green-fill) 16%, transparent); color: var(--green); }
+    .rel ul { margin: 0; padding-left: 20px; color: var(--text-2); }
+    .rel li { margin: 5px 0; font-size: 16px; }
+    .rel li b { color: var(--text); }
+    .older { background: var(--surface); border-radius: var(--radius-l); }
+    .older > summary { list-style: none; cursor: pointer; padding: 22px 30px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .older > summary::-webkit-details-marker { display: none; }
+    .older > summary .ic { width: 18px; height: 18px; transition: transform 0.3s; color: var(--text-2); }
+    .older[open] > summary .ic { transform: rotate(90deg); }
+    .older .rel { background: none; padding: 6px 30px 22px; }
+    .older .rel-head b { font-size: 19px; }
+    .log-link { text-align: center; margin-top: 8px; font-size: 16px; }
+
+    /* ───────────── cta ───────────── */
+    .cta { padding: 40px 0 120px; }
+    .cta-card {
+      background: var(--surface); border-radius: 48px; padding: 64px 72px;
+      display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 40px;
       overflow: hidden;
-      transition: border-color 0.25s, box-shadow 0.25s;
     }
-    .release:hover {
-      border-color: rgba(167, 139, 250, 0.35);
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
-    }
-    .release-head {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 16px 20px;
-      cursor: default;
-    }
-    .ver {
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      color: var(--text);
-      min-width: 4.5rem;
-    }
-    .ver.latest {
-      background: linear-gradient(90deg, var(--green), var(--blue));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .tag-latest {
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      padding: 3px 8px;
-      border-radius: 999px;
-      color: var(--green);
-      background: rgba(61, 255, 138, 0.1);
-      border: 1px solid rgba(61, 255, 138, 0.28);
-    }
-    .release ul {
-      margin: 0;
-      padding: 0 20px 18px 42px;
-      color: var(--muted);
-    }
-    .release li { margin: 5px 0; font-size: 0.92rem; }
+    .cta-card h2 { margin: 0 0 26px; font-size: clamp(30px, 3.8vw, 44px); line-height: 1.1; letter-spacing: -0.03em; font-weight: 800; }
+    .cta-icon { width: clamp(140px, 18vw, 210px); height: auto; filter: drop-shadow(0 24px 40px rgba(20, 60, 140, 0.35)); }
 
-    /* ——— footer ——— */
-    footer {
-      margin-top: 24px;
-      padding-top: 28px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 12px;
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
+    /* ───────────── footer ───────────── */
+    footer { border-top: 1px solid var(--line); padding: 56px 0 40px; font-size: 14px; color: var(--text-2); }
+    .foot { display: grid; grid-template-columns: 1.6fr repeat(3, 1fr); gap: 32px; }
+    .foot h4 { margin: 0 0 12px; font-size: 14px; color: var(--text); }
+    .foot ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+    .foot a { color: var(--text-2); }
+    .foot a:hover { color: var(--text); }
+    .foot .brand { margin-bottom: 12px; }
+    .foot-tag { color: var(--text); font-weight: 600; font-size: 17px; margin: 0 0 6px; }
+    .foot-bottom { margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; color: var(--text-3); font-size: 13px; }
 
-    /* ——— motion helpers ——— */
-    .reveal {
-      opacity: 0;
-      transform: translateY(28px);
-      transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+    /* ───────────── responsive ───────────── */
+    @media (max-width: 1000px) {
+      .nav-links { display: none; }
+      .nav-tools { margin-left: auto; }
+      .fgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .stats-big { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .stats-big .stat-tile:nth-child(n + 4) { display: none; }
     }
-    .reveal.is-visible {
-      opacity: 1;
-      transform: translateY(0);
+    @media (max-width: 820px) {
+      .bento { grid-template-columns: minmax(0, 1fr); }
+      .card--wide { grid-column: auto; }
+      .card { min-height: 0; padding: 36px 28px 32px; border-radius: 34px; }
+      .lid-viz { grid-template-columns: 1fr; gap: 20px; }
+      .btiles, .steps { grid-template-columns: minmax(0, 1fr); }
+      .btile { min-height: 0; }
+      .fgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cta-card { grid-template-columns: 1fr; text-align: center; padding: 48px 28px; border-radius: 34px; }
+      .cta-card .cta-icon { margin: 0 auto; grid-row: 1; }
+      .foot { grid-template-columns: 1fr 1fr; }
+      .foot > div:first-child { grid-column: 1 / -1; }
+      .sec { padding: 88px 0; }
     }
-
-    @keyframes rise-in {
-      from { opacity: 0; transform: translateY(24px); }
-      to { opacity: 1; transform: translateY(0); }
+    @media (max-width: 640px) {
+      :root { --gutter: 16px; }
+      body { font-size: 16px; }
+      .nav .container { gap: 10px; }
+      .brand span { display: none; }
+      .nav .btn-sm { padding: 7px 12px; }
+      .hero { padding-top: 104px; }
+      .chips { gap: 8px; }
+      .chips li { padding: 5px 12px; border-radius: 999px; background: var(--surface); font-size: 14px; }
+      .chips li + li::before { content: none; }
+      .btn { padding: 14px 24px; font-size: 17px; }
+      .showcase { padding-top: 36px; }
+      /* phone: show the menu as a standalone card over the wallpaper */
+      .mac { perspective: none; }
+      .mac-lid { aspect-ratio: auto; }
+      .lid-front { position: relative; padding: 0; background: none; box-shadow: none; border-radius: 30px; }
+      .screen { font-size: 13px; border-radius: 30px; padding: 0 0 22px; height: auto; }
+      .notch, .mbar-left, .mac-base, .lid-alu { display: none; }
+      .mbar { justify-content: flex-end; }
+      .menu { position: relative; top: auto; right: auto; margin: 10px auto 0; width: calc(100% - 24px); max-width: 360px; font-size: 13px; }
+      .mi { white-space: normal; }
+      .stats-big { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stats-big .stat-tile:nth-child(n + 3) { display: none; }
+      .tiles-row { gap: 6px; }
+      .tiles-row .stat-tile b { font-size: 16px; }
+      .ring { width: 170px; height: 170px; }
+      .faq summary { padding: 18px 18px; font-size: 16px; }
+      .faq .ans { padding: 0 18px 20px 52px; }
+      .rel, .older > summary { padding-left: 22px; padding-right: 22px; }
+      .older .rel { padding: 6px 22px 20px; }
+        .foot { grid-template-columns: 1fr 1fr; }
+      .lang-chips button { padding: 12px 18px; font-size: 16px; }
     }
-    @keyframes drop-in {
-      from { opacity: 0; transform: translateY(-16px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @media (max-width: 720px) {
-      .wrap { padding: 28px 16px 64px; }
-      .nav { border-radius: 18px; flex-direction: column; align-items: stretch; }
-      .nav-links { justify-content: center; }
-      .shot-frame { transform: none; animation: none; }
-      .shot-frame:hover { transform: none; }
-    }
-
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-      .reveal { opacity: 1; transform: none; }
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
     }
   </style>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha512-7eHRwcbYkK4d9g/6tD/mhkf++eoTHwpNM9woBxtPUBWm67zeAfFC+HrdoE2GanKeocly/VxeLvIqwvCdk7qScg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha512-onMTRKJBKz8M1TnqqDuGBlowlH0ohFzMXYRNebz+yOcc5TQr/zAKsthzhuv0hiyUKEiQEQXEynnXCvNTOk50dg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-  <div class="bg-layer" aria-hidden="true">
-    <div class="grid-lines"></div>
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-    <canvas id="particles"></canvas>
-  </div>
-  <div class="noise" aria-hidden="true"></div>
+  <!-- icon sprite -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="appg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#25407a"/><stop offset="1" stop-color="#101d3a"/></linearGradient><linearGradient id="lidg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F6F9"/><stop offset="1" stop-color="#C3C9D2"/></linearGradient><linearGradient id="baseg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#AEB5C0"/><stop offset="1" stop-color="#7C8594"/></linearGradient>
+      <symbol id="app-icon" viewBox="0 0 100 100">
+        <rect width="100" height="100" rx="22" fill="url(#appg)"/>
+        <circle cx="50" cy="24.2" r="11.5" fill="none" stroke="#3EE6A0" stroke-opacity=".28" stroke-width="1.4"/>
+        <circle cx="50" cy="24.2" r="7.4" fill="none" stroke="#3EE6A0" stroke-opacity=".6" stroke-width="1.6"/>
+        <circle cx="50" cy="24.2" r="3.5" fill="#3EE6A0"/>
+        <path d="M29.3 38.3H70.7C72.9 38.3 74.6 39.5 75.4 41.4L82.6 57.6C83.6 59.8 82.2 61.7 79.9 61.7H20.1C17.8 61.7 16.4 59.8 17.4 57.6L24.6 41.4C25.4 39.5 27.1 38.3 29.3 38.3Z" fill="url(#lidg)"/>
+        <rect x="19.1" y="62.9" width="61.7" height="1.6" rx=".8" fill="#3EE6A0"/>
+        <rect x="12.9" y="65.6" width="74.2" height="6.7" rx="3.3" fill="url(#baseg)"/>
+      </symbol>
+      <symbol id="i-lid" viewBox="0 0 18 18"><path d="M4.6 3.8H13.4C14 3.8 14.4 4.1 14.6 4.6L16.3 8.8C16.5 9.4 16.1 10 15.4 10H2.6C1.9 10 1.5 9.4 1.7 8.8L3.4 4.6C3.6 4.1 4 3.8 4.6 3.8Z"/><rect x="1" y="11.8" width="16" height="2.6" rx="1.3"/></symbol>
+      <symbol id="i-shield-s" viewBox="0 0 24 24"><path d="M12 3.2 18.8 6v5.2c0 4.4-2.9 7.6-6.8 9.1-3.9-1.5-6.8-4.7-6.8-9.1V6L12 3.2Z"/></symbol>
+      <symbol id="i-battery" viewBox="0 0 24 24"><rect x="2" y="7" width="17.5" height="10" rx="2.6"/><path d="M22 10.5v3"/><rect x="4.4" y="9.4" width="10.5" height="5.2" rx="1" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx=".8"/><path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/></symbol>
+      <symbol id="i-ram" viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="9" rx="1.5"/><path d="M6.5 10v3M10.5 10v3M14.5 10v3M18 10v3M5.5 16v2.5M9.5 16v2.5M14.5 16v2.5M18.5 16v2.5"/></symbol>
+      <symbol id="i-temp" viewBox="0 0 24 24"><path d="M14 14.6V5a2 2 0 1 0-4 0v9.6a4 4 0 1 0 4 0Z"/><path d="M12 9.5v6.5"/></symbol>
+      <symbol id="i-fan" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.8"/><path d="M12 10.2C11 6.5 12.5 3 15.5 3.5c2.6.4 2 4.2-1.8 7.2M13.8 12.5c3.7.9 6.4 3.6 4.8 6.2-1.4 2.2-4.6.1-5.9-4.4M10.4 13c-2.8 2.6-6.5 3.2-7.3.3-.7-2.5 2.9-3.9 7.3-2.7"/></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+      <symbol id="i-auto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17a8.5 8.5 0 0 0 0-17Z" fill="currentColor"/></symbol>
+      <symbol id="i-display" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8.5 21h7M12 17v4"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5M4 19.5h16"/></symbol>
+      <symbol id="i-window" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M3 9h18"/><path d="M6.2 6.8h.01M8.6 6.8h.01"/></symbol>
+      <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5M9.5 2.5h5M18.5 6.5 20 5"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 20.5h18M6.5 16.5v-4M11 16.5v-9M15.5 16.5v-6M20 16.5V5"/></symbol>
+      <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></symbol>
+      <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/></symbol>
+      <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15.5" r="4.5"/><path d="m11.2 12.3 8.3-8.3M16.5 7l2.5 2.5M14.2 9.3l2 2"/></symbol>
+      <symbol id="i-cmd" viewBox="0 0 24 24"><path d="M9 9V6.5A2.5 2.5 0 1 0 6.5 9H9Zm0 0h6m-6 0v6m6-6V6.5A2.5 2.5 0 1 1 17.5 9H15Zm0 0v6m0 0H9m6 0v2.5a2.5 2.5 0 1 0 2.5-2.5H15Zm-6 0v2.5A2.5 2.5 0 1 1 6.5 15H9Z"/></symbol>
+      <symbol id="i-restore" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 3.5V8h4.5"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 19.5 6v5.5c0 4.7-3.2 8-7.5 9.5-4.3-1.5-7.5-4.8-7.5-9.5V6L12 3Z"/><path d="m8.8 12 2.2 2.2 4.2-4.4"/></symbol>
+      <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z"/></symbol>
+      <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5"/></symbol>
+      <symbol id="i-laptop" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+      <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+      <symbol id="i-hand" viewBox="0 0 24 24"><path d="M8 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5v-4a1.5 1.5 0 0 1 3 0V10m0-3a1.5 1.5 0 0 1 3 0v6.5a7 7 0 0 1-7 7h-.5a6 6 0 0 1-4.6-2.2L3.6 15a1.6 1.6 0 0 1 2.4-2l2 2"/></symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2.5 5 13.5h6l-1 8 8-11h-6l1-8Z"/></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+      <symbol id="i-cup" viewBox="0 0 24 24"><path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z"/><path d="M16 10.5h1.5a2.5 2.5 0 0 1 0 5H16M8 3.5v2.5M12 3.5v2.5"/></symbol>
+    </defs>
+  </svg>
 
-  <div class="wrap">
-    <nav class="nav">
-      <div class="brand">
-        <span class="brand-badge" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#3dff8a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z"/>
-          </svg>
-        </span>
-        ClamKeep
-      </div>
-      <div class="nav-links">
-        <a href="#features">Features</a>
-        <a href="#behavior">Behavior</a>
-        <a href="#install">Install</a>
-        <a href="#changelog">Changelog</a>
-        <a href="https://github.com/M3etis/ClamKeep">GitHub</a>
-      </div>
-    </nav>
-
-    <header class="hero">
-      <div class="pill"><span class="dot"></span> v1.9.0 · macOS 13+</div>
-      <h1>Keep your Mac awake<br /><span class="gradient-text">with the lid closed</span></h1>
-      <p class="tagline">ClamKeep lives in the menu bar. Wake Mode holds the system, the display, and auto-lock — then you can re-enable Display Sleep or Auto Lock as exceptions. A live system-stats dashboard sits at the top of the menu.</p>
-      <div class="actions">
-        <a class="btn btn-primary" href="https://github.com/M3etis/ClamKeep/releases/latest">Download DMG</a>
-        <a class="btn btn-secondary" href="https://github.com/M3etis/ClamKeep">View on GitHub</a>
-      </div>
-    </header>
-
-    <div class="shot-wrap">
-      <div class="shot-glow"></div>
-      <div class="shot-frame">
-        <div class="shot-chrome" aria-hidden="true"><i></i><i></i><i></i></div>
-        <img src="screenshot.png" alt="ClamKeep 1.9.0 menu with system stats and features" width="1280" height="800" />
+  <!-- ───────────── NAV ───────────── -->
+  <header class="nav">
+    <div class="container">
+      <a class="brand" href="#top" aria-label="ClamKeep">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#app-icon"/></svg>
+        <span>ClamKeep</span>
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="#wake" data-i18n="nav.features">Features</a>
+        <a href="#how" data-i18n="nav.how">How it works</a>
+        <a href="#install" data-i18n="nav.install">Install</a>
+        <a href="#faq" data-i18n="nav.faq">FAQ</a>
+        <a href="#changelog" data-i18n="nav.log">Changelog</a>
+      </nav>
+      <div class="nav-tools">
+        <div class="seg" role="group" aria-label="Language">
+          <button type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+          <button type="button" data-lang="kk" aria-pressed="false">KK</button>
+        </div>
+        <button type="button" class="icon-btn" id="theme-btn" data-mode="auto" aria-label="Theme: auto">
+          <svg class="ic" data-show="auto"><use href="#i-auto"/></svg>
+          <svg class="ic" data-show="light"><use href="#i-sun"/></svg>
+          <svg class="ic" data-show="dark"><use href="#i-moon"/></svg>
+        </button>
+        <a class="btn btn-sm magnetic" href="https://github.com/M3etis/ClamKeep/releases/latest" data-i18n="nav.download">Download</a>
       </div>
     </div>
+  </header>
 
-    <section id="features">
-      <div class="section-head reveal">
-        <h2>Features</h2>
-        <p class="section-sub">Everything at a glance — plain language, no power jargon.</p>
-      </div>
-      <div class="grid">
-        <article class="card reveal">
-          <h3><span class="dot g"></span>System Stats</h3>
-          <p>Live battery, CPU, RAM, temperature, and fans at the top of the menu — icon, value, label. Missing sensors hide automatically. Toggle in Settings.</p>
-        </article>
-        <article class="card reveal">
-          <h3><span class="dot g"></span>Wake Mode</h3>
-          <p>Everything at once: keeps your Mac awake with the lid closed, keeps the screen on, and delays auto-lock. On enable those holds are automatic; on disable the whole session ends. Shows <span class="onoff on">ON</span> / <span class="onoff off">OFF</span>.</p>
-        </article>
-        <article class="card reveal">
-          <h3><span class="dot g"></span>Display Sleep</h3>
-          <p>Manual exception. <span class="onoff on">ON</span> — screen can turn off while Wake Mode is on. <span class="onoff off">OFF</span> — screen stays on (default on every new session).</p>
-        </article>
-        <article class="card reveal">
-          <h3><span class="dot g"></span>Auto Lock</h3>
-          <p>Manual exception. <span class="onoff on">ON</span> — Mac can lock after idle. <span class="onoff off">OFF</span> — delayed (default on every new session). Manual lock (⌃⌘Q) is always immediate.</p>
-        </article>
-        <article class="card reveal">
-          <h3><span class="dot a"></span>Don't Sleep During Downloads</h3>
-          <p>Standing policy: holds wake for download processes and recent activity in your Downloads folder.</p>
-        </article>
-        <article class="card reveal">
-          <h3><span class="dot a"></span>Don't Sleep While Active App…</h3>
-          <p>Keeps wake on while a selected app runs. When it quits, only that reason is cleared.</p>
-        </article>
-        <article class="card reveal">
-          <h3><span class="dot b"></span>Auto-off Timer</h3>
-          <p>5–60 minute presets or custom hours:minutes. The menu header shows a live countdown.</p>
-        </article>
-        <article class="card reveal">
-          <h3><span class="dot v"></span>Wake reasons</h3>
-          <p>manual / downloads / watched app — one source ending does not cancel the others.</p>
-        </article>
-        <article class="card reveal">
-          <h3><span class="dot m"></span>Extras</h3>
-          <p>EN / RU / KK, launch at login, show/hide system stats, five icon styles, universal binary, passwordless helper.</p>
-        </article>
+  <main id="top">
+    <!-- ───────────── HERO ───────────── -->
+    <section class="hero">
+      <div class="container">
+        <p class="eyebrow">
+          <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#app-icon"/></svg>
+          <span data-i18n="hero.eyebrow">Menu bar utility for macOS</span>
+        </p>
+        <h1 class="split" data-i18n="hero.title">Keep your Mac awake.<br>Even with the lid closed.</h1>
+        <p class="lead" data-i18n="hero.lead">ClamKeep lives in the menu bar. One toggle holds the system, the display and auto-lock — downloads, builds and renders keep running while your MacBook is shut.</p>
+        <div class="actions">
+          <a class="btn magnetic" href="https://github.com/M3etis/ClamKeep/releases/latest">
+            <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>
+            <span data-i18n="hero.cta">Download for macOS</span>
+          </a>
+          <a class="btn btn-ghost magnetic" href="https://github.com/M3etis/ClamKeep" data-i18n="hero.gh">View on GitHub</a>
+        </div>
+        <p class="meta" data-i18n="hero.meta">v1.9.0 · macOS 13+ · Apple Silicon &amp; Intel · Free</p>
+        <ul class="chips">
+          <li data-m="wake">Wake Mode</li>
+          <li data-m="ds">Display Sleep</li>
+          <li data-m="al">Auto Lock</li>
+          <li data-i18n="chip.dl">Downloads</li>
+          <li data-m="timer">Auto-off Timer</li>
+          <li data-i18n="chip.stats">System Stats</li>
+        </ul>
       </div>
     </section>
 
-    <section id="behavior">
-      <div class="section-head reveal">
-        <h2>Behavior</h2>
-        <p class="section-sub">How each state treats the display, auto lock, and a closed lid.</p>
-      </div>
-      <div class="table-shell reveal">
-        <table>
-          <thead>
-            <tr>
-              <th>State</th>
-              <th>Display</th>
-              <th>Auto lock</th>
-              <th>Lid closed</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Wake Mode <span class="onoff on">ON</span> (default)</td>
-              <td>Screen stays on</td>
-              <td>Delayed</td>
-              <td>Screen off (hardware), system awake</td>
-            </tr>
-            <tr>
-              <td>Display Sleep <span class="onoff on">ON</span></td>
-              <td>Display may sleep</td>
-              <td>Delayed</td>
-              <td>Screen off (hardware), system awake</td>
-            </tr>
-            <tr>
-              <td>Auto Lock <span class="onoff on">ON</span></td>
-              <td>Screen stays on (unless Display Sleep also on)</td>
-              <td>Normal after idle; manual lock immediate</td>
-              <td>Screen off (hardware), system awake</td>
-            </tr>
-            <tr>
-              <td>Wake Mode <span class="onoff off">OFF</span></td>
-              <td>Standard macOS</td>
-              <td>Standard macOS</td>
-              <td>Standard macOS</td>
-            </tr>
-            <tr>
-              <td>+ Auto-off Timer</td>
-              <td colspan="3">Header countdown; session ends at 00:00:00</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section id="install">
-      <div class="section-head reveal">
-        <h2>Install</h2>
-        <p class="section-sub">Three steps. One-time admin password for the helper.</p>
-      </div>
-      <div class="steps">
-        <div class="step reveal">
-          <div class="step-num">1</div>
-          <h3>Download</h3>
-          <p>Get <code>ClamKeep-1.9.0.dmg</code> from <a href="https://github.com/M3etis/ClamKeep/releases/latest">Releases</a>.</p>
-        </div>
-        <div class="step reveal">
-          <div class="step-num">2</div>
-          <h3>Drag to Applications</h3>
-          <p>Open the DMG and drop ClamKeep into Applications.</p>
-        </div>
-        <div class="step reveal">
-          <div class="step-num">3</div>
-          <h3>Launch &amp; approve</h3>
-          <p>Approve the one-time helper install (admin password).</p>
-        </div>
-      </div>
-      <p class="section-sub reveal" style="margin-top:16px">Requires macOS 13+. Universal binary (Apple Silicon + Intel).</p>
-    </section>
-
-    <section id="changelog">
-      <div class="section-head reveal">
-        <h2>Changelog</h2>
-        <p class="section-sub">Recent highlights from the release notes.</p>
-      </div>
-      <div class="timeline">
-        <article class="release reveal">
-          <div class="release-head">
-            <span class="ver latest">1.9.0</span>
-            <span class="tag-latest">Latest</span>
+    <!-- ───────────── SHOWCASE ───────────── -->
+    <section class="showcase" aria-label="Interactive preview">
+      <div class="container">
+        <div class="mac" id="mac">
+          <div class="mac-lid" id="mac-lid">
+            <div class="lid-front">
+              <div class="screen">
+                <div class="notch" aria-hidden="true"></div>
+                <div class="mbar">
+                  <div class="mbar-left" aria-hidden="true"><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Window</span><span>Help</span></div>
+                  <div class="mbar-right">
+                    <button type="button" class="mbar-icon" id="mbar-icon" data-state="on" aria-label="ClamKeep menu bar icon">
+                      <svg viewBox="0 0 18 18" aria-hidden="true"><use href="#i-lid"/></svg><i class="ring"></i>
+                    </button>
+                    <span id="clock">Thu 24 Sep 23:42</span>
+                  </div>
+                </div>
+                <div class="menu" id="menu" role="group" aria-label="ClamKeep menu — interactive demo">
+                  <div class="m-status">
+                    <i class="m-dot on" id="m-dot"></i>
+                    <div class="m-texts"><span class="m-title" id="m-title">Mac is awake</span><span class="m-sub" id="m-sub">Active for 32:18:36</span></div>
+                    <button type="button" class="m-switch" id="m-switch" role="switch" aria-checked="true" data-toggle="wake" aria-label="Wake Mode"><i></i></button>
+                  </div>
+                  <div class="m-stats" id="m-stats">
+                    <div class="m-stat" data-kind="bat"><svg class="ic" aria-hidden="true"><use href="#i-battery"/></svg><b data-stat="bat">78%</b><span data-m="bat">Battery</span></div>
+                    <div class="m-stat" data-kind="cpu"><svg class="ic" aria-hidden="true"><use href="#i-cpu"/></svg><b data-stat="cpu">24%</b><span data-m="cpu">CPU</span></div>
+                    <div class="m-stat" data-kind="ram"><svg class="ic" aria-hidden="true"><use href="#i-ram"/></svg><b data-stat="ram">74%</b><span data-m="ram">RAM</span></div>
+                    <div class="m-stat" data-kind="temp"><svg class="ic" aria-hidden="true"><use href="#i-temp"/></svg><b data-stat="temp">52°</b><span data-m="temp">Temp</span></div>
+                  </div>
+                  <div class="m-sep"></div>
+                  <button type="button" class="mi" data-toggle="ds" aria-pressed="false"><span class="lbl-wrap"><span class="chk" data-chk="ds">✓</span><span data-m="ds_allow">Allow Display Sleep</span></span><kbd>⌘S</kbd></button>
+                  <button type="button" class="mi" data-toggle="al" aria-pressed="false"><span class="lbl-wrap"><span class="chk" data-chk="al">✓</span><span data-m="al_allow">Allow Auto Lock</span></span><kbd>⌘L</kbd></button>
+                  <div class="m-sep"></div>
+                  <div class="mi"><span class="lbl-wrap"><span class="chk">✓</span><span data-m="dl">Keep Awake During Downloads</span></span><kbd>⌘D</kbd></div>
+                  <div class="mi"><span class="lbl-wrap"><span class="chk">✓</span><span data-m="app">Keep Awake While App Runs</span></span><span class="dim">›</span></div>
+                  <div class="mi"><span class="lbl-wrap"><span class="chk">✓</span><span data-m="turnoff">Turn Off After</span></span><span class="dim">›</span></div>
+                  <div class="m-sep"></div>
+                  <div class="mi"><span class="lbl-wrap"><span class="chk">✓</span><span data-m="settings">Settings…</span></span><kbd>⌘,</kbd></div>
+                  <div class="mi"><span class="lbl-wrap"><span class="chk">✓</span><span data-m="about">About ClamKeep</span></span></div>
+                  <div class="mi"><span class="lbl-wrap"><span class="chk">✓</span><span data-m="quit">Quit ClamKeep</span></span><kbd>⌘Q</kbd></div>
+                </div>
+                <div class="screen-dim" id="screen-dim"></div>
+              </div>
+            </div>
+            <div class="lid-alu" id="lid-alu"></div>
           </div>
-          <ul>
-            <li><strong>System Stats dashboard</strong> — battery, CPU, RAM, temperature, fans at the top of the menu</li>
-            <li>Unavailable sensors (e.g. fans) hide automatically</li>
-            <li><strong>Settings → Show System Stats</strong> toggle, applies immediately</li>
-            <li>Cleaner menu header — removed the redundant “Active: …” modes line</li>
-          </ul>
-        </article>
-        <article class="release reveal">
-          <div class="release-head"><span class="ver">1.8.1</span></div>
-          <ul>
-            <li>Fixed helper install when <code>/usr/local/bin</code> was missing</li>
-            <li>Wake Mode stays on after toggle on affected systems</li>
-          </ul>
-        </article>
-        <article class="release reveal">
-          <div class="release-head"><span class="ver">1.8.0</span></div>
-          <ul>
-            <li>Wake Mode on <strong>forbids Display Sleep and Auto Lock</strong> — re-enable them manually as exceptions</li>
-            <li>Wake Mode off cancels <strong>all</strong> other options (timer, downloads, watched app, exceptions)</li>
-            <li>Fixed Wake Mode toggle reliability (helper IPC races, stale results)</li>
-            <li>Auto-off timer restores <strong>remaining</strong> time after relaunch</li>
-            <li>Hardened helper (v1.4.0): singleton, authenticated IPC, allowlist, injection-safe</li>
-          </ul>
-        </article>
-        <article class="release reveal">
-          <div class="release-head"><span class="ver">1.7.0</span></div>
-          <ul>
-            <li>Wake Mode does everything at once: Mac awake, display on, auto-lock delayed</li>
-            <li>Menu shows <strong>Wake Mode / Display Sleep / Auto Lock</strong> with a green <strong>[ON]</strong> / <strong>[OFF]</strong> status badge</li>
-            <li>Display Sleep / Auto Lock are exceptions (both <strong>[OFF]</strong> by default)</li>
-            <li>Manual lock (⌘⌃Q) still locks immediately</li>
-          </ul>
-        </article>
-        <article class="release reveal">
-          <div class="release-head"><span class="ver">1.6.0</span></div>
-          <ul>
-            <li>Single <strong>Wake Mode</strong> toggle (replaces Enable/Disable Wake Mode)</li>
-            <li><strong>Auto-off Timer</strong>: 5–60 min presets and custom hours/minutes; header countdown</li>
-            <li>Active options: green title + <strong>ON</strong> in the system shortcut column</li>
-            <li>Turning Wake Mode off ends the session (timer, app watchdog, download policy)</li>
-            <li>Header shows only modes that are actually holding the system</li>
-            <li>Fixed Custom Timer dialog layout</li>
-          </ul>
-        </article>
-        <article class="release reveal">
-          <div class="release-head"><span class="ver">1.5.0</span></div>
-          <ul>
-            <li>Added <strong>Prevent Auto Lock</strong></li>
-            <li>Wake reasons (manual / downloads / app) no longer cancel each other</li>
-            <li>Standing download policy with <code>~/Downloads</code> activity detection</li>
-            <li>Display hold via the one-time helper</li>
-            <li>Synchronous wake teardown on quit</li>
-          </ul>
-        </article>
-        <article class="release reveal">
-          <div class="release-head"><span class="ver">1.4.0</span></div>
-          <ul>
-            <li>Download monitor, Prevent Display Sleep rename, Don't Sleep While Active App</li>
-          </ul>
-        </article>
+          <div class="mac-base" aria-hidden="true"></div>
+          <div class="lid-card" id="lid-card" aria-hidden="true">
+            <h3 data-i18n="lid.title">Lid closed. Still working.</h3>
+            <div class="status-row"><span data-i18n="lid.sys">System</span><b><i class="led"></i><span data-i18n="lid.awake">Awake</span></b></div>
+            <div class="status-row"><span data-i18n="lid.dl">Download</span><b><span class="bar"><i id="lid-bar"></i></span><span id="lid-pct">64%</span></b></div>
+            <div class="status-row"><span data-i18n="lid.screen">Screen</span><b data-i18n="lid.off">Off (hardware)</b></div>
+          </div>
+        </div>
+        <p class="showcase-hint" data-i18n="hero.hint">The menu is live — flip the switch, then try Allow Display Sleep or Allow Auto Lock.</p>
       </div>
     </section>
 
-    <footer>
-      <span>ClamKeep 1.9.0 · <a href="https://github.com/M3etis/ClamKeep">github.com/M3etis/ClamKeep</a> · m3etis@gmail.com</span>
-      <span>macOS menu bar utility</span>
-    </footer>
-  </div>
+    <!-- ───────────── WAKE MODE ───────────── -->
+    <section class="sec" id="wake">
+      <div class="container">
+        <div class="sec-head">
+          <span class="kicker" data-m="wake">Wake Mode</span>
+          <h2 class="split" data-i18n="wake.title">Close the lid.<br>Keep everything running.</h2>
+          <p data-i18n="wake.lead">Turn on Wake Mode and ClamKeep holds the system, keeps the screen on and delays auto-lock. Turn it off and the whole session ends — timer, downloads and watched app included.</p>
+        </div>
+        <div class="bento">
+          <article class="card card--wide reveal-card" id="card-lid">
+            <p class="cap" data-i18n="wake.c1.cap">Lid closed · System awake</p>
+            <h3 data-i18n="wake.c1.title">Shut it, bag it, plug it into a monitor — your Mac keeps working.</h3>
+            <div class="viz">
+              <div class="lid-viz">
+                <svg viewBox="0 0 420 220" aria-hidden="true">
+                  <ellipse cx="205" cy="196" rx="170" ry="8" fill="currentColor" opacity=".08"/>
+                  <rect x="45" y="170" width="300" height="14" rx="7" fill="var(--alu-2)"/>
+                  <rect x="45" y="170" width="300" height="5" rx="2.5" fill="var(--alu-1)"/>
+                  <g id="side-lid" transform="rotate(0 337 167)">
+                    <rect x="62" y="160" width="279" height="9" rx="4.5" fill="var(--alu-1)" stroke="var(--alu-2)" stroke-width="1"/>
+                    <rect x="70" y="167.5" width="260" height="2" rx="1" fill="#5a3a9a" id="side-screen"/>
+                  </g>
+                  <circle cx="345" cy="177" r="3.2" fill="var(--green-fill)" id="side-led"/>
+                </svg>
+                <div class="lid-status">
+                  <div class="status-row"><span data-i18n="lid.lid">Lid</span><b data-i18n="lid.closed">Closed</b></div>
+                  <div class="status-row"><span data-i18n="lid.sys">System</span><b><i class="led"></i><span data-i18n="lid.awake">Awake</span></b></div>
+                  <div class="status-row"><span data-i18n="lid.dl">Download</span><b><span class="bar"><i id="side-bar"></i></span><span id="side-pct">64%</span></b></div>
+                  <div class="status-row"><span data-i18n="lid.screen">Screen</span><b data-i18n="lid.off">Off (hardware)</b></div>
+                </div>
+              </div>
+            </div>
+          </article>
+          <article class="card card--center reveal-card" id="card-ds">
+            <p class="cap" data-m="ds">Display Sleep</p>
+            <h3 data-i18n="wake.c2.title">An exception, not the default.</h3>
+            <p data-i18n="wake.c2.text"><b>Unchecked</b> — the screen stays on (every new session). <b>Checked</b> — the screen may turn off while the Mac stays awake.</p>
+            <div class="viz" style="flex-direction:column">
+              <div class="monitor" id="ds-monitor"><div class="monitor-screen"></div><div class="monitor-stand"></div></div>
+              <div class="mini">
+                <div class="mini-row"><span class="lbl-wrap"><span class="chk" id="ds-chk">✓</span><span data-m="ds_allow">Allow Display Sleep</span></span><kbd>⌘S</kbd></div>
+                <div class="mini-sep"></div>
+                <div class="mini-note"><span class="awake-pill"><i class="led"></i><span data-i18n="lid.macawake">Mac stays awake</span></span></div>
+              </div>
+            </div>
+          </article>
+          <article class="card card--center reveal-card" id="card-al">
+            <p class="cap" data-m="al">Auto Lock</p>
+            <h3 data-i18n="wake.c3.title">Locked only when you say so.</h3>
+            <p data-i18n="wake.c3.text"><b>Unchecked</b> — auto-lock waits. <b>Checked</b> — the Mac can lock after idle. Manual lock is always instant.</p>
+            <div class="viz" style="flex-direction:column">
+              <svg class="lock-ic open" id="al-lock" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <rect x="6" y="14" width="20" height="14" rx="3.5"/>
+                <path class="shackle" d="M10.5 14V9.5a5.5 5.5 0 0 1 11 0V14"/>
+              </svg>
+              <div class="mini">
+                <div class="mini-row"><span class="lbl-wrap"><span class="chk" id="al-chk">✓</span><span data-m="al_allow">Allow Auto Lock</span></span><kbd>⌘L</kbd></div>
+              </div>
+              <div class="keys" aria-label="Control Command Q"><span class="key">⌃</span><span class="key">⌘</span><span class="key">Q</span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── SYSTEM STATS ───────────── -->
+    <section class="sec" id="stats" style="padding-top:0">
+      <div class="container">
+        <div class="sec-head">
+          <span class="kicker" data-i18n="chip.stats">System Stats</span>
+          <h2 class="split" data-i18n="stats.title">Your Mac's vitals,<br>right in the menu.</h2>
+          <p data-i18n="stats.lead">Battery, CPU, RAM, temperature and fans — read from IOKit and the SMC in user space. No root, no powermetrics.</p>
+        </div>
+        <div class="bento">
+          <article class="card card--wide reveal-card">
+            <p class="cap" data-i18n="stats.c1.cap">Live dashboard</p>
+            <h3 data-i18n="stats.c1.title">Icon, value, label. Updated live.</h3>
+            <div class="viz">
+              <div class="stats-big">
+                <div class="stat-tile" data-kind="bat"><svg class="ic" aria-hidden="true"><use href="#i-battery"/></svg><b data-stat="bat">78%</b><span data-m="bat">Battery</span></div>
+                <div class="stat-tile" data-kind="cpu"><svg class="ic" aria-hidden="true"><use href="#i-cpu"/></svg><b data-stat="cpu">24%</b><span data-m="cpu">CPU</span></div>
+                <div class="stat-tile" data-kind="ram"><svg class="ic" aria-hidden="true"><use href="#i-ram"/></svg><b data-stat="ram">74%</b><span data-m="ram">RAM</span></div>
+                <div class="stat-tile" data-kind="temp"><svg class="ic" aria-hidden="true"><use href="#i-temp"/></svg><b data-stat="temp">52°</b><span data-m="temp">Temp</span></div>
+                <div class="stat-tile" data-kind="fan"><svg class="ic" aria-hidden="true"><use href="#i-fan"/></svg><b data-stat="fan">1840</b><span data-m="fans">Fans</span></div>
+              </div>
+            </div>
+          </article>
+          <article class="card reveal-card" id="card-adapt">
+            <p class="cap" data-i18n="stats.c2.cap">Adaptive</p>
+            <h3 data-i18n="stats.c2.title">Missing sensors simply disappear.</h3>
+            <p data-i18n="stats.c2.text">On a fanless MacBook Air the Fans tile is hidden automatically.</p>
+            <div class="viz" style="flex-direction:column">
+              <div class="tiles-row">
+                <div class="stat-tile"><svg class="ic" aria-hidden="true"><use href="#i-battery"/></svg><b>91%</b><span data-m="bat">Battery</span></div>
+                <div class="stat-tile"><svg class="ic" aria-hidden="true"><use href="#i-cpu"/></svg><b>12%</b><span data-m="cpu">CPU</span></div>
+                <div class="stat-tile"><svg class="ic" aria-hidden="true"><use href="#i-temp"/></svg><b>38°</b><span data-m="temp">Temp</span></div>
+                <div class="stat-tile" id="fan-tile"><svg class="ic" aria-hidden="true"><use href="#i-fan"/></svg><b>—</b><span data-m="fans">Fans</span></div>
+              </div>
+              <div class="device-label">MacBook Air</div>
+            </div>
+          </article>
+          <article class="card reveal-card">
+            <p class="cap" data-i18n="stats.c3.cap">Heat &amp; load</p>
+            <h3 data-i18n="stats.c3.title">Orange means busy.</h3>
+            <p data-i18n="stats.c3.text">CPU, RAM and temperature turn orange under load or heat. A green battery means it's charging.</p>
+            <div class="viz">
+              <div class="graph-wrap">
+                <div class="graph" id="graph" aria-hidden="true"></div>
+                <div class="graph-legend"><span data-m="cpu">CPU</span><span id="graph-now">24%</span></div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── SMART ───────────── -->
+    <section class="sec" id="smart" style="padding-top:0">
+      <div class="container">
+        <div class="sec-head">
+          <span class="kicker" data-i18n="smart.kicker">Smart keep-awake</span>
+          <h2 class="split" data-i18n="smart.title">Awake for a reason.<br>Asleep when it's done.</h2>
+          <p data-i18n="smart.lead">Downloads, a running app or a timer — each one is its own wake reason, and one ending never cancels the others.</p>
+        </div>
+        <div class="bento">
+          <article class="card reveal-card" id="card-dl">
+            <p class="cap" data-m="dl">Don't Sleep During Downloads</p>
+            <h3 data-i18n="smart.dl.title">Big files finish, even overnight.</h3>
+            <p data-i18n="smart.dl.text">A standing policy: ClamKeep notices download tools and fresh files in <code>~/Downloads</code>.</p>
+            <div class="viz">
+              <div class="dl-list">
+                <div class="dl-row"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg><span class="dl-name">ubuntu-24.04-desktop.iso</span><span class="dl-size" data-dl-pct>72%</span><span class="bar"><i style="width:72%"></i></span></div>
+                <div class="dl-row"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg><span class="dl-name">dataset-2026.zip</span><span class="dl-size" data-dl-pct>38%</span><span class="bar"><i style="width:38%"></i></span></div>
+                <div class="dl-row"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg><span class="dl-name">render-final.mov</span><span class="dl-size" data-dl-pct>91%</span><span class="bar"><i style="width:91%"></i></span></div>
+              </div>
+            </div>
+          </article>
+          <article class="card reveal-card" id="card-app">
+            <p class="cap" data-m="app">Don't Sleep While Active App…</p>
+            <h3 data-i18n="smart.app.title">Awake while your app works.</h3>
+            <p data-i18n="smart.app.text">Pick a running app. When it quits, only that reason is cleared.</p>
+            <div class="viz">
+              <div class="apps" id="apps">
+                <div class="apps-head" id="apps-head">Watching: Xcode</div>
+                <div class="app-row sel" data-app="Xcode"><span class="appi" style="background:#1d7cf2">X</span>Xcode<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></div>
+                <div class="app-row" data-app="Terminal"><span class="appi" style="background:#2b2b2e">&gt;_</span>Terminal<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></div>
+                <div class="app-row" data-app="Blender"><span class="appi" style="background:#e87d0d">B</span>Blender<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></div>
+                <div class="app-row" data-app="Final Cut Pro"><span class="appi" style="background:#5b3bd6">F</span>Final Cut Pro<svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></div>
+              </div>
+            </div>
+          </article>
+          <article class="card card--center reveal-card" id="card-timer">
+            <p class="cap" data-m="timer">Auto-off Timer</p>
+            <h3 data-i18n="smart.timer.title">Set it and forget it.</h3>
+            <p data-i18n="smart.timer.text">From 15 minutes to 4 hours, or your own time with a live end time. The countdown lives in the menu header and survives a relaunch.</p>
+            <div class="viz" style="flex-direction:column">
+              <div class="ring">
+                <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="track" cx="60" cy="60" r="52"/><circle class="prog" id="ring-prog" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="0"/></svg>
+                <div class="ring-text"><b id="ring-time">15:00</b><span data-m="left">Time left</span></div>
+              </div>
+              <div class="presets" aria-hidden="true"><span class="on" data-m="p15">15 min</span><span data-m="p30">30 min</span><span data-m="p45">45 min</span><span data-m="p60">1 h</span><span data-m="p120">2 h</span><span data-m="p240">4 h</span><span data-m="custom">Custom…</span></div>
+            </div>
+          </article>
+          <article class="card card--center reveal-card" id="card-reasons">
+            <p class="cap" data-i18n="smart.rs.cap">Wake reasons</p>
+            <h3 data-i18n="smart.rs.title">One ends. The others stay.</h3>
+            <p data-i18n="smart.rs.text">Turning Wake Mode off manually ends the whole session.</p>
+            <div class="viz" style="flex-direction:column">
+              <div class="reasons">
+                <div class="reason"><svg class="ic" aria-hidden="true"><use href="#i-hand"/></svg><span data-i18n="smart.rs.manual">manual</span><span class="rs">ON</span></div>
+                <div class="reason" id="reason-dl"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg><span data-i18n="smart.rs.downloads">downloads</span><span class="rs">ON</span></div>
+                <div class="reason"><svg class="ic" aria-hidden="true"><use href="#i-window"/></svg><span data-i18n="smart.rs.app">watched app</span><span class="rs">ON</span></div>
+              </div>
+              <div class="reason-wake"><span class="awake-pill"><i class="led"></i><span data-m="title_on">Mac is awake</span></span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── HOW IT WORKS ───────────── -->
+    <section class="sec" id="how" style="padding-top:0">
+      <div class="container">
+        <div class="sec-head">
+          <span class="kicker" data-i18n="nav.how">How it works</span>
+          <h2 class="split" data-i18n="how.title">Every state, at a glance.</h2>
+          <p data-i18n="how.lead">Pick a state to see what happens to the display, auto-lock and a closed lid.</p>
+        </div>
+        <div class="states" id="states" role="group" aria-label="State">
+          <button type="button" data-state="wake" aria-pressed="true">Wake Mode ON</button>
+          <button type="button" data-state="ds" aria-pressed="false">+ Display Sleep ON</button>
+          <button type="button" data-state="al" aria-pressed="false">+ Auto Lock ON</button>
+          <button type="button" data-state="timer" aria-pressed="false">+ Auto-off Timer</button>
+          <button type="button" data-state="off" aria-pressed="false">Wake Mode OFF</button>
+        </div>
+        <div class="btiles" aria-live="polite">
+          <div class="btile"><svg class="ic" aria-hidden="true"><use href="#i-display"/></svg><h3 data-i18n="how.display">Display</h3><div class="bval" id="b-display">Screen stays on</div></div>
+          <div class="btile"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg><h3 data-m="al">Auto Lock</h3><div class="bval" id="b-lock">Delayed</div></div>
+          <div class="btile"><svg class="ic" aria-hidden="true"><use href="#i-laptop"/></svg><h3 data-i18n="how.lid">Lid closed</h3><div class="bval" id="b-lid">Screen off (hardware), system awake</div></div>
+        </div>
+        <p class="bnote" id="b-note"></p>
+      </div>
+    </section>
+
+    <!-- ───────────── ALL FEATURES ───────────── -->
+    <section class="sec" id="features" style="padding-top:0">
+      <div class="container">
+        <div class="sec-head">
+          <h2 class="split" data-i18n="all.title">Everything ClamKeep does.</h2>
+          <p data-i18n="all.lead">Small, native and focused — a menu bar app that does one job really well.</p>
+        </div>
+        <div class="fgrid">
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg><h3 data-m="wake">Wake Mode</h3><p data-i18n="f.wake">Switch in the menu · ⌘W</p></div>
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-display"/></svg><h3 data-m="ds">Display Sleep</h3><p data-i18n="f.ds">Optional exception · ⌘S</p></div>
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg><h3 data-m="al">Auto Lock</h3><p data-i18n="f.al">Optional exception · ⌘L</p></div>
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg><h3 data-i18n="chip.dl">Downloads</h3><p data-i18n="f.dl">Hold wake · ⌘D</p></div>
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-window"/></svg><h3 data-i18n="f.app.t">Active App</h3><p data-i18n="f.app">Awake while it runs</p></div>
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-timer"/></svg><h3 data-m="timer">Auto-off Timer</h3><p data-i18n="f.timer">5–60 min or custom</p></div>
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg><h3 data-i18n="f.count.t">Live countdown</h3><p data-i18n="f.count">In the menu header</p></div>
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg><h3 data-i18n="chip.stats">System Stats</h3><p data-i18n="f.stats">Battery · CPU · RAM · Temp · Fans</p></div>
+          <div class="fcard">
+            <div class="ico-stack" aria-hidden="true">
+              <span><svg class="ic lid" viewBox="0 0 18 18"><use href="#i-lid"/></svg></span><span><svg class="ic"><use href="#i-moon"/></svg></span><span><svg class="ic"><use href="#i-bolt"/></svg></span><span><svg class="ic"><use href="#i-eye"/></svg></span><span><svg class="ic"><use href="#i-cup"/></svg></span><span><svg class="ic"><use href="#i-shield-s"/></svg></span>
+            </div>
+            <h3 data-i18n="f.icons.t">Six icon styles</h3><p data-i18n="f.icons">Lid · Moon · Bolt · Eye · Coffee · Shield</p>
+          </div>
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-power"/></svg><h3 data-i18n="f.login.t">Launch at login</h3><p>SMAppService</p></div>
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-layers"/></svg><h3 data-i18n="f.uni.t">Universal binary</h3><p>Apple Silicon + Intel</p></div>
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-key"/></svg><h3 data-i18n="f.pw.t">Passwordless</h3><p data-i18n="f.pw">One-time helper install</p></div>
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-cmd"/></svg><h3 data-i18n="f.lock.t">Manual lock</h3><p data-i18n="f.lock">⌃⌘Q is always instant</p></div>
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-restore"/></svg><h3 data-i18n="f.restore.t">Session restore</h3><p data-i18n="f.restore">Timer survives relaunch</p></div>
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg><h3 data-i18n="f.helper.t">Hardened helper</h3><p data-i18n="f.helper">Allowlisted, authenticated IPC</p></div>
+          <div class="fcard"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg><h3 data-i18n="f.lang.t">Three languages</h3><p>EN · RU · KK</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── LANGUAGES ───────────── -->
+    <section class="langs" aria-labelledby="langs-title">
+      <div class="container">
+        <h2 id="langs-title" data-i18n="langs.title">Speaks your language</h2>
+        <p data-i18n="langs.text">The app and this site are available in English, Russian and Kazakh.</p>
+        <div class="lang-chips" role="group" aria-label="Language">
+          <button type="button" data-lang="en" aria-pressed="true">English <small>EN</small></button>
+          <button type="button" data-lang="ru" aria-pressed="false">Русский <small>RU</small></button>
+          <button type="button" data-lang="kk" aria-pressed="false">Қазақша <small>KK</small></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── INSTALL ───────────── -->
+    <section class="sec" id="install">
+      <div class="container">
+        <div class="sec-head">
+          <span class="kicker" data-i18n="nav.install">Install</span>
+          <h2 class="split" data-i18n="inst.title">Up and running in a minute.</h2>
+          <p data-i18n="inst.lead">Requires macOS 13 or later. Universal binary for Apple Silicon and Intel.</p>
+        </div>
+        <div class="steps">
+          <div class="step reveal-card"><div class="step-n">01</div><h3 data-i18n="inst.s1.t">Download</h3><p data-i18n="inst.s1">Get <code>ClamKeep-1.9.0.dmg</code> from <a href="https://github.com/M3etis/ClamKeep/releases/latest">GitHub Releases</a>.</p></div>
+          <div class="step reveal-card"><div class="step-n">02</div><h3 data-i18n="inst.s2.t">Drag to Applications</h3><p data-i18n="inst.s2">Open the DMG and drop ClamKeep into Applications.</p></div>
+          <div class="step reveal-card"><div class="step-n">03</div><h3 data-i18n="inst.s3.t">Launch &amp; approve</h3><p data-i18n="inst.s3">The setup window installs the helper — enter your admin password once.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── FAQ ───────────── -->
+    <section class="sec" id="faq" style="padding-top:0">
+      <div class="container">
+        <div class="sec-head">
+          <h2 class="split" data-i18n="faq.title">Questions &amp; answers</h2>
+        </div>
+        <div class="faq">
+          <details class="reveal-card"><summary><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="faq.q1">Is it safe to run a MacBook with the lid closed?</span></summary><div class="ans"><p data-i18n="faq.a1">Yes. When the lid closes, the built-in screen turns off in hardware; ClamKeep only stops the system from sleeping. Give the Mac some airflow and avoid heavy loads in a tight bag — the Temp tile helps you keep an eye on it.</p></div></details>
+          <details class="reveal-card"><summary><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="faq.q2">Why does it ask for an administrator password?</span></summary><div class="ans"><p data-i18n="faq.a2">Keeping a Mac awake with the lid closed needs a system power setting (<code>pmset</code>). ClamKeep installs a tiny launchd helper once; after that every toggle is passwordless. The helper accepts only an allowlist of commands, and only from your user account.</p></div></details>
+          <details class="reveal-card"><summary><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="faq.q3">Do I need a charger or an external display?</span></summary><div class="ans"><p data-i18n="faq.a3">No. Unlike the standard macOS clamshell mode, ClamKeep keeps the Mac awake on battery and without an external monitor.</p></div></details>
+          <details class="reveal-card"><summary><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="faq.q4">How does it affect battery life?</span></summary><div class="ans"><p data-i18n="faq.a4">While Wake Mode is on, the Mac uses power as if it were open (minus the screen when the lid is closed). Use the Auto-off Timer so a session never runs longer than you need.</p></div></details>
+          <details class="reveal-card"><summary><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="faq.q5">What happens when I quit ClamKeep?</span></summary><div class="ans"><p data-i18n="faq.a5">Wake Mode is turned off before the app quits, so your Mac returns to standard sleep behaviour, and the display-sleep and auto-lock settings are restored.</p></div></details>
+          <details class="reveal-card"><summary><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="faq.q6">Which Macs are supported?</span></summary><div class="ans"><p data-i18n="faq.a6">Any Mac on macOS 13 Ventura or later — ClamKeep is a universal binary for Apple Silicon and Intel.</p></div></details>
+          <details class="reveal-card"><summary><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="faq.q7">Is ClamKeep free?</span></summary><div class="ans"><p data-i18n="faq.a7">Yes. Download the DMG from GitHub Releases — the source code is on GitHub too.</p></div></details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── CHANGELOG ───────────── -->
+    <section class="sec" id="changelog" style="padding-top:0">
+      <div class="container">
+        <div class="sec-head">
+          <span class="kicker" data-i18n="nav.log">Changelog</span>
+          <h2 class="split" data-i18n="log.title">What's new</h2>
+        </div>
+        <div class="log">
+          <article class="rel reveal-card">
+            <div class="rel-head"><b data-i18n="log.next.v">Next release</b><span class="tag tag-next" data-i18n="log.next">Coming soon</span></div>
+            <ul>
+              <li data-i18n="log.n.1">Native menu: a status header with the Wake Mode switch, live time and stats; checkmarks instead of [ON] / [OFF]</li>
+              <li data-i18n="log.n.2">Settings window, a helper setup window with clear errors, and a custom timer panel</li>
+              <li data-i18n="log.n.3">Monochrome menu bar icons with a new Lid style and an optional color mode</li>
+              <li data-i18n="log.n.4">A new app icon with dark, clear and tinted variants</li>
+            </ul>
+          </article>
+          <article class="rel reveal-card">
+            <div class="rel-head"><b>1.9.0</b><span class="tag" data-i18n="log.latest">Latest</span></div>
+            <ul>
+              <li data-i18n="log.190.1">A <b>System Stats</b> dashboard — battery, CPU, RAM, temperature and fans at the top of the menu</li>
+              <li data-i18n="log.190.2">Unavailable sensors hide automatically</li>
+              <li data-i18n="log.190.3"><b>Settings → Show System Stats</b> toggle, applies immediately</li>
+              <li data-i18n="log.190.4">Cleaner menu header</li>
+            </ul>
+          </article>
+          <details class="older reveal-card">
+            <summary><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg><span data-i18n="log.older">Earlier versions</span></summary>
+            <article class="rel">
+              <div class="rel-head"><b>1.8.1</b></div>
+              <ul><li data-i18n="log.181.1">Fixed helper install when <code>/usr/local/bin</code> was missing</li></ul>
+            </article>
+            <article class="rel">
+              <div class="rel-head"><b>1.8.0</b></div>
+              <ul>
+                <li data-i18n="log.180.1">Wake Mode forbids Display Sleep and Auto Lock — re-enable them as exceptions</li>
+                <li data-i18n="log.180.2">Turning Wake Mode off cancels the timer, downloads, watched app and exceptions</li>
+                <li data-i18n="log.180.3">The auto-off timer restores the remaining time after a relaunch</li>
+                <li data-i18n="log.180.4">Hardened helper: single instance, authenticated IPC, command allowlist</li>
+              </ul>
+            </article>
+            <article class="rel">
+              <div class="rel-head"><b>1.7.0</b></div>
+              <ul>
+                <li data-i18n="log.170.1">Wake Mode does everything at once: Mac awake, display on, auto-lock delayed</li>
+                <li data-i18n="log.170.2">Green [ON] / [OFF] status badges in the menu</li>
+              </ul>
+            </article>
+            <article class="rel">
+              <div class="rel-head"><b>1.6.0</b></div>
+              <ul><li data-i18n="log.160.1">A single Wake Mode toggle and the Auto-off Timer with a header countdown</li></ul>
+            </article>
+          </details>
+          <p class="log-link"><a href="https://github.com/M3etis/ClamKeep/releases" data-i18n="log.all">All release notes on GitHub →</a></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── CTA ───────────── -->
+    <section class="cta" id="download">
+      <div class="container">
+        <div class="cta-card reveal-card">
+          <div>
+            <h2 data-i18n="cta.title">Get ClamKeep<br>and close the lid without worry.</h2>
+            <a class="btn magnetic" href="https://github.com/M3etis/ClamKeep/releases/latest">
+              <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>
+              <span data-i18n="hero.cta">Download for macOS</span>
+            </a>
+          </div>
+          <svg class="cta-icon" id="cta-icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#app-icon"/></svg>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ───────────── FOOTER ───────────── -->
+  <footer>
+    <div class="container">
+      <div class="foot">
+        <div>
+          <a class="brand" href="#top"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#app-icon"/></svg>ClamKeep</a>
+          <p class="foot-tag" data-i18n="foot.tag">Keep your Mac awake with the lid closed.</p>
+          <p style="margin:0" data-i18n="foot.desc">A tiny native menu bar utility for macOS 13+.</p>
+        </div>
+        <div>
+          <h4 data-i18n="foot.product">Product</h4>
+          <ul>
+            <li><a href="#wake" data-i18n="nav.features">Features</a></li>
+            <li><a href="#how" data-i18n="nav.how">How it works</a></li>
+            <li><a href="#install" data-i18n="nav.install">Install</a></li>
+            <li><a href="#changelog" data-i18n="nav.log">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="foot.project">Project</h4>
+          <ul>
+            <li><a href="https://github.com/M3etis/ClamKeep">GitHub</a></li>
+            <li><a href="https://github.com/M3etis/ClamKeep/releases">Releases</a></li>
+            <li><a href="https://github.com/M3etis/ClamKeep/issues" data-i18n="foot.issue">Report an issue</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="foot.contact">Contact</h4>
+          <ul>
+            <li><a href="mailto:m3etis@gmail.com">m3etis@gmail.com</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>ClamKeep 1.9.0</span>
+        <span data-i18n="foot.apple">Not affiliated with Apple Inc.</span>
+      </div>
+    </div>
+  </footer>
 
   <script>
-    // Scroll reveal
-    const revealEls = document.querySelectorAll(".reveal");
-    if ("IntersectionObserver" in window) {
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach((entry, i) => {
-          if (entry.isIntersecting) {
-            const el = entry.target;
-            const delay = (el.parentElement && el.parentElement.classList.contains("grid")
-              ? [...el.parentElement.children].indexOf(el) % 4
-              : 0) * 70;
-            el.style.transitionDelay = delay + "ms";
-            el.classList.add("is-visible");
-            io.unobserve(el);
-          }
-        });
-      }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
-      revealEls.forEach((el) => io.observe(el));
-    } else {
-      revealEls.forEach((el) => el.classList.add("is-visible"));
+  // Runs after the deferred GSAP scripts (they execute before DOMContentLoaded).
+  document.addEventListener("DOMContentLoaded", function () {
+    "use strict";
+    var $ = function (s, r) { return (r || document).querySelector(s); };
+    var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+    var root = document.documentElement;
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var hasGsap = !!(window.gsap && window.ScrollTrigger);
+    if (!hasGsap) root.classList.remove("js-motion");
+    var store = {
+      get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+      set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    };
+
+    /* ───────────── dictionaries ───────────── */
+    // Dynamic strings (menu labels match Sources/Localizable.swift)
+    var M = {
+      en: {
+        wake: "Wake Mode", ds: "Display Sleep", al: "Auto Lock", dl: "Keep Awake During Downloads",
+        ds_allow: "Allow Display Sleep", al_allow: "Allow Auto Lock", turnoff: "Turn Off After",
+        timer: "Auto-off Timer", app: "Keep Awake While App Runs", settings: "Settings…",
+        about: "About ClamKeep", quit: "Quit ClamKeep", left: "Time left",
+        title_on: "Mac is awake", title_off: "Sleeping normally", sub_on: "Active for ", sub_off: "Turn on to keep your Mac awake",
+        bat: "Battery", cpu: "CPU", ram: "RAM", temp: "Temp", fans: "Fans",
+        p15: "15 min", p30: "30 min", p45: "45 min", p60: "1 h", p120: "2 h", p240: "4 h",
+        custom: "Custom…", watching: "Watching: ",
+        s_wake: "Wake Mode on", s_ds: "+ Allow Display Sleep", s_al: "+ Allow Auto Lock", s_timer: "+ Turn Off After", s_off: "Wake Mode off",
+        b: {
+          wake: ["Screen stays on", "Delayed", "Screen off (hardware), system awake", "The default for every new session."],
+          ds: ["Display may sleep", "Delayed", "Screen off (hardware), system awake", "Saves battery — the Mac keeps working."],
+          al: ["Screen stays on (unless display sleep is also allowed)", "Normal after idle; manual lock is instant", "Screen off (hardware), system awake", "⌃⌘Q always locks right away."],
+          timer: ["Same as the current state", "Same as the current state", "Awake until 00:00:00, then the session ends", "The menu header shows the remaining time."],
+          off: ["Standard macOS", "Standard macOS", "Standard macOS", "Timer, downloads and watched app are cancelled too."]
+        },
+        theme: { auto: "Theme: auto", light: "Theme: light", dark: "Theme: dark" },
+        title: "ClamKeep — keep your Mac awake with the lid closed"
+      },
+      ru: {
+        wake: "Бодрствование", ds: "Сон дисплея", al: "Автоблокировка", dl: "Не засыпать во время загрузок",
+        ds_allow: "Разрешить сон дисплея", al_allow: "Разрешить автоблокировку", turnoff: "Выключить через",
+        timer: "Таймер", app: "Не засыпать, пока работает приложение", settings: "Настройки…",
+        about: "О ClamKeep", quit: "Выйти из ClamKeep", left: "Осталось",
+        title_on: "Mac не спит", title_off: "Обычный режим сна", sub_on: "Работает ", sub_off: "Включите, чтобы Mac не засыпал",
+        bat: "Батарея", cpu: "ЦП", ram: "ОЗУ", temp: "Темп.", fans: "Вент.",
+        p15: "15 мин", p30: "30 мин", p45: "45 мин", p60: "1 ч", p120: "2 ч", p240: "4 ч",
+        custom: "Своё время…", watching: "Слежение: ",
+        s_wake: "Бодрствование вкл.", s_ds: "+ Разрешить сон дисплея", s_al: "+ Разрешить автоблокировку", s_timer: "+ Выключить через", s_off: "Бодрствование выкл.",
+        b: {
+          wake: ["Экран остаётся включённым", "Отложена", "Экран гаснет (аппаратно), система работает", "Так начинается каждая новая сессия."],
+          ds: ["Экран может погаснуть", "Отложена", "Экран гаснет (аппаратно), система работает", "Экономит батарею — Mac продолжает работать."],
+          al: ["Экран включён (если не разрешён и сон дисплея)", "Обычная после простоя; ручная — сразу", "Экран гаснет (аппаратно), система работает", "⌃⌘Q всегда блокирует сразу."],
+          timer: ["Как в текущем состоянии", "Как в текущем состоянии", "Работает до 00:00:00, затем сессия завершается", "В заголовке меню виден остаток времени."],
+          off: ["Стандартное поведение macOS", "Стандартное поведение macOS", "Стандартное поведение macOS", "Таймер, загрузки и слежение за приложением тоже отменяются."]
+        },
+        theme: { auto: "Тема: авто", light: "Тема: светлая", dark: "Тема: тёмная" },
+        title: "ClamKeep — Mac не уснёт с закрытой крышкой"
+      },
+      kk: {
+        wake: "Ояу режим", ds: "Дисплей ұйқысы", al: "Автоблоктау", dl: "Жүктеу кезінде ұйықтамау",
+        ds_allow: "Дисплей ұйқысына рұқсат ету", al_allow: "Автоблоктауға рұқсат ету", turnoff: "Өшіру уақыты",
+        timer: "Таймер", app: "Қолданба жұмыс істегенде ұйықтамау", settings: "Баптаулар…",
+        about: "ClamKeep туралы", quit: "ClamKeep-тен шығу", left: "Қалды",
+        title_on: "Mac ояу", title_off: "Қалыпты ұйқы режимі", sub_on: "Белсенді: ", sub_off: "Mac ұйықтамауы үшін қосыңыз",
+        bat: "Батарея", cpu: "CPU", ram: "ЖЖҚ", temp: "Темп.", fans: "Желдеткіш",
+        p15: "15 мин", p30: "30 мин", p45: "45 мин", p60: "1 сағ", p120: "2 сағ", p240: "4 сағ",
+        custom: "Басқа уақыт…", watching: "Бақылануда: ",
+        s_wake: "Ояу режим қосулы", s_ds: "+ Дисплей ұйқысына рұқсат", s_al: "+ Автоблоктауға рұқсат", s_timer: "+ Өшіру уақыты", s_off: "Ояу режим өшік",
+        b: {
+          wake: ["Экран қосулы қалады", "Кейінге қалдырылған", "Экран өшеді (аппараттық), жүйе ояу", "Әр жаңа сессия осылай басталады."],
+          ds: ["Дисплей ұйықтай алады", "Кейінге қалдырылған", "Экран өшеді (аппараттық), жүйе ояу", "Батареяны үнемдейді — Mac жұмысын жалғастырады."],
+          al: ["Экран қосулы (дисплей ұйқысына да рұқсат етілмесе)", "Бос тұрғаннан кейін қалыпты; қолмен — бірден", "Экран өшеді (аппараттық), жүйе ояу", "⌃⌘Q әрқашан бірден блоктайды."],
+          timer: ["Ағымдағы күйдегідей", "Ағымдағы күйдегідей", "00:00:00-ге дейін ояу, содан кейін сессия аяқталады", "Мәзір тақырыбында қалған уақыт көрінеді."],
+          off: ["Стандартты macOS", "Стандартты macOS", "Стандартты macOS", "Таймер, жүктеулер және қолданба бақылауы да тоқтатылады."]
+        },
+        theme: { auto: "Тақырып: авто", light: "Тақырып: ашық", dark: "Тақырып: қараңғы" },
+        title: "ClamKeep — қақпақ жабық кезде Mac ояу"
+      }
+    };
+
+    // Static page copy. English lives in the HTML; these override it.
+    var T = {
+      ru: {
+        "nav.features": "Возможности", "nav.how": "Как это работает", "nav.install": "Установка", "nav.faq": "Вопросы", "nav.log": "Изменения", "nav.download": "Скачать",
+        "hero.eyebrow": "Утилита для строки меню macOS",
+        "hero.title": "Mac не уснёт.<br>Даже с закрытой крышкой.",
+        "hero.lead": "ClamKeep живёт в строке меню. Один переключатель удерживает систему, экран и автоблокировку — загрузки, сборки и рендеры продолжаются, пока MacBook закрыт.",
+        "hero.cta": "Скачать для macOS", "hero.gh": "Открыть на GitHub",
+        "hero.meta": "v1.9.0 · macOS 13+ · Apple Silicon и Intel · Бесплатно",
+        "hero.hint": "Меню живое — переключите бодрствование, затем отметьте «Разрешить сон дисплея» или «Разрешить автоблокировку».",
+        "chip.dl": "Загрузки", "chip.stats": "Статистика",
+        "lid.title": "Крышка закрыта. Работа идёт.", "lid.sys": "Система", "lid.awake": "Работает", "lid.dl": "Загрузка", "lid.screen": "Экран", "lid.off": "Выкл. (аппаратно)", "lid.lid": "Крышка", "lid.closed": "Закрыта", "lid.macawake": "Mac не спит",
+        "wake.title": "Закройте крышку.<br>Всё продолжит работать.",
+        "wake.lead": "Включите бодрствование — ClamKeep удержит систему, оставит экран включённым и отложит автоблокировку. Выключите — и закончится вся сессия, включая таймер, загрузки и слежение за приложением.",
+        "wake.c1.cap": "Крышка закрыта · Система работает",
+        "wake.c1.title": "Закройте, уберите в рюкзак, подключите к монитору — Mac продолжит работать.",
+        "wake.c2.title": "Исключение, а не правило.",
+        "wake.c2.text": "<b>Без галочки</b> — экран остаётся включённым (в каждой новой сессии). <b>С галочкой</b> — экран может погаснуть, а Mac продолжит работать.",
+        "wake.c3.title": "Блокировка — только когда нужно вам.",
+        "wake.c3.text": "<b>Без галочки</b> — автоблокировка ждёт. <b>С галочкой</b> — Mac может заблокироваться по бездействию. Ручная блокировка всегда срабатывает сразу.",
+        "stats.title": "Показатели Mac —<br>прямо в меню.",
+        "stats.lead": "Батарея, ЦП, ОЗУ, температура и вентиляторы — данные из IOKit и SMC в пользовательском пространстве. Без root и без powermetrics.",
+        "stats.c1.cap": "Живая панель", "stats.c1.title": "Иконка, значение, подпись. Обновляется вживую.",
+        "stats.c2.cap": "Адаптивно", "stats.c2.title": "Нет датчика — нет плитки.", "stats.c2.text": "На MacBook Air без вентилятора плитка вентиляторов скрывается сама.",
+        "stats.c3.cap": "Нагрев и нагрузка", "stats.c3.title": "Оранжевый — значит занят.", "stats.c3.text": "ЦП, ОЗУ и температура становятся оранжевыми под нагрузкой или при нагреве. Зелёная батарея — идёт зарядка.",
+        "smart.kicker": "Умное бодрствование",
+        "smart.title": "Не спит, пока есть причина.<br>Засыпает, когда всё готово.",
+        "smart.lead": "Загрузки, запущенное приложение или таймер — у каждого своя причина бодрствования, и окончание одной не отменяет другие.",
+        "smart.dl.title": "Большие файлы докачаются даже ночью.",
+        "smart.dl.text": "Постоянная политика: ClamKeep замечает загрузчики и свежие файлы в <code>~/Downloads</code>.",
+        "smart.app.title": "Не спит, пока работает приложение.", "smart.app.text": "Выберите запущенное приложение. Когда оно закроется, снимется только эта причина.",
+        "smart.timer.title": "Поставьте и забудьте.", "smart.timer.text": "От 15 минут до 4 часов или своё время с подсказкой, когда режим выключится. Обратный отсчёт — в заголовке меню, остаток сохраняется после перезапуска.",
+        "smart.rs.cap": "Причины бодрствования", "smart.rs.title": "Одна закончилась — другие остаются.", "smart.rs.text": "Ручное выключение бодрствования завершает всю сессию.",
+        "smart.rs.manual": "вручную", "smart.rs.downloads": "загрузки", "smart.rs.app": "приложение",
+        "how.title": "Каждое состояние — с первого взгляда.", "how.lead": "Выберите состояние и посмотрите, что происходит с экраном, автоблокировкой и закрытой крышкой.",
+        "how.display": "Экран", "how.lid": "Крышка закрыта",
+        "all.title": "Всё, что умеет ClamKeep.", "all.lead": "Маленькое нативное приложение для строки меню, которое отлично делает одну вещь.",
+        "f.wake": "Переключатель в меню · ⌘W", "f.ds": "Исключение · ⌘S", "f.al": "Исключение · ⌘L", "f.dl": "Не засыпать · ⌘D",
+        "f.app.t": "Активное приложение", "f.app": "Пока оно запущено", "f.timer": "5–60 мин или своё время",
+        "f.count.t": "Обратный отсчёт", "f.count": "В заголовке меню", "f.stats": "Батарея · ЦП · ОЗУ · Темп. · Вент.",
+        "f.icons.t": "Шесть значков", "f.icons": "Крышка · Луна · Энергия · Глаз · Кофе · Щит",
+        "f.login.t": "Запуск при входе", "f.uni.t": "Универсальная сборка", "f.pw.t": "Без пароля", "f.pw": "Помощник ставится один раз",
+        "f.lock.t": "Ручная блокировка", "f.lock": "⌃⌘Q срабатывает сразу", "f.restore.t": "Восстановление сессии", "f.restore": "Таймер переживёт перезапуск",
+        "f.helper.t": "Защищённый помощник", "f.helper": "Белый список команд, проверка IPC", "f.lang.t": "Три языка",
+        "langs.title": "Говорит на вашем языке", "langs.text": "Приложение и этот сайт доступны на английском, русском и казахском.",
+        "inst.title": "Готово за минуту.", "inst.lead": "Нужна macOS 13 или новее. Универсальная сборка для Apple Silicon и Intel.",
+        "inst.s1.t": "Скачайте", "inst.s1": "Возьмите <code>ClamKeep-1.9.0.dmg</code> в <a href=\"https://github.com/M3etis/ClamKeep/releases/latest\">GitHub Releases</a>.",
+        "inst.s2.t": "Перетащите в Программы", "inst.s2": "Откройте DMG и перетащите ClamKeep в папку «Программы».",
+        "inst.s3.t": "Запустите и подтвердите", "inst.s3": "Окно настройки установит помощник — пароль администратора нужен один раз.",
+        "faq.title": "Вопросы и ответы",
+        "faq.q1": "Безопасно ли работать с закрытой крышкой?", "faq.a1": "Да. При закрытой крышке встроенный экран гаснет аппаратно, а ClamKeep лишь не даёт системе заснуть. Обеспечьте Mac доступ воздуха и не запускайте тяжёлые задачи в тесном рюкзаке — плитка температуры поможет следить за этим.",
+        "faq.q2": "Зачем нужен пароль администратора?", "faq.a2": "Чтобы Mac не засыпал при закрытой крышке, нужно изменить системную настройку питания (<code>pmset</code>). ClamKeep один раз устанавливает маленький launchd-помощник — после этого все переключения работают без пароля. Помощник принимает только команды из белого списка и только от вашей учётной записи.",
+        "faq.q3": "Нужны ли зарядка или внешний монитор?", "faq.a3": "Нет. В отличие от стандартного режима закрытой крышки в macOS, ClamKeep держит Mac бодрствующим и от батареи, и без внешнего монитора.",
+        "faq.q4": "Как это влияет на батарею?", "faq.a4": "Пока бодрствование включено, Mac расходует энергию как открытый (минус экран, если крышка закрыта). Используйте таймер, чтобы сессия не длилась дольше нужного.",
+        "faq.q5": "Что будет, если закрыть ClamKeep?", "faq.a5": "Перед выходом бодрствование выключается, Mac возвращается к стандартному режиму сна, а настройки сна дисплея и автоблокировки восстанавливаются.",
+        "faq.q6": "Какие Mac поддерживаются?", "faq.a6": "Любой Mac с macOS 13 Ventura и новее — ClamKeep собран как универсальное приложение для Apple Silicon и Intel.",
+        "faq.q7": "ClamKeep бесплатный?", "faq.a7": "Да. Скачайте DMG в GitHub Releases — исходный код тоже на GitHub.",
+        "log.title": "Что нового", "log.latest": "Последняя",
+        "log.next.v": "Следующий релиз", "log.next": "Скоро",
+        "log.n.1": "Нативное меню: шапка с переключателем бодрствования, временем и статистикой; галочки вместо [ON] / [OFF]",
+        "log.n.2": "Окно настроек, окно установки помощника с понятными ошибками и панель своего таймера",
+        "log.n.3": "Монохромные значки строки меню, новый стиль «Крышка» и опция цвета",
+        "log.n.4": "Новая иконка приложения с тёмным, прозрачным и тонированным вариантами", "log.older": "Предыдущие версии", "log.all": "Все релизы на GitHub →",
+        "log.190.1": "Панель <b>статистики</b> — батарея, ЦП, ОЗУ, температура и вентиляторы вверху меню",
+        "log.190.2": "Недоступные датчики скрываются автоматически",
+        "log.190.3": "Переключатель <b>Настройки → Показывать статистику</b>, применяется сразу",
+        "log.190.4": "Более чистый заголовок меню",
+        "log.181.1": "Исправлена установка помощника, когда не было <code>/usr/local/bin</code>",
+        "log.180.1": "Бодрствование запрещает сон дисплея и автоблокировку — их можно включить как исключения",
+        "log.180.2": "Выключение бодрствования отменяет таймер, загрузки, слежение за приложением и исключения",
+        "log.180.3": "Таймер восстанавливает оставшееся время после перезапуска",
+        "log.180.4": "Защищённый помощник: один экземпляр, проверенный IPC, белый список команд",
+        "log.170.1": "Бодрствование делает всё сразу: Mac не спит, экран включён, автоблокировка отложена",
+        "log.170.2": "Зелёные метки [ON] / [OFF] в меню",
+        "log.160.1": "Единый переключатель бодрствования и таймер с обратным отсчётом в заголовке",
+        "cta.title": "Скачайте ClamKeep<br>и закрывайте крышку без забот.",
+        "foot.tag": "Mac не спит с закрытой крышкой.", "foot.desc": "Маленькая нативная утилита для строки меню macOS 13+.",
+        "foot.product": "Продукт", "foot.project": "Проект", "foot.contact": "Контакты", "foot.issue": "Сообщить о проблеме", "foot.apple": "Не связано с Apple Inc."
+      },
+      kk: {
+        "nav.features": "Мүмкіндіктер", "nav.how": "Қалай жұмыс істейді", "nav.install": "Орнату", "nav.faq": "Сұрақтар", "nav.log": "Өзгерістер", "nav.download": "Жүктеу",
+        "hero.eyebrow": "macOS мәзір жолына арналған утилита",
+        "hero.title": "Mac ұйықтамайды.<br>Қақпағы жабық болса да.",
+        "hero.lead": "ClamKeep мәзір жолында тұрады. Бір қосқыш жүйені, экранды және автоблоктауды ұстап тұрады — MacBook жабық кезде де жүктеулер, жинақтар мен рендерлер жалғаса береді.",
+        "hero.cta": "macOS үшін жүктеу", "hero.gh": "GitHub-та ашу",
+        "hero.meta": "v1.9.0 · macOS 13+ · Apple Silicon және Intel · Тегін",
+        "hero.hint": "Мәзір тірі — ояу режимді қосып, «Дисплей ұйқысына рұқсат ету» не «Автоблоктауға рұқсат ету» белгілеңіз.",
+        "chip.dl": "Жүктеулер", "chip.stats": "Статистика",
+        "lid.title": "Қақпақ жабық. Жұмыс жүріп жатыр.", "lid.sys": "Жүйе", "lid.awake": "Ояу", "lid.dl": "Жүктеу", "lid.screen": "Экран", "lid.off": "Өшік (аппараттық)", "lid.lid": "Қақпақ", "lid.closed": "Жабық", "lid.macawake": "Mac ояу",
+        "wake.title": "Қақпақты жабыңыз.<br>Бәрі жұмысын жалғастырады.",
+        "wake.lead": "Ояу режимді қосыңыз — ClamKeep жүйені ұстап, экранды қосулы қалдырып, автоблоктауды кейінге қалдырады. Өшірсеңіз — таймер, жүктеулер және қолданба бақылауымен бірге бүкіл сессия аяқталады.",
+        "wake.c1.cap": "Қақпақ жабық · Жүйе ояу",
+        "wake.c1.title": "Жабыңыз, сөмкеге салыңыз, мониторға қосыңыз — Mac жұмысын жалғастырады.",
+        "wake.c2.title": "Ереже емес, ерекшелік.",
+        "wake.c2.text": "<b>Белгісіз</b> — экран қосулы қалады (әр жаңа сессияда). <b>Белгімен</b> — экран өше алады, ал Mac ояу қалады.",
+        "wake.c3.title": "Блоктау — тек сіз қалағанда.",
+        "wake.c3.text": "<b>Белгісіз</b> — автоблоктау күтеді. <b>Белгімен</b> — Mac бос тұрғанда блоктала алады. Қолмен блоктау әрқашан бірден іске қосылады.",
+        "stats.title": "Mac көрсеткіштері —<br>тікелей мәзірде.",
+        "stats.lead": "Батарея, CPU, ЖЖҚ, температура және желдеткіштер — IOKit пен SMC-тен пайдаланушы кеңістігінде оқылады. Root та, powermetrics та қажет емес.",
+        "stats.c1.cap": "Тірі панель", "stats.c1.title": "Белгіше, мән, атау. Тірі жаңарады.",
+        "stats.c2.cap": "Бейімделгіш", "stats.c2.title": "Датчик жоқ — тақтайша жоқ.", "stats.c2.text": "Желдеткіші жоқ MacBook Air-де желдеткіш тақтайшасы өздігінен жасырылады.",
+        "stats.c3.cap": "Қызу және жүктеме", "stats.c3.title": "Қызғылт сары — бос емес.", "stats.c3.text": "Жүктеме не қызу кезінде CPU, ЖЖҚ және температура қызғылт сары түске боялады. Жасыл батарея — зарядталуда.",
+        "smart.kicker": "Ақылды ояу режим",
+        "smart.title": "Себеп барда ояу.<br>Іс біткенде ұйықтайды.",
+        "smart.lead": "Жүктеулер, іске қосылған қолданба не таймер — әрқайсысы өз себебі, біреуінің аяқталуы басқаларын тоқтатпайды.",
+        "smart.dl.title": "Үлкен файлдар түнде де жүктеліп бітеді.",
+        "smart.dl.text": "Тұрақты саясат: ClamKeep жүктеу құралдарын және <code>~/Downloads</code> ішіндегі жаңа файлдарды байқайды.",
+        "smart.app.title": "Қолданба жұмыс істегенде ояу.", "smart.app.text": "Іске қосылған қолданбаны таңдаңыз. Ол жабылғанда тек осы себеп алынады.",
+        "smart.timer.title": "Қойыңыз да, ұмытыңыз.", "smart.timer.text": "15 минуттан 4 сағатқа дейін не өз уақытыңыз — режимнің қашан өшетіні көрсетіледі. Кері санақ мәзір тақырыбында, қалған уақыт қайта іске қосқанда сақталады.",
+        "smart.rs.cap": "Ояу себептері", "smart.rs.title": "Біреуі бітті — қалғандары қалады.", "smart.rs.text": "Ояу режимді қолмен өшіру бүкіл сессияны аяқтайды.",
+        "smart.rs.manual": "қолмен", "smart.rs.downloads": "жүктеулер", "smart.rs.app": "қолданба",
+        "how.title": "Әр күй — бір көзқараста.", "how.lead": "Экранға, автоблоктауға және жабық қақпаққа не болатынын көру үшін күйді таңдаңыз.",
+        "how.display": "Экран", "how.lid": "Қақпақ жабық",
+        "all.title": "ClamKeep не істей алады.", "all.lead": "Шағын, нативті және бір іске бағытталған — бір жұмысты керемет орындайтын мәзір қолданбасы.",
+        "f.wake": "Мәзірдегі қосқыш · ⌘W", "f.ds": "Ерекшелік · ⌘S", "f.al": "Ерекшелік · ⌘L", "f.dl": "Ояу ұстау · ⌘D",
+        "f.app.t": "Белсенді қолданба", "f.app": "Жұмыс істеп тұрғанда", "f.timer": "5–60 мин не өз уақытыңыз",
+        "f.count.t": "Кері санақ", "f.count": "Мәзір тақырыбында", "f.stats": "Батарея · CPU · ЖЖҚ · Темп. · Желдеткіш",
+        "f.icons.t": "Алты белгіше", "f.icons": "Қақпақ · Ай · Қуат · Көз · Кофе · Қалқан",
+        "f.login.t": "Кіргенде іске қосу", "f.uni.t": "Әмбебап құрастыру", "f.pw.t": "Құпия сөзсіз", "f.pw": "Көмекші бір рет орнатылады",
+        "f.lock.t": "Қолмен блоктау", "f.lock": "⌃⌘Q бірден іске қосылады", "f.restore.t": "Сессияны қалпына келтіру", "f.restore": "Таймер қайта іске қосқанда сақталады",
+        "f.helper.t": "Қорғалған көмекші", "f.helper": "Рұқсат тізімі, IPC тексеру", "f.lang.t": "Үш тіл",
+        "langs.title": "Сіздің тіліңізде сөйлейді", "langs.text": "Қолданба мен осы сайт ағылшын, орыс және қазақ тілдерінде қолжетімді.",
+        "inst.title": "Бір минутта дайын.", "inst.lead": "macOS 13 не жаңарағы қажет. Apple Silicon мен Intel үшін әмбебап құрастыру.",
+        "inst.s1.t": "Жүктеңіз", "inst.s1": "<code>ClamKeep-1.9.0.dmg</code> файлын <a href=\"https://github.com/M3etis/ClamKeep/releases/latest\">GitHub Releases</a>-тен алыңыз.",
+        "inst.s2.t": "Applications-ке сүйреңіз", "inst.s2": "DMG-ні ашып, ClamKeep-ті Applications қалтасына тастаңыз.",
+        "inst.s3.t": "Іске қосып, растаңыз", "inst.s3": "Баптау терезесі көмекшіні орнатады — әкімші құпия сөзі бір рет қажет.",
+        "faq.title": "Сұрақтар мен жауаптар",
+        "faq.q1": "Қақпақ жабық күйде жұмыс істеу қауіпсіз бе?", "faq.a1": "Иә. Қақпақ жабылғанда кірістірілген экран аппараттық түрде өшеді, ал ClamKeep тек жүйенің ұйықтауына жол бермейді. Mac-қа ауа жетуін қамтамасыз етіңіз және тар сөмкеде ауыр тапсырмаларды іске қоспаңыз — температура тақтайшасы бақылауға көмектеседі.",
+        "faq.q2": "Неге әкімші құпия сөзі сұралады?", "faq.a2": "Қақпақ жабық кезде Mac ұйықтамауы үшін жүйенің қуат параметрін (<code>pmset</code>) өзгерту керек. ClamKeep шағын launchd көмекшісін бір рет орнатады — содан кейін барлық ауыстырулар құпия сөзсіз жұмыс істейді. Көмекші тек рұқсат тізіміндегі командаларды және тек сіздің тіркелгіңізден қабылдайды.",
+        "faq.q3": "Зарядтағыш не сыртқы монитор керек пе?", "faq.a3": "Жоқ. macOS-тың стандартты жабық қақпақ режимінен айырмашылығы — ClamKeep Mac-ты батареядан да, сыртқы мониторсыз да ояу ұстайды.",
+        "faq.q4": "Батареяға қалай әсер етеді?", "faq.a4": "Ояу режим қосулы кезде Mac ашық күйдегідей қуат жұмсайды (қақпақ жабық болса, экраннан басқа). Сессия қажетінен ұзаққа созылмауы үшін таймерді пайдаланыңыз.",
+        "faq.q5": "ClamKeep-тен шықсам не болады?", "faq.a5": "Шығар алдында ояу режим өшіріледі, Mac стандартты ұйқы режиміне оралады, ал дисплей ұйқысы мен автоблоктау параметрлері қалпына келтіріледі.",
+        "faq.q6": "Қандай Mac-тарға қолдау көрсетіледі?", "faq.a6": "macOS 13 Ventura және жаңарақ кез келген Mac — ClamKeep Apple Silicon мен Intel үшін әмбебап қолданба ретінде құрастырылған.",
+        "faq.q7": "ClamKeep тегін бе?", "faq.a7": "Иә. DMG-ні GitHub Releases-тен жүктеңіз — бастапқы коды да GitHub-та.",
+        "log.title": "Не жаңа", "log.latest": "Соңғы",
+        "log.next.v": "Келесі шығарылым", "log.next": "Жақында",
+        "log.n.1": "Нативті мәзір: ояу режим қосқышы, уақыт және статистикасы бар тақырып; [ON] / [OFF] орнына белгілер",
+        "log.n.2": "Баптаулар терезесі, қателері түсінікті көмекші орнату терезесі және басқа уақыт панелі",
+        "log.n.3": "Мәзір жолының монохромды белгішелері, жаңа «Қақпақ» стилі және түс опциясы",
+        "log.n.4": "Қараңғы, мөлдір және реңкті нұсқалары бар жаңа қолданба белгішесі", "log.older": "Алдыңғы нұсқалар", "log.all": "Барлық шығарылымдар GitHub-та →",
+        "log.190.1": "<b>Статистика</b> панелі — батарея, CPU, ЖЖҚ, температура және желдеткіштер мәзірдің жоғарғы жағында",
+        "log.190.2": "Қолжетімсіз датчиктер өздігінен жасырылады",
+        "log.190.3": "<b>Баптаулар → Статистиканы көрсету</b> қосқышы, бірден қолданылады",
+        "log.190.4": "Мәзір тақырыбы тазарды",
+        "log.181.1": "<code>/usr/local/bin</code> жоқ кезде көмекшіні орнату түзетілді",
+        "log.180.1": "Ояу режим дисплей ұйқысы мен автоблоктауға тыйым салады — оларды ерекшелік ретінде қосуға болады",
+        "log.180.2": "Ояу режимді өшіру таймерді, жүктеулерді, қолданба бақылауын және ерекшеліктерді тоқтатады",
+        "log.180.3": "Таймер қайта іске қосқаннан кейін қалған уақытты қалпына келтіреді",
+        "log.180.4": "Қорғалған көмекші: бір дана, тексерілген IPC, командалардың рұқсат тізімі",
+        "log.170.1": "Ояу режим бәрін бірден істейді: Mac ояу, экран қосулы, автоблоктау кейінге қалдырылған",
+        "log.170.2": "Мәзірде жасыл [ON] / [OFF] белгілері",
+        "log.160.1": "Бірыңғай ояу режим қосқышы және тақырыптағы кері санағы бар таймер",
+        "cta.title": "ClamKeep-ті жүктеп,<br>қақпақты алаңсыз жабыңыз.",
+        "foot.tag": "Қақпақ жабық кезде Mac ояу.", "foot.desc": "macOS 13+ үшін шағын нативті мәзір утилитасы.",
+        "foot.product": "Өнім", "foot.project": "Жоба", "foot.contact": "Байланыс", "foot.issue": "Мәселе туралы хабарлау", "foot.apple": "Apple Inc. компаниясымен байланысы жоқ."
+      }
+    };
+    var EN = {};
+    $$("[data-i18n]").forEach(function (el) { EN[el.getAttribute("data-i18n")] = el.innerHTML; });
+
+    /* ───────────── state ───────────── */
+    var lang = "en";
+    var menu = { wake: true, ds: false, al: false, start: Date.now() - (32 * 3600 + 18 * 60 + 36) * 1000 };
+    var stats = { bat: 78, cpu: 24, ram: 74, temp: 52, fan: 1840, charging: false };
+    var behavior = "wake";
+    var introDone = !hasGsap || reduce;
+
+    function splitLines(el) {
+      var parts = el.innerHTML.split(/<br\s*\/?>/i);
+      el.innerHTML = parts.map(function (p) {
+        return '<span class="line"><span class="line-in">' + p.trim() + "</span></span>";
+      }).join("");
     }
 
-    // Cursor glow on cards
-    document.querySelectorAll(".card").forEach((card) => {
-      card.addEventListener("pointermove", (e) => {
-        const r = card.getBoundingClientRect();
-        card.style.setProperty("--mx", (e.clientX - r.left) + "px");
-        card.style.setProperty("--my", (e.clientY - r.top) + "px");
+    /* ───────────── i18n ───────────── */
+    function setLang(l, persist) {
+      if (!M[l]) l = "en";
+      lang = l;
+      root.lang = l;
+      $$("[data-i18n]").forEach(function (el) {
+        var k = el.getAttribute("data-i18n");
+        var v = l === "en" ? EN[k] : (T[l][k] != null ? T[l][k] : EN[k]);
+        if (v == null) return;
+        el.innerHTML = v;
+        if (el.classList.contains("split")) splitLines(el);
+      });
+      $$("[data-m]").forEach(function (el) {
+        var v = M[l][el.getAttribute("data-m")];
+        if (v != null) el.textContent = v;
+      });
+      $$("[data-lang]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-lang") === l)); });
+      $$("#states button").forEach(function (b) { b.textContent = M[l]["s_" + b.getAttribute("data-state")]; });
+      document.title = M[l].title;
+      renderMenu(); renderBehavior(false); renderApps(); updateThemeBtn(); tickClock();
+      if (persist) store.set("ck-lang", l);
+      if (hasGsap && window.ScrollTrigger) requestAnimationFrame(function () { ScrollTrigger.refresh(); });
+    }
+    function detectLang() {
+      var q = new URLSearchParams(location.search).get("lang");
+      if (q && M[q]) return q;
+      var s = store.get("ck-lang");
+      if (s && M[s]) return s;
+      var langs = navigator.languages || [navigator.language || "en"];
+      for (var i = 0; i < langs.length; i++) {
+        var c = (langs[i] || "").slice(0, 2).toLowerCase();
+        if (c === "ru" || c === "kk") return c;
+        if (c === "en") return "en";
+      }
+      return "en";
+    }
+    $$("[data-lang]").forEach(function (b) {
+      b.addEventListener("click", function () { setLang(b.getAttribute("data-lang"), true); });
+    });
+
+    /* ───────────── theme ───────────── */
+    function themeMode() { return root.getAttribute("data-theme") || "auto"; }
+    function updateThemeBtn() {
+      var b = $("#theme-btn"); var m = themeMode();
+      b.setAttribute("data-mode", m);
+      b.setAttribute("aria-label", M[lang].theme[m]);
+      b.title = M[lang].theme[m];
+    }
+    $("#theme-btn").addEventListener("click", function () {
+      var next = { auto: "light", light: "dark", dark: "auto" }[themeMode()];
+      if (next === "auto") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", next);
+      store.set("ck-theme", next);
+      updateThemeBtn();
+    });
+
+    /* ───────────── live menu ───────────── */
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function fmtDur(ms) {
+      var s = Math.max(0, Math.floor(ms / 1000));
+      return pad(Math.floor(s / 3600)) + ":" + pad(Math.floor(s / 60) % 60) + ":" + pad(s % 60);
+    }
+    function setCheck(el, on) {
+      if (el) el.classList.toggle("on", on);
+    }
+    function renderMenu() {
+      var sw = $("#m-switch");
+      sw.setAttribute("aria-checked", String(menu.wake));
+      sw.setAttribute("aria-label", M[lang].wake);
+      ["ds", "al"].forEach(function (k) {
+        setCheck($('[data-chk="' + k + '"]'), menu.wake && menu[k]);
+        var btn = $('[data-toggle="' + k + '"]');
+        btn.setAttribute("aria-pressed", String(menu.wake && menu[k]));
+        btn.classList.toggle("is-disabled", !menu.wake);
+      });
+      var state = !menu.wake ? "off" : menu.ds ? "amber" : "on";
+      $("#mbar-icon").setAttribute("data-state", state);
+      var dot = $("#m-dot");
+      dot.classList.toggle("on", state === "on");
+      dot.classList.toggle("amber", state === "amber");
+      $("#m-title").textContent = menu.wake ? M[lang].title_on : M[lang].title_off;
+      renderHead();
+    }
+    function renderHead() {
+      $("#m-sub").textContent = menu.wake ? M[lang].sub_on + fmtDur(Date.now() - menu.start) : M[lang].sub_off;
+    }
+    function pop(el) {
+      if (hasGsap && !reduce && el) gsap.fromTo(el, { scale: 0.55 }, { scale: 1, duration: 0.45, ease: "back.out(3)" });
+    }
+    $$("[data-toggle]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var k = btn.getAttribute("data-toggle");
+        if (k === "wake") {
+          menu.wake = !menu.wake; menu.ds = false; menu.al = false;
+          if (menu.wake) menu.start = Date.now();
+        } else {
+          if (!menu.wake) {
+            if (hasGsap && !reduce) gsap.fromTo(btn, { x: -4 }, { x: 0, duration: 0.4, ease: "elastic.out(1, 0.3)" });
+            return;
+          }
+          menu[k] = !menu[k];
+        }
+        renderMenu();
+        pop(k === "wake" ? $("#m-switch i") : $('[data-chk="' + k + '"]'));
       });
     });
 
-    // Particle field
-    (function () {
-      const canvas = document.getElementById("particles");
-      if (!canvas) return;
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const ctx = canvas.getContext("2d");
-      let w, h, particles = [], raf;
+    function tickClock() {
+      var d = new Date();
+      var loc = lang === "kk" ? "kk-KZ" : lang === "ru" ? "ru-RU" : "en-GB";
+      var s;
+      try {
+        s = new Intl.DateTimeFormat(loc, { weekday: "short", day: "numeric", month: "short" }).format(d) + "  " +
+            new Intl.DateTimeFormat(loc, { hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+      } catch (e) { s = d.toDateString(); }
+      $("#clock").textContent = s.replace(/,/g, "");
+    }
 
-      function resize() {
-        w = canvas.width = canvas.offsetWidth;
-        h = canvas.height = canvas.offsetHeight;
-        const count = Math.min(80, Math.floor((w * h) / 22000));
-        particles = Array.from({ length: count }, () => ({
-          x: Math.random() * w,
-          y: Math.random() * h,
-          r: Math.random() * 1.8 + 0.4,
-          vx: (Math.random() - 0.5) * 0.25,
-          vy: (Math.random() - 0.5) * 0.25,
-          a: Math.random() * 0.45 + 0.15
-        }));
-      }
-
-      function tick() {
-        ctx.clearRect(0, 0, w, h);
-        for (const p of particles) {
-          p.x += p.vx;
-          p.y += p.vy;
-          if (p.x < 0) p.x = w;
-          if (p.x > w) p.x = 0;
-          if (p.y < 0) p.y = h;
-          if (p.y > h) p.y = 0;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(180, 255, 210, " + p.a + ")";
-          ctx.fill();
-        }
-        // soft links
-        for (let i = 0; i < particles.length; i++) {
-          for (let j = i + 1; j < particles.length; j++) {
-            const a = particles[i], b = particles[j];
-            const dx = a.x - b.x, dy = a.y - b.y;
-            const d = Math.hypot(dx, dy);
-            if (d < 110) {
-              ctx.strokeStyle = "rgba(61, 255, 138, " + (0.08 * (1 - d / 110)) + ")";
-              ctx.lineWidth = 1;
-              ctx.beginPath();
-              ctx.moveTo(a.x, a.y);
-              ctx.lineTo(b.x, b.y);
-              ctx.stroke();
-            }
-          }
-        }
-        raf = requestAnimationFrame(tick);
-      }
-
-      resize();
-      window.addEventListener("resize", resize);
-      if (!reduce) tick();
+    /* ───────────── stats simulation ───────────── */
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    function renderStats() {
+      $$('[data-stat="bat"]').forEach(function (e) { e.textContent = Math.round(stats.bat) + "%"; });
+      $$('[data-stat="cpu"]').forEach(function (e) { e.textContent = Math.round(stats.cpu) + "%"; });
+      $$('[data-stat="ram"]').forEach(function (e) { e.textContent = Math.round(stats.ram) + "%"; });
+      $$('[data-stat="temp"]').forEach(function (e) { e.textContent = Math.round(stats.temp) + "°"; });
+      $$('[data-stat="fan"]').forEach(function (e) { e.textContent = String(Math.round(stats.fan / 10) * 10); });
+      $$('[data-kind="cpu"]').forEach(function (e) { e.classList.toggle("hot", stats.cpu >= 80); });
+      $$('[data-kind="ram"]').forEach(function (e) { e.classList.toggle("hot", stats.ram >= 85); });
+      $$('[data-kind="temp"]').forEach(function (e) { e.classList.toggle("hot", stats.temp >= 80); });
+      $$('[data-kind="bat"]').forEach(function (e) { e.classList.toggle("charging", stats.charging); });
+    }
+    var spikeLeft = 0;
+    function stepStats() {
+      if (spikeLeft > 0) { spikeLeft--; stats.cpu = clamp(stats.cpu + (88 - stats.cpu) * 0.5 + (Math.random() - 0.5) * 6, 5, 97); }
       else {
-        ctx.clearRect(0, 0, w, h);
-        for (const p of particles) {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(180, 255, 210, " + p.a + ")";
-          ctx.fill();
-        }
+        if (Math.random() < 0.08) spikeLeft = 4;
+        stats.cpu = clamp(stats.cpu + (22 - stats.cpu) * 0.35 + (Math.random() - 0.5) * 14, 4, 96);
       }
-    })();
+      stats.ram = clamp(stats.ram + (Math.random() - 0.5) * 2.2, 62, 88);
+      stats.temp = clamp(stats.temp + ((40 + stats.cpu * 0.48) - stats.temp) * 0.3, 36, 96);
+      stats.fan = clamp(1200 + Math.max(0, stats.temp - 45) * 95 + (Math.random() - 0.5) * 60, 1200, 5800);
+      stats.bat = stats.charging ? Math.min(100, stats.bat + 0.2) : Math.max(8, stats.bat - 0.05);
+      if (stats.bat < 30) stats.charging = true;
+      if (stats.bat >= 99) stats.charging = false;
+      renderStats();
+    }
+
+    /* CPU graph */
+    var graph = $("#graph"), bars = [], history = [];
+    for (var i = 0; i < 26; i++) { var b = document.createElement("i"); graph.appendChild(b); bars.push(b); history.push(18 + Math.random() * 20); }
+    function renderGraph() {
+      bars.forEach(function (b, i) {
+        var v = history[i];
+        b.style.height = Math.max(6, v) + "%";
+        b.classList.toggle("hot", v >= 80);
+      });
+      $("#graph-now").textContent = Math.round(history[history.length - 1]) + "%";
+    }
+    var graphSpike = 0;
+    function stepGraph() {
+      var last = history[history.length - 1];
+      if (graphSpike > 0) { graphSpike--; last = clamp(last + (90 - last) * 0.55 + (Math.random() - 0.5) * 8, 5, 98); }
+      else { if (Math.random() < 0.12) graphSpike = 5; last = clamp(last + (24 - last) * 0.3 + (Math.random() - 0.5) * 18, 5, 95); }
+      history.shift(); history.push(last); renderGraph();
+    }
+    renderGraph();
+
+    /* timer ring */
+    var TIMER_TOTAL = 15 * 60, timerLeft = TIMER_TOTAL, C = 2 * Math.PI * 52;
+    function renderTimer() {
+      $("#ring-time").textContent = pad(Math.floor(timerLeft / 60)) + ":" + pad(timerLeft % 60);
+      $("#ring-prog").style.strokeDashoffset = String(C * (1 - timerLeft / TIMER_TOTAL));
+    }
+    renderTimer();
+
+    /* apps */
+    var appNames = ["Xcode", "Terminal", "Blender", "Final Cut Pro"], appIdx = 0;
+    function renderApps() {
+      $$("#apps .app-row").forEach(function (r, i) { r.classList.toggle("sel", i === appIdx); });
+      $("#apps-head").textContent = M[lang].watching + appNames[appIdx];
+    }
+
+    /* ───────────── behavior explorer ───────────── */
+    function renderBehavior(animate) {
+      var v = M[lang].b[behavior];
+      $("#b-display").textContent = v[0];
+      $("#b-lock").textContent = v[1];
+      $("#b-lid").textContent = v[2];
+      $("#b-note").textContent = v[3];
+      $$("#states button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-state") === behavior)); });
+      if (animate && hasGsap && !reduce) {
+        gsap.fromTo(".bval", { rotateX: -80, autoAlpha: 0, y: 8 }, { rotateX: 0, autoAlpha: 1, y: 0, duration: 0.55, stagger: 0.07, ease: "back.out(1.6)" });
+        gsap.fromTo("#b-note", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4, delay: 0.2 });
+      }
+    }
+    $$("#states button").forEach(function (b) {
+      b.addEventListener("click", function () { behavior = b.getAttribute("data-state"); renderBehavior(true); });
+    });
+
+    /* ───────────── timers (paused when tab hidden) ───────────── */
+    var ticks = [];
+    function every(ms, fn) { ticks.push({ ms: ms, fn: fn, id: null }); }
+    function startTicks() { ticks.forEach(function (t) { if (!t.id) t.id = setInterval(t.fn, t.ms); }); }
+    function stopTicks() { ticks.forEach(function (t) { clearInterval(t.id); t.id = null; }); }
+    every(1000, function () { if (menu.wake) renderHead(); });
+    every(15000, tickClock);
+    every(1000, function () { timerLeft = timerLeft <= 0 ? TIMER_TOTAL : timerLeft - 1; renderTimer(); });
+    if (!reduce) {
+      every(1600, function () { if (introDone) stepStats(); });
+      every(650, stepGraph);
+      every(2200, function () { appIdx = (appIdx + 1) % appNames.length; renderApps(); });
+    }
+    document.addEventListener("visibilitychange", function () { if (document.hidden) stopTicks(); else startTicks(); });
+
+    /* ───────────── init ───────────── */
+    setLang(detectLang(), false);
+    renderStats();
+    startTicks();
+    // headings without data-i18n split once (all .split carry data-i18n, but keep it safe)
+    $$(".split").forEach(function (el) { if (!el.querySelector(".line")) splitLines(el); });
+
+    /* ───────────── GSAP motion ───────────── */
+    if (!hasGsap) return;
+    gsap.registerPlugin(ScrollTrigger);
+    var mm = gsap.matchMedia();
+
+    mm.add({
+      full: "(min-width: 768px) and (prefers-reduced-motion: no-preference)",
+      lite: "(max-width: 767px) and (prefers-reduced-motion: no-preference)"
+    }, function (ctx) {
+      var full = ctx.conditions.full;
+
+      /* hero intro */
+      gsap.set([".hero", ".showcase"], { visibility: "visible" });
+      var counter = { bat: 0, cpu: 0, ram: 0, temp: 0 };
+      var target = { bat: stats.bat, cpu: stats.cpu, ram: stats.ram, temp: stats.temp };
+      var intro = gsap.timeline({ defaults: { ease: "expo.out" }, onComplete: function () { introDone = true; } });
+      intro
+        .from(".hero .eyebrow", { y: 14, autoAlpha: 0, duration: 0.8 })
+        .from(".hero h1 .line-in", { yPercent: 105, duration: 1.15, stagger: 0.12 }, "-=0.55")
+        .from(".hero .lead", { y: 18, autoAlpha: 0, duration: 0.9 }, "-=0.8")
+        .from(".hero .actions > *", { y: 16, autoAlpha: 0, duration: 0.8, stagger: 0.08 }, "-=0.7")
+        .from(".hero .meta, .hero .chips li", { y: 10, autoAlpha: 0, duration: 0.6, stagger: 0.035 }, "-=0.6")
+        .from("#mac", { y: full ? 140 : 60, rotateX: full ? 22 : 0, autoAlpha: 0, transformPerspective: 1800, transformOrigin: "50% 100%", duration: 1.5 }, "-=0.9")
+        .from(".showcase-hint", { autoAlpha: 0, duration: 0.6 }, "-=0.6")
+        .from("#menu", { scale: 0.7, autoAlpha: 0, transformOrigin: "88% 0%", duration: 0.7, ease: "back.out(1.5)" }, "-=0.75")
+        .from("#menu .mi, #menu .m-status", { x: -8, autoAlpha: 0, duration: 0.35, stagger: 0.025, ease: "power2.out" }, "-=0.45")
+        .to(counter, {
+          bat: target.bat, cpu: target.cpu, ram: target.ram, temp: target.temp, duration: 1.2, ease: "power3.out",
+          onStart: function () { stats.bat = 0; stats.cpu = 0; stats.ram = 0; stats.temp = 0; },
+          onUpdate: function () {
+            stats.bat = counter.bat; stats.cpu = counter.cpu; stats.ram = counter.ram; stats.temp = counter.temp;
+            renderStats();
+          }
+        }, "<");
+
+      /* hero scrub: pin the laptop, close the lid, Mac stays awake */
+      if (full) {
+        var lidState = { p: 64 };
+        var scrub = gsap.timeline({
+          scrollTrigger: { trigger: ".showcase", start: "center center", end: "+=120%", pin: true, scrub: 0.8, anticipatePin: 1 }
+        });
+        scrub
+          .to("#mac", { scale: 1.05, duration: 1, ease: "power1.inOut" }, 0)
+          .to(".showcase-hint", { autoAlpha: 0, duration: 0.4 }, 0.6)
+          .to("#mac-lid", { rotateX: -87, duration: 2, ease: "power2.inOut" }, 0.8)
+          .to("#screen-dim", { opacity: 0.95, duration: 1.5, ease: "power1.in" }, 1.2)
+          .to("#lid-alu", { opacity: 1, duration: 0.6, ease: "none" }, 2.1)
+          .fromTo("#lid-card", { autoAlpha: 0, y: 30, scale: 0.94 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.7, ease: "back.out(1.6)" }, 2.7)
+          .to(lidState, { p: 97, duration: 1.4, ease: "none", onUpdate: function () {
+            var p = Math.round(lidState.p);
+            $("#lid-pct").textContent = p + "%";
+            $("#lid-bar").style.width = p + "%";
+          } }, 2.7)
+          .to({}, { duration: 0.3 });
+      }
+
+      /* section headings: line reveal */
+      $$(".sec-head").forEach(function (head) {
+        var tl = gsap.timeline({ scrollTrigger: { trigger: head, start: "top 85%" } });
+        tl.from($$(".kicker", head), { y: 12, autoAlpha: 0, duration: 0.7, ease: "power3.out" })
+          .from($$("h2 .line-in", head), { yPercent: 105, duration: 1.1, stagger: 0.1, ease: "expo.out" }, "-=0.5")
+          .from($$("p", head), { y: 16, autoAlpha: 0, duration: 0.9, ease: "power3.out" }, "-=0.8");
+      });
+      gsap.from(".langs h2, .langs p, .lang-chips button", {
+        y: 24, autoAlpha: 0, duration: 0.9, stagger: 0.08, ease: "expo.out",
+        scrollTrigger: { trigger: ".langs", start: "top 80%" }
+      });
+
+      /* cards: batch reveal */
+      gsap.set(".reveal-card", { autoAlpha: 0, y: full ? 70 : 40, scale: full ? 0.96 : 1 });
+      ScrollTrigger.batch(".reveal-card", {
+        start: "top 90%",
+        onEnter: function (els) { gsap.to(els, { autoAlpha: 1, y: 0, scale: 1, duration: 1.1, stagger: 0.12, ease: "expo.out", overwrite: true }); },
+        onEnterBack: function (els) { gsap.to(els, { autoAlpha: 1, y: 0, scale: 1, duration: 0.6, overwrite: true }); }
+      });
+
+      /* features grid wave */
+      gsap.from(".fgrid .fcard", {
+        autoAlpha: 0, y: 36, scale: 0.94, duration: 0.8, ease: "expo.out",
+        stagger: { each: 0.045, grid: "auto", from: "start" },
+        scrollTrigger: { trigger: ".fgrid", start: "top 85%" }
+      });
+
+      /* card loops — play only while visible */
+      function loop(trigger, build) {
+        var tl = gsap.timeline({ repeat: -1, paused: true });
+        build(tl);
+        ScrollTrigger.create({
+          trigger: trigger, start: "top bottom", end: "bottom top",
+          onToggle: function (self) { self.isActive ? tl.play() : tl.pause(); }
+        });
+        return tl;
+      }
+
+      // side-view lid
+      var side = { p: 40 };
+      loop("#card-lid", function (tl) {
+        tl.set("#side-lid", { rotation: 108, svgOrigin: "337 167" })
+          .set(side, { p: 40 })
+          .set("#card-lid .lid-status", { autoAlpha: 0.35 })
+          .to("#side-lid", { rotation: 0, svgOrigin: "337 167", duration: 1.6, ease: "power2.inOut", delay: 0.8 })
+          .to("#card-lid .lid-status", { autoAlpha: 1, duration: 0.5 }, ">-0.2")
+          .to("#side-led", { opacity: 0.25, duration: 0.6, repeat: 5, yoyo: true, ease: "sine.inOut" }, "<")
+          .to(side, { p: 100, duration: 3.6, ease: "none", onUpdate: function () {
+            var p = Math.round(side.p);
+            $("#side-pct").textContent = p + "%";
+            $("#side-bar").style.width = p + "%";
+          } }, "<")
+          .to("#side-lid", { rotation: 108, svgOrigin: "337 167", duration: 1.4, ease: "power2.inOut", delay: 0.8 });
+      });
+
+      // display sleep toggle
+      loop("#card-ds", function (tl) {
+        tl.call(function () { setCheck($("#ds-chk"), false); $("#ds-monitor").style.setProperty("--dim", 0); }, null, 0)
+          .to({}, { duration: 2.2 })
+          .call(function () { setCheck($("#ds-chk"), true); pop($("#ds-chk")); $("#ds-monitor").style.setProperty("--dim", 0.88); })
+          .to({}, { duration: 2.4 });
+      });
+
+      // auto lock toggle
+      loop("#card-al", function (tl) {
+        tl.call(function () { setCheck($("#al-chk"), false); $("#al-lock").classList.add("open"); }, null, 0)
+          .to({}, { duration: 2.2 })
+          .call(function () { setCheck($("#al-chk"), true); pop($("#al-chk")); $("#al-lock").classList.remove("open"); })
+          .fromTo("#al-lock", { scale: 1 }, { scale: 1.12, duration: 0.18, yoyo: true, repeat: 1, ease: "power2.out" }, "+=0.35")
+          .to({}, { duration: 2 });
+      });
+
+      // fanless tile
+      loop("#card-adapt", function (tl) {
+        tl.set("#fan-tile", { autoAlpha: 1, scale: 1, flexGrow: 1, width: "auto", padding: "" })
+          .to({}, { duration: 1.6 })
+          .to("#fan-tile", { autoAlpha: 0, scale: 0.6, duration: 0.5, ease: "power2.in" })
+          .to("#fan-tile", { flexGrow: 0.0001, width: 0, paddingLeft: 0, paddingRight: 0, marginLeft: -10, duration: 0.6, ease: "power3.inOut" })
+          .to({}, { duration: 2.2 })
+          .to("#fan-tile", { flexGrow: 1, width: "auto", paddingLeft: 6, paddingRight: 6, marginLeft: 0, duration: 0.6, ease: "power3.inOut" })
+          .to("#fan-tile", { autoAlpha: 1, scale: 1, duration: 0.5, ease: "back.out(2)" });
+      });
+
+      // downloads fill
+      var dlBars = $$("#card-dl .bar i"), dlPct = $$("#card-dl [data-dl-pct]");
+      var dlState = [{ p: 72 }, { p: 38 }, { p: 91 }];
+      loop("#card-dl", function (tl) {
+        dlState.forEach(function (s, i) {
+          var from = [24, 6, 52][i];
+          tl.fromTo(s, { p: from }, { p: 100, duration: [3.2, 4.2, 2.4][i], ease: "power1.inOut", onUpdate: function () {
+            var p = Math.round(s.p); dlBars[i].style.width = p + "%"; dlPct[i].textContent = p + "%";
+          } }, 0);
+        });
+        tl.to({}, { duration: 1.2 });
+      });
+
+      // reasons: downloads finish, others stay
+      loop("#card-reasons", function (tl) {
+        tl.call(function () { $("#reason-dl").classList.remove("done"); $("#reason-dl .rs").textContent = "ON"; }, null, 0)
+          .to({}, { duration: 2.2 })
+          .call(function () { $("#reason-dl").classList.add("done"); $("#reason-dl .rs").textContent = "OFF"; })
+          .fromTo("#reason-dl", { x: 0 }, { x: 10, duration: 0.25, yoyo: true, repeat: 1, ease: "power2.out" })
+          .to({}, { duration: 2.4 });
+      });
+
+      /* CTA icon parallax */
+      gsap.fromTo("#cta-icon", { rotate: -14, y: 50 }, {
+        rotate: 8, y: -30, ease: "none",
+        scrollTrigger: { trigger: ".cta", start: "top bottom", end: "bottom top", scrub: 1 }
+      });
+
+      /* magnetic buttons (pointer devices only) */
+      var cleanups = [];
+      if (full && window.matchMedia("(hover: hover)").matches) {
+        $$(".magnetic").forEach(function (el) {
+          var xTo = gsap.quickTo(el, "x", { duration: 0.5, ease: "power3.out" });
+          var yTo = gsap.quickTo(el, "y", { duration: 0.5, ease: "power3.out" });
+          function move(e) { var r = el.getBoundingClientRect(); xTo((e.clientX - r.left - r.width / 2) * 0.25); yTo((e.clientY - r.top - r.height / 2) * 0.35); }
+          function leave() { xTo(0); yTo(0); }
+          el.addEventListener("pointermove", move); el.addEventListener("pointerleave", leave);
+          cleanups.push(function () { el.removeEventListener("pointermove", move); el.removeEventListener("pointerleave", leave); });
+        });
+      }
+
+      return function () { cleanups.forEach(function (f) { f(); }); introDone = true; };
+    });
+
+    // reduced motion: make sure nothing stays hidden
+    mm.add("(prefers-reduced-motion: reduce)", function () {
+      gsap.set([".hero", ".showcase"], { visibility: "visible" });
+      introDone = true;
+    });
+
+    window.addEventListener("load", function () { ScrollTrigger.refresh(); });
+  });
   </script>
 </body>
 </html>
