@@ -747,17 +747,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 }
 
-// MARK: - Menu Validation
-
-extension AppDelegate: NSMenuItemValidation {
-    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-        if menuItem == allowDisplaySleepMenuItem || menuItem == allowAutoLockMenuItem {
-            return isActive
-        }
-        return true
-    }
-}
-
 // MARK: - AppWatchdogDelegate
 
 extension AppDelegate: AppWatchdogDelegate {

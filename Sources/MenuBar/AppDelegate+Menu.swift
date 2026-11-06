@@ -23,6 +23,9 @@ extension AppDelegate {
     func setupMenu() {
         let menu = NSMenu()
         menu.delegate = self
+        // Enabled state is set explicitly in updateUI(); auto-enabling would
+        // also disable the action-less header and dim its controls.
+        menu.autoenablesItems = false
 
         // Header: status + Wake Mode switch (primary action) + metrics + helper banner.
         statusHeader = StatusHeaderView()
@@ -95,6 +98,9 @@ extension AppDelegate {
 
     func updateUI(active: Bool) {
         // Checkmarks replace the old colored "[ON]" badges.
+        // Exceptions only mean something while Wake Mode holds the Mac.
+        allowDisplaySleepMenuItem.isEnabled = active
+        allowAutoLockMenuItem.isEnabled = active
         allowDisplaySleepMenuItem.state = (allowDisplaySleep && active) ? .on : .off
         allowAutoLockMenuItem.state = (allowAutoLock && active) ? .on : .off
         downloadMonitorMenuItem.state = downloadMonitorEnabled ? .on : .off

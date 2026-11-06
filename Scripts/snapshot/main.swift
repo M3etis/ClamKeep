@@ -8,7 +8,7 @@ try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories
 _ = NSApplication.shared
 // Use the built app's icon (run ./build.sh first) so About/onboarding previews are realistic.
 if FileManager.default.fileExists(atPath: "build/ClamKeep.app") {
-    NSApplication.shared.applicationIconImage = NSWorkspace.shared.icon(forFile: "build/ClamKeep.app")
+    NSApplication.shared.applicationIconImage = NSWorkspace.shared.icon(forFile: FileManager.default.currentDirectoryPath + "/build/ClamKeep.app")
 }
 
 func save(_ rep: NSBitmapImageRep, _ name: String) {
