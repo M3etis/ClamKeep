@@ -5,7 +5,7 @@
 
 macOS menu bar application that keeps your Mac awake with the lid closed. Turning Wake Mode on holds the system, the display, and auto-lock; you can re-enable the last two as exceptions. Turning it off ends the whole session. A compact system-stats dashboard sits at the top of the menu.
 
-![ClamKeep features](https://github.com/M3etis/ClamKeep/releases/download/v1.9.0/screenshot.png)
+![ClamKeep 1.10 — menu header, settings and helper setup](docs/screenshot.png)
 
 ## Features
 
@@ -22,7 +22,7 @@ macOS menu bar application that keeps your Mac awake with the lid closed. Turnin
 - Keeps your Mac awake with the lid closed — downloads, background tasks, and apps keep running
 - **On enable:** Display Sleep and Auto Lock are automatically forbidden (screen held, auto-lock delayed)
 - **On disable:** ends the session and cancels timer, download policy, and watched app
-- The switch in the menu header (or ⌘W while the menu is open) turns it on and off
+- The switch in the menu header or **Turn On / Turn Off Wake Mode** (⌘W) right below it
 - Menu bar icon: outline when off, filled when on, with a small ring when the display may sleep (optionally green / orange — **Settings… → Menu Bar Icon**)
 - Header shows either session time or auto-off countdown
 
@@ -87,7 +87,7 @@ Wake Mode is the switch in the menu header; the two exceptions are checkmark ite
 
 ### From DMG
 
-1. Download `ClamKeep-1.9.0.dmg` from [Releases](https://github.com/M3etis/ClamKeep/releases)
+1. Download `ClamKeep-1.10.0.dmg` from [Releases](https://github.com/M3etis/ClamKeep/releases)
 2. Open the DMG and drag ClamKeep to Applications
 3. Launch ClamKeep — the setup window installs the helper daemon (one-time administrator password)
 
@@ -107,7 +107,7 @@ SKIP_INSTALL=1 ./build.sh   # Build into build/ only
 ## Usage
 
 1. Click the ClamKeep icon in the menu bar
-2. Header — Wake Mode status and switch (⌘W), live time, system stats. Turning it on forbids display sleep and auto lock
+2. Header — Wake Mode status and switch, live time, system stats; **Turn On / Turn Off Wake Mode** (⌘W) below it. Turning it on forbids display sleep and auto lock
 3. **Allow Display Sleep** (⌘S) — lets the screen turn off while Wake Mode is on (optional exception)
 4. **Allow Auto Lock** (⌘L) — lets the Mac lock itself after idle (optional exception)
 5. **Keep Awake During Downloads** (⌘D) — hold wake while downloads are detected
@@ -134,12 +134,16 @@ SKIP_INSTALL=1 ./build.sh   # Build into build/ only
 
 ## Changelog
 
-### Unreleased — native redesign
-- Status header with the Wake Mode switch, live time, system stats and a helper banner
-- Checkmark menu items instead of `[ON]` / `[OFF]` badges; shortcuts unchanged
-- Settings window (General, Menu Bar Icon, About), helper setup window, custom timer panel
-- Template menu bar icons (new **Lid** style) with an optional color mode
-- New app icon with dark, clear and tinted variants
+### 1.10.0 — native redesign
+- Status header with the Wake Mode switch, live time, system stats and a helper banner; **Turn On / Turn Off Wake Mode** (⌘W) row for keyboard and VoiceOver
+- Checkmark menu items instead of `[ON]` / `[OFF]` badges; all shortcuts unchanged
+- **Settings…** window (⌘,): General, Menu Bar Icon, About — replaces the nested Settings submenu and the About alert
+- Helper setup window with progress, clear errors and retry; a failed reinstall never hides a working helper, and a slow helper no longer blocks Wake Mode
+- If the helper rejects Wake Mode from any entry point (switch, timer, downloads, watched app), ClamKeep re-checks it and offers setup
+- Custom timer panel with steppers, live end time and validation (up to 99 h); shorter **Turn Off After** list (15 min … 4 h); stored custom values stay checked
+- Quit confirmation with “Don't ask again”
+- Monochrome template menu bar icons (new **Lid** style) with an optional color mode; existing installs keep their style and colors
+- New app icon (Icon Composer) with dark, clear and tinted variants
 - See `DESIGN_AUDIT.md` and `DESIGN_CHANGELOG.md`
 
 ### 1.9.0

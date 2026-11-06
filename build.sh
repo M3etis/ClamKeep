@@ -9,8 +9,8 @@ cd "$(dirname "$0")"
 
 APP_NAME="ClamKeep"
 BUNDLE_ID="com.m3etis.clamkeep"
-VERSION="1.9.0"
-BUILD_NUMBER="10"
+VERSION="1.10.0"
+BUILD_NUMBER="12"
 MIN_MACOS="13.0"
 
 BUILD_DIR="build"

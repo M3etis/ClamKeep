@@ -536,7 +536,6 @@
     .rel { background: var(--surface); border-radius: var(--radius-l); padding: 28px 30px; }
     .rel-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
     .rel-head b { font-size: 24px; letter-spacing: -0.02em; }
-    .tag-next { background: color-mix(in srgb, var(--blue) 14%, transparent) !important; color: var(--blue) !important; }
     .tag { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--green-fill) 16%, transparent); color: var(--green); }
     .rel ul { margin: 0; padding-left: 20px; color: var(--text-2); }
     .rel li { margin: 5px 0; font-size: 16px; }
@@ -731,7 +730,7 @@
           </a>
           <a class="btn btn-ghost magnetic" href="https://github.com/M3etis/ClamKeep" data-i18n="hero.gh">View on GitHub</a>
         </div>
-        <p class="meta" data-i18n="hero.meta">v1.9.0 · macOS 13+ · Apple Silicon &amp; Intel · Free</p>
+        <p class="meta" data-i18n="hero.meta">v1.10.0 · macOS 13+ · Apple Silicon &amp; Intel · Free</p>
         <ul class="chips">
           <li data-m="wake">Wake Mode</li>
           <li data-m="ds">Display Sleep</li>
@@ -1061,7 +1060,7 @@
           <p data-i18n="inst.lead">Requires macOS 13 or later. Universal binary for Apple Silicon and Intel.</p>
         </div>
         <div class="steps">
-          <div class="step reveal-card"><div class="step-n">01</div><h3 data-i18n="inst.s1.t">Download</h3><p data-i18n="inst.s1">Get <code>ClamKeep-1.9.0.dmg</code> from <a href="https://github.com/M3etis/ClamKeep/releases/latest">GitHub Releases</a>.</p></div>
+          <div class="step reveal-card"><div class="step-n">01</div><h3 data-i18n="inst.s1.t">Download</h3><p data-i18n="inst.s1">Get <code>ClamKeep-1.10.0.dmg</code> from <a href="https://github.com/M3etis/ClamKeep/releases/latest">GitHub Releases</a>.</p></div>
           <div class="step reveal-card"><div class="step-n">02</div><h3 data-i18n="inst.s2.t">Drag to Applications</h3><p data-i18n="inst.s2">Open the DMG and drop ClamKeep into Applications.</p></div>
           <div class="step reveal-card"><div class="step-n">03</div><h3 data-i18n="inst.s3.t">Launch &amp; approve</h3><p data-i18n="inst.s3">The setup window installs the helper — enter your admin password once.</p></div>
         </div>
@@ -1095,16 +1094,16 @@
         </div>
         <div class="log">
           <article class="rel reveal-card">
-            <div class="rel-head"><b data-i18n="log.next.v">Next release</b><span class="tag tag-next" data-i18n="log.next">Coming soon</span></div>
+            <div class="rel-head"><b>1.10.0</b><span class="tag" data-i18n="log.latest">Latest</span></div>
             <ul>
-              <li data-i18n="log.n.1">Native menu: a status header with the Wake Mode switch, live time and stats; checkmarks instead of [ON] / [OFF]</li>
+              <li data-i18n="log.n.1">Native menu: a status header with the Wake Mode switch, live time and stats, a ⌘W row for the keyboard, and checkmarks instead of [ON] / [OFF]</li>
               <li data-i18n="log.n.2">Settings window, a helper setup window with clear errors, and a custom timer panel</li>
               <li data-i18n="log.n.3">Monochrome menu bar icons with a new Lid style and an optional color mode</li>
               <li data-i18n="log.n.4">A new app icon with dark, clear and tinted variants</li>
             </ul>
           </article>
           <article class="rel reveal-card">
-            <div class="rel-head"><b>1.9.0</b><span class="tag" data-i18n="log.latest">Latest</span></div>
+            <div class="rel-head"><b>1.9.0</b></div>
             <ul>
               <li data-i18n="log.190.1">A <b>System Stats</b> dashboard — battery, CPU, RAM, temperature and fans at the top of the menu</li>
               <li data-i18n="log.190.2">Unavailable sensors hide automatically</li>
@@ -1195,7 +1194,7 @@
         </div>
       </div>
       <div class="foot-bottom">
-        <span>ClamKeep 1.9.0</span>
+        <span>ClamKeep 1.10.0</span>
         <span data-i18n="foot.apple">Not affiliated with Apple Inc.</span>
       </div>
     </div>
@@ -1292,7 +1291,7 @@
         "hero.title": "Mac не уснёт.<br>Даже с закрытой крышкой.",
         "hero.lead": "ClamKeep живёт в строке меню. Один переключатель удерживает систему, экран и автоблокировку — загрузки, сборки и рендеры продолжаются, пока MacBook закрыт.",
         "hero.cta": "Скачать для macOS", "hero.gh": "Открыть на GitHub",
-        "hero.meta": "v1.9.0 · macOS 13+ · Apple Silicon и Intel · Бесплатно",
+        "hero.meta": "v1.10.0 · macOS 13+ · Apple Silicon и Intel · Бесплатно",
         "hero.hint": "Меню живое — переключите бодрствование, затем отметьте «Разрешить сон дисплея» или «Разрешить автоблокировку».",
         "chip.dl": "Загрузки", "chip.stats": "Статистика",
         "lid.title": "Крышка закрыта. Работа идёт.", "lid.sys": "Система", "lid.awake": "Работает", "lid.dl": "Загрузка", "lid.screen": "Экран", "lid.off": "Выкл. (аппаратно)", "lid.lid": "Крышка", "lid.closed": "Закрыта", "lid.macawake": "Mac не спит",
@@ -1330,7 +1329,7 @@
         "f.helper.t": "Защищённый помощник", "f.helper": "Белый список команд, проверка IPC", "f.lang.t": "Три языка",
         "langs.title": "Говорит на вашем языке", "langs.text": "Приложение и этот сайт доступны на английском, русском и казахском.",
         "inst.title": "Готово за минуту.", "inst.lead": "Нужна macOS 13 или новее. Универсальная сборка для Apple Silicon и Intel.",
-        "inst.s1.t": "Скачайте", "inst.s1": "Возьмите <code>ClamKeep-1.9.0.dmg</code> в <a href=\"https://github.com/M3etis/ClamKeep/releases/latest\">GitHub Releases</a>.",
+        "inst.s1.t": "Скачайте", "inst.s1": "Возьмите <code>ClamKeep-1.10.0.dmg</code> в <a href=\"https://github.com/M3etis/ClamKeep/releases/latest\">GitHub Releases</a>.",
         "inst.s2.t": "Перетащите в Программы", "inst.s2": "Откройте DMG и перетащите ClamKeep в папку «Программы».",
         "inst.s3.t": "Запустите и подтвердите", "inst.s3": "Окно настройки установит помощник — пароль администратора нужен один раз.",
         "faq.title": "Вопросы и ответы",
@@ -1342,8 +1341,7 @@
         "faq.q6": "Какие Mac поддерживаются?", "faq.a6": "Любой Mac с macOS 13 Ventura и новее — ClamKeep собран как универсальное приложение для Apple Silicon и Intel.",
         "faq.q7": "ClamKeep бесплатный?", "faq.a7": "Да. Скачайте DMG в GitHub Releases — исходный код тоже на GitHub.",
         "log.title": "Что нового", "log.latest": "Последняя",
-        "log.next.v": "Следующий релиз", "log.next": "Скоро",
-        "log.n.1": "Нативное меню: шапка с переключателем бодрствования, временем и статистикой; галочки вместо [ON] / [OFF]",
+        "log.n.1": "Нативное меню: шапка с переключателем бодрствования, временем и статистикой, пункт ⌘W для клавиатуры и галочки вместо [ON] / [OFF]",
         "log.n.2": "Окно настроек, окно установки помощника с понятными ошибками и панель своего таймера",
         "log.n.3": "Монохромные значки строки меню, новый стиль «Крышка» и опция цвета",
         "log.n.4": "Новая иконка приложения с тёмным, прозрачным и тонированным вариантами", "log.older": "Предыдущие версии", "log.all": "Все релизы на GitHub →",
@@ -1369,7 +1367,7 @@
         "hero.title": "Mac ұйықтамайды.<br>Қақпағы жабық болса да.",
         "hero.lead": "ClamKeep мәзір жолында тұрады. Бір қосқыш жүйені, экранды және автоблоктауды ұстап тұрады — MacBook жабық кезде де жүктеулер, жинақтар мен рендерлер жалғаса береді.",
         "hero.cta": "macOS үшін жүктеу", "hero.gh": "GitHub-та ашу",
-        "hero.meta": "v1.9.0 · macOS 13+ · Apple Silicon және Intel · Тегін",
+        "hero.meta": "v1.10.0 · macOS 13+ · Apple Silicon және Intel · Тегін",
         "hero.hint": "Мәзір тірі — ояу режимді қосып, «Дисплей ұйқысына рұқсат ету» не «Автоблоктауға рұқсат ету» белгілеңіз.",
         "chip.dl": "Жүктеулер", "chip.stats": "Статистика",
         "lid.title": "Қақпақ жабық. Жұмыс жүріп жатыр.", "lid.sys": "Жүйе", "lid.awake": "Ояу", "lid.dl": "Жүктеу", "lid.screen": "Экран", "lid.off": "Өшік (аппараттық)", "lid.lid": "Қақпақ", "lid.closed": "Жабық", "lid.macawake": "Mac ояу",
@@ -1407,7 +1405,7 @@
         "f.helper.t": "Қорғалған көмекші", "f.helper": "Рұқсат тізімі, IPC тексеру", "f.lang.t": "Үш тіл",
         "langs.title": "Сіздің тіліңізде сөйлейді", "langs.text": "Қолданба мен осы сайт ағылшын, орыс және қазақ тілдерінде қолжетімді.",
         "inst.title": "Бір минутта дайын.", "inst.lead": "macOS 13 не жаңарағы қажет. Apple Silicon мен Intel үшін әмбебап құрастыру.",
-        "inst.s1.t": "Жүктеңіз", "inst.s1": "<code>ClamKeep-1.9.0.dmg</code> файлын <a href=\"https://github.com/M3etis/ClamKeep/releases/latest\">GitHub Releases</a>-тен алыңыз.",
+        "inst.s1.t": "Жүктеңіз", "inst.s1": "<code>ClamKeep-1.10.0.dmg</code> файлын <a href=\"https://github.com/M3etis/ClamKeep/releases/latest\">GitHub Releases</a>-тен алыңыз.",
         "inst.s2.t": "Applications-ке сүйреңіз", "inst.s2": "DMG-ні ашып, ClamKeep-ті Applications қалтасына тастаңыз.",
         "inst.s3.t": "Іске қосып, растаңыз", "inst.s3": "Баптау терезесі көмекшіні орнатады — әкімші құпия сөзі бір рет қажет.",
         "faq.title": "Сұрақтар мен жауаптар",
@@ -1419,8 +1417,7 @@
         "faq.q6": "Қандай Mac-тарға қолдау көрсетіледі?", "faq.a6": "macOS 13 Ventura және жаңарақ кез келген Mac — ClamKeep Apple Silicon мен Intel үшін әмбебап қолданба ретінде құрастырылған.",
         "faq.q7": "ClamKeep тегін бе?", "faq.a7": "Иә. DMG-ні GitHub Releases-тен жүктеңіз — бастапқы коды да GitHub-та.",
         "log.title": "Не жаңа", "log.latest": "Соңғы",
-        "log.next.v": "Келесі шығарылым", "log.next": "Жақында",
-        "log.n.1": "Нативті мәзір: ояу режим қосқышы, уақыт және статистикасы бар тақырып; [ON] / [OFF] орнына белгілер",
+        "log.n.1": "Нативті мәзір: ояу режим қосқышы, уақыт және статистикасы бар тақырып, пернетақтаға арналған ⌘W пункті және [ON] / [OFF] орнына белгілер",
         "log.n.2": "Баптаулар терезесі, қателері түсінікті көмекші орнату терезесі және басқа уақыт панелі",
         "log.n.3": "Мәзір жолының монохромды белгішелері, жаңа «Қақпақ» стилі және түс опциясы",
         "log.n.4": "Қараңғы, мөлдір және реңкті нұсқалары бар жаңа қолданба белгішесі", "log.older": "Алдыңғы нұсқалар", "log.all": "Барлық шығарылымдар GitHub-та →",
